@@ -29,11 +29,12 @@ class Balance:
         if not isinstance(self.cash, Money) or self.cash.currency != self.currency:
             raise DomainValidationError("Balance cash must use the balance currency.")
         for field_name, value in (("available", self.available), ("reserved", self.reserved)):
-            if value is not None:
-                if not isinstance(value, Money) or value.currency != self.currency:
-                    raise DomainValidationError(
-                        f"Balance {field_name} must use the balance currency."
-                    )
+            if value is not None and (
+                not isinstance(value, Money) or value.currency != self.currency
+            ):
+                raise DomainValidationError(
+                    f"Balance {field_name} must use the balance currency."
+                )
         if self.reserved is not None and self.reserved.amount < Decimal("0"):
             raise DomainValidationError("Balance reserved amount must not be negative.")
         if self.updated_at is not None:
