@@ -40,7 +40,13 @@ jobs:
       - name: Typecheck
         run: mypy src tests scripts
 
-      - name: Unit and bootstrap tests
+      - name: Import architecture contracts
+        run: lint-imports
+
+      - name: Architecture and public import tests
+        run: pytest tests/architecture tests/contracts
+
+      - name: Unit and property tests
         run: pytest --cov=pytradekit --cov-report=term-missing
 
       - name: Build wheel and sdist

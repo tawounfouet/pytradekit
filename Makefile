@@ -1,4 +1,4 @@
-.PHONY: install typography lint typecheck test build check
+.PHONY: install typography lint typecheck architecture test build check
 
 install:
 	python -m pip install -e ".[dev]"
@@ -12,10 +12,14 @@ lint:
 typecheck:
 	mypy src tests scripts
 
+architecture:
+	lint-imports
+	pytest tests/architecture tests/contracts
+
 test:
 	pytest --cov=pytradekit --cov-report=term-missing
 
 build:
 	python -m build
 
-check: typography lint typecheck test build
+check: typography lint typecheck architecture test build
