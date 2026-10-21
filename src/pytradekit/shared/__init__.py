@@ -10,16 +10,19 @@ from pytradekit.shared.errors import (
     InvariantViolationError,
     PyTradeKitError,
 )
+from pytradekit.shared.events import DomainEvent
 from pytradekit.shared.ids import EventId, InstrumentId
 from pytradekit.shared.money import Money
 from pytradekit.shared.percentage import Percentage
 from pytradekit.shared.price import Price
 from pytradekit.shared.quantity import Quantity
+from pytradekit.shared.time import require_utc_datetime
 
 __all__ = [
     "CausationId",
     "CorrelationId",
     "Currency",
+    "DomainEvent",
     "DomainValidationError",
     "EventId",
     "InstrumentId",
@@ -29,4 +32,5 @@ __all__ = [
     "Price",
     "PyTradeKitError",
     "Quantity",
+    "require_utc_datetime",
 ]
