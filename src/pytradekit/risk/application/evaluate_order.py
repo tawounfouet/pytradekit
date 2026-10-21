@@ -50,6 +50,7 @@ class OrderRiskResult:
 
     @property
     def allowed(self) -> bool:
+        """Return whether submission may continue."""
         return self.decision in {RiskDecision.ALLOW, RiskDecision.WARN}
 
 
@@ -70,6 +71,7 @@ class EvaluateOrderRisk:
         self._clock = clock
 
     def execute(self, request: OrderRiskRequest) -> OrderRiskResult:
+        """Evaluate one order against projected portfolio state."""
         current = self._portfolio.get_snapshot(request.account_id)
         if current is None:
             return self._input_reject("PORTFOLIO_STATE_UNAVAILABLE")
@@ -152,14 +154,15 @@ class EvaluateOrderRisk:
                     decisions.append(limit.decision)
 
             decision = most_restrictive(*decisions)
-            evaluation = RiskEvaluation(
-                decision=decision,
-                violations=tuple(violations),
-                evaluated_at=evaluated_at,
-                policy_id=policy.id,
-                policy_version=policy.version,
+            evaluations.append(
+                RiskEvaluation(
+                    decision=decision,
+                    violations=tuple(violations),
+                    evaluated_at=evaluated_at,
+                    policy_id=policy.id,
+                    policy_version=policy.version,
+                )
             )
-            evaluations.append(evaluation)
             all_violations.extend(violations)
 
         final_decision = most_restrictive(*(item.decision for item in evaluations))
@@ -175,7 +178,8 @@ class EvaluateOrderRisk:
             risk_increasing=projected.risk_increasing,
         )
 
-    def _resolve_price(self, request: OrderRiskRequest) -> Price | None:
+    @staticmethod
+    def _resolve_price(request: OrderRiskRequest) -> Price | None:
         if request.order_type is OrderType.LIMIT:
             return request.limit_price
         return request.reference_price
@@ -183,31 +187,38 @@ class EvaluateOrderRisk:
     def _applicable_policies(self, request: OrderRiskRequest) -> tuple[RiskPolicy, ...]:
         result: list[RiskPolicy] = []
         for policy in self._policies.list_active():
-            if policy.scope is RiskScope.GLOBAL:
+            global_match = policy.scope is RiskScope.GLOBAL
+            account_match = (
+                policy.scope is RiskScope.ACCOUNT
+                and policy.scope_id == str(request.account_id)
+            )
+            strategy_match = (
+                policy.scope is RiskScope.STRATEGY
+                and request.strategy_id is not None
+                and policy.scope_id == request.strategy_id
+            )
+            instrument_match = (
+                policy.scope is RiskScope.INSTRUMENT
+                and policy.scope_id == str(request.instrument_id)
+            )
+            if global_match or account_match or strategy_match or instrument_match:
                 result.append(policy)
-            elif policy.scope is RiskScope.ACCOUNT:
-                if policy.scope_id == str(request.account_id):
-                    result.append(policy)
-            elif policy.scope is RiskScope.STRATEGY:
-                if request.strategy_id is not None and policy.scope_id == request.strategy_id:
-                    result.append(policy)
-            elif policy.scope is RiskScope.INSTRUMENT:
-                if policy.scope_id == str(request.instrument_id):
-                    result.append(policy)
         return tuple(result)
 
     def _applicable_halts(self, request: OrderRiskRequest) -> tuple[TradingHalt, ...]:
         result: list[TradingHalt] = []
         for halt in self._halts.list_active():
-            if halt.scope is RiskScope.GLOBAL:
-                result.append(halt)
-            elif halt.scope is RiskScope.ACCOUNT and halt.scope_id == str(request.account_id):
-                result.append(halt)
-            elif (
+            global_match = halt.scope is RiskScope.GLOBAL
+            account_match = (
+                halt.scope is RiskScope.ACCOUNT
+                and halt.scope_id == str(request.account_id)
+            )
+            strategy_match = (
                 halt.scope is RiskScope.STRATEGY
                 and request.strategy_id is not None
                 and halt.scope_id == request.strategy_id
-            ):
+            )
+            if global_match or account_match or strategy_match:
                 result.append(halt)
         return tuple(result)
 
