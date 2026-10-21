@@ -37,7 +37,6 @@ def test_long_lifecycle_and_realized_pnl() -> None:
 
     assert position.quantity == Decimal("20")
     assert position.average_price == Price(Decimal("110"), USD)
-    assert position.side.value == "long"
 
     position.apply_fill(
         side=OrderSide.SELL,
@@ -59,7 +58,6 @@ def test_long_lifecycle_and_realized_pnl() -> None:
 
     assert position.quantity == 0
     assert position.average_price is None
-    assert position.side.value == "flat"
     assert position.realized_pnl.amount == Decimal("-50")
 
 
@@ -80,7 +78,6 @@ def test_position_flip_long_to_short_and_back_to_long() -> None:
 
     assert position.quantity == Decimal("-5")
     assert position.average_price == Price(Decimal("90"), USD)
-    assert position.side.value == "short"
     assert position.realized_pnl.amount == Decimal("-100")
 
     position.apply_fill(
@@ -92,5 +89,27 @@ def test_position_flip_long_to_short_and_back_to_long() -> None:
 
     assert position.quantity == Decimal("3")
     assert position.average_price == Price(Decimal("80"), USD)
-    assert position.side.value == "long"
     assert position.realized_pnl.amount == Decimal("-50")
+
+
+def test_position_side_is_derived_from_signed_quantity() -> None:
+    long_position = _position()
+    long_position.apply_fill(
+        side=OrderSide.BUY,
+        quantity=Quantity(Decimal("1")),
+        price=Price(Decimal("100"), USD),
+        occurred_at=T0,
+    )
+    assert long_position.side.value == "long"
+
+    short_position = _position()
+    short_position.apply_fill(
+        side=OrderSide.SELL,
+        quantity=Quantity(Decimal("1")),
+        price=Price(Decimal("100"), USD),
+        occurred_at=T0,
+    )
+    assert short_position.side.value == "short"
+
+    flat_position = _position()
+    assert flat_position.side.value == "flat"
