@@ -41,10 +41,10 @@ On Windows PowerShell, activate the virtual environment with:
 pytradekit --version
 ~~~
 
-Current pre-release version:
+Current release version:
 
 ~~~text
-0.1.0a1
+0.1.0
 ~~~
 
 ## First foundations example
@@ -194,4 +194,4 @@ make typography
 
 ## License
 
-A project license must be selected explicitly before the first public versioned release.
+PyTradeKit is licensed under the Apache License 2.0. See `LICENSE` for the full terms.
