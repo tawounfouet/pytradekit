@@ -102,3 +102,21 @@ name = "Runtime ports do not depend on adapters"
 type = "forbidden"
 source_modules = ["pytradekit.runtime.ports"]
 forbidden_modules = ["pytradekit.runtime.adapters"]
+
+[[tool.importlinter.contracts]]
+name = "Strategy domain is broker independent"
+type = "forbidden"
+source_modules = ["pytradekit.strategy.domain"]
+forbidden_modules = [
+  "pytradekit.brokers",
+  "pytradekit.backtesting.adapters",
+]
+
+[[tool.importlinter.contracts]]
+name = "Market data domain is strategy and broker independent"
+type = "forbidden"
+source_modules = ["pytradekit.market_data.domain"]
+forbidden_modules = [
+  "pytradekit.strategy",
+  "pytradekit.brokers",
+]
