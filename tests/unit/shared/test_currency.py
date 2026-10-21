@@ -42,7 +42,7 @@ def test_currency_is_immutable() -> None:
     currency = Currency("EUR")
 
     with pytest.raises(FrozenInstanceError):
-        setattr(currency, "code", "USD")
+        currency.__setattr__("code", "USD")
 
 
 def test_currency_has_value_equality_and_hash_semantics() -> None:
