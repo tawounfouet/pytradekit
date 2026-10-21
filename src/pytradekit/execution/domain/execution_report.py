@@ -38,9 +38,13 @@ class ExecutionReport:
             raise DomainValidationError("ExecutionReport external_order_id must not be empty.")
         if self.fill is not None and self.fill.order_id != self.order_id:
             raise DomainValidationError("ExecutionReport fill must belong to the same order.")
-        if self.status in {ExecutionStatus.PARTIALLY_FILLED, ExecutionStatus.FILLED}:
-            if self.fill is None:
-                raise DomainValidationError("Fill execution report requires a Fill.")
-        if self.status is ExecutionStatus.REJECTED:
-            if self.rejection_reason is None or not self.rejection_reason.strip():
-                raise DomainValidationError("Rejected execution report requires a reason.")
+        if (
+            self.status in {ExecutionStatus.PARTIALLY_FILLED, ExecutionStatus.FILLED}
+            and self.fill is None
+        ):
+            raise DomainValidationError("Fill execution report requires a Fill.")
+        if (
+            self.status is ExecutionStatus.REJECTED
+            and (self.rejection_reason is None or not self.rejection_reason.strip())
+        ):
+            raise DomainValidationError("Rejected execution report requires a reason.")
