@@ -1,4 +1,4 @@
-.PHONY: install typography lint typecheck architecture test build check
+.PHONY: install typography lint typecheck architecture test build release-check check
 
 install:
 	python -m pip install -e ".[dev]"
@@ -10,7 +10,7 @@ lint:
 	ruff check .
 
 typecheck:
-	mypy src tests scripts
+	mypy src tests scripts examples
 
 architecture:
 	lint-imports
@@ -22,4 +22,7 @@ test:
 build:
 	python -m build
 
-check: typography lint typecheck architecture test build
+release-check:
+	python scripts/qualify_release.py
+
+check: typography lint typecheck architecture test release-check
