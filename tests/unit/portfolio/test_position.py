@@ -1,0 +1,123 @@
+"""Position accounting unit tests."""
+
+from datetime import UTC, datetime, timedelta
+from decimal import Decimal
+
+from pytradekit.orders.domain import OrderSide
+from pytradekit.portfolio.domain import AccountId, Position
+from pytradekit.shared import Currency, InstrumentId, Price, Quantity
+
+USD = Currency("USD")
+T0 = datetime(2026, 10, 21, 20, 0, tzinfo=UTC)
+
+
+def _position() -> Position:
+    return Position.flat(
+        account_id=AccountId.new(),
+        instrument_id=InstrumentId.new(),
+        currency=USD,
+        occurred_at=T0,
+    )
+
+
+def test_long_lifecycle_and_realized_pnl() -> None:
+    position = _position()
+    position.apply_fill(
+        side=OrderSide.BUY,
+        quantity=Quantity(Decimal("10")),
+        price=Price(Decimal("100"), USD),
+        occurred_at=T0,
+    )
+    position.apply_fill(
+        side=OrderSide.BUY,
+        quantity=Quantity(Decimal("10")),
+        price=Price(Decimal("120"), USD),
+        occurred_at=T0 + timedelta(seconds=1),
+    )
+
+    quantity_after_increase = position.quantity
+    average_after_increase = position.average_price
+    assert quantity_after_increase == Decimal("20")
+    assert average_after_increase == Price(Decimal("110"), USD)
+
+    position.apply_fill(
+        side=OrderSide.SELL,
+        quantity=Quantity(Decimal("5")),
+        price=Price(Decimal("130"), USD),
+        occurred_at=T0 + timedelta(seconds=2),
+    )
+
+    quantity_after_reduction = position.quantity
+    average_after_reduction = position.average_price
+    pnl_after_reduction = position.realized_pnl.amount
+    assert quantity_after_reduction == Decimal("15")
+    assert average_after_reduction == Price(Decimal("110"), USD)
+    assert pnl_after_reduction == Decimal("100")
+
+    position.apply_fill(
+        side=OrderSide.SELL,
+        quantity=Quantity(Decimal("15")),
+        price=Price(Decimal("100"), USD),
+        occurred_at=T0 + timedelta(seconds=3),
+    )
+
+    assert position.quantity == 0
+    assert position.average_price is None
+    assert position.realized_pnl.amount == Decimal("-50")
+
+
+def test_position_flip_long_to_short_and_back_to_long() -> None:
+    position = _position()
+    position.apply_fill(
+        side=OrderSide.BUY,
+        quantity=Quantity(Decimal("10")),
+        price=Price(Decimal("100"), USD),
+        occurred_at=T0,
+    )
+    position.apply_fill(
+        side=OrderSide.SELL,
+        quantity=Quantity(Decimal("15")),
+        price=Price(Decimal("90"), USD),
+        occurred_at=T0 + timedelta(seconds=1),
+    )
+
+    quantity_after_short_flip = position.quantity
+    average_after_short_flip = position.average_price
+    pnl_after_short_flip = position.realized_pnl.amount
+    assert quantity_after_short_flip == Decimal("-5")
+    assert average_after_short_flip == Price(Decimal("90"), USD)
+    assert pnl_after_short_flip == Decimal("-100")
+
+    position.apply_fill(
+        side=OrderSide.BUY,
+        quantity=Quantity(Decimal("8")),
+        price=Price(Decimal("80"), USD),
+        occurred_at=T0 + timedelta(seconds=2),
+    )
+
+    assert position.quantity == Decimal("3")
+    assert position.average_price == Price(Decimal("80"), USD)
+    assert position.realized_pnl.amount == Decimal("-50")
+
+
+def test_position_side_is_derived_from_signed_quantity() -> None:
+    long_position = _position()
+    long_position.apply_fill(
+        side=OrderSide.BUY,
+        quantity=Quantity(Decimal("1")),
+        price=Price(Decimal("100"), USD),
+        occurred_at=T0,
+    )
+    assert long_position.side.value == "long"
+
+    short_position = _position()
+    short_position.apply_fill(
+        side=OrderSide.SELL,
+        quantity=Quantity(Decimal("1")),
+        price=Price(Decimal("100"), USD),
+        occurred_at=T0,
+    )
+    assert short_position.side.value == "short"
+
+    flat_position = _position()
+    assert flat_position.side.value == "flat"

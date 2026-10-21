@@ -39,8 +39,11 @@ def main() -> None:
             correlation_id=CorrelationId.new(),
         )
     )
+    submission_status = result.submission_status
+    if submission_status is None:
+        raise RuntimeError("Expected an execution submission attempt.")
 
-    print(f"submission result: {result.submission_status.value}")
+    print(f"submission result: {submission_status.value}")
     print(f"order status: {result.order.status.value}")
     print(f"certainty: {result.order.execution_certainty.value}")
 

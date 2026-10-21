@@ -7,12 +7,12 @@ from pytradekit.orders.application.models import (
     SubmitOrderResult,
 )
 from pytradekit.orders.domain import InvalidOrderError, Order, OrderId, OrderType
-from pytradekit.orders.ports import ExecutionPort, OrderRepository
+from pytradekit.orders.ports import ExecutionPort, OrderRepository, RiskEvaluationPort
 from pytradekit.runtime.ports import ClockPort
 
 
 class SubmitOrder:
-    """Create, persist, submit, and apply the immediate canonical result."""
+    """Create, risk-check, persist, submit, and apply the immediate result."""
 
     def __init__(
         self,
@@ -20,13 +20,15 @@ class SubmitOrder:
         repository: OrderRepository,
         execution: ExecutionPort,
         clock: ClockPort,
+        risk: RiskEvaluationPort | None = None,
     ) -> None:
         self._repository = repository
         self._execution = execution
         self._clock = clock
+        self._risk = risk
 
     def execute(self, command: SubmitOrderCommand) -> SubmitOrderResult:
-        """Execute one order submission without blind retry."""
+        """Execute one order submission without blind retry or risk bypass."""
         order_id = command.order_id or OrderId.new()
         now = self._clock.now()
 
@@ -59,7 +61,37 @@ class SubmitOrder:
             )
 
         order.validate(occurred_at=self._clock.now())
+        if self._risk is not None and command.account_id is None:
+            raise InvalidOrderError("Risk-gated submission requires account_id.")
+
         self._repository.add(order)
+        risk_decision: str | None = None
+        risk_violation_codes: tuple[str, ...] = ()
+        risk_issues: tuple[str, ...] = ()
+
+        if self._risk is not None:
+            account_id = command.account_id
+            if account_id is None:
+                raise InvalidOrderError("Risk-gated submission requires account_id.")
+            gate = self._risk.evaluate(
+                order,
+                account_id=account_id,
+                reference_price=command.reference_price,
+                strategy_id=command.strategy_id,
+                start_of_day_nav=command.start_of_day_nav,
+            )
+            risk_decision = gate.decision
+            risk_violation_codes = gate.violation_codes
+            risk_issues = gate.issues
+            if not gate.allowed:
+                return SubmitOrderResult(
+                    order=OrderSnapshot.from_order(order),
+                    submission_status=None,
+                    risk_decision=risk_decision,
+                    risk_violation_codes=risk_violation_codes,
+                    risk_issues=risk_issues,
+                )
+
         order.mark_submitted(occurred_at=self._clock.now())
         self._repository.save(order)
 
@@ -84,4 +116,7 @@ class SubmitOrder:
         return SubmitOrderResult(
             order=OrderSnapshot.from_order(order),
             submission_status=submission.status,
+            risk_decision=risk_decision,
+            risk_violation_codes=risk_violation_codes,
+            risk_issues=risk_issues,
         )
