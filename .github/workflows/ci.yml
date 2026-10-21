@@ -38,7 +38,7 @@ jobs:
         run: ruff check .
 
       - name: Typecheck
-        run: mypy src tests scripts
+        run: mypy src tests scripts examples
 
       - name: Import architecture contracts
         run: lint-imports
@@ -49,5 +49,5 @@ jobs:
       - name: Unit and property tests
         run: pytest --cov=pytradekit --cov-report=term-missing
 
-      - name: Build wheel and sdist
-        run: python -m build
+      - name: Release artifact qualification
+        run: python scripts/qualify_release.py
