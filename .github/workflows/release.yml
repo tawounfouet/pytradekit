@@ -8,6 +8,8 @@ on:
       - pyproject.toml
       - src/pytradekit/__init__.py
       - LICENSE
+      - CHANGELOG.md
+      - README.md
       - docs/releases/**
       - scripts/qualify_release.py
       - examples/**
@@ -43,6 +45,25 @@ jobs:
           )"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Read release title
+        id: release
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          TITLE="$(python - <<'PY'
+          import os
+          from pathlib import Path
+
+          version = os.environ["VERSION"]
+          path = Path("docs") / "releases" / f"{version}.md"
+          lines = path.read_text(encoding="utf-8").splitlines()
+          if not lines or not lines[0].startswith("# "):
+              raise SystemExit("Release notes must start with a Markdown H1 title.")
+          print(lines[0][2:])
+          PY
+          )"
+          echo "title=$TITLE" >> "$GITHUB_OUTPUT"
 
       - name: Check release state
         id: state
@@ -81,11 +102,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.version.outputs.tag }}
           VERSION: ${{ steps.version.outputs.version }}
+          RELEASE_TITLE: ${{ steps.release.outputs.title }}
         run: |
           gh release create "$TAG" \
             dist/*.whl \
             dist/*.tar.gz \
             dist/SHA256SUMS \
             --target "${{ github.sha }}" \
-            --title "PyTradeKit $VERSION - OMS & Execution" \
+            --title "$RELEASE_TITLE" \
             --notes-file "docs/releases/$VERSION.md"
