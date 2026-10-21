@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import hashlib
 import os
 import subprocess
@@ -17,6 +18,7 @@ EXAMPLES = (
     Path("examples/02_market_order_lifecycle.py"),
     Path("examples/03_uncertain_submission_reconciliation.py"),
     Path("examples/04_cancel_fill_race.py"),
+    Path("examples/05_portfolio_risk.py"),
 )
 
 
@@ -42,6 +44,63 @@ def _project_version() -> str:
         raise RuntimeError("Project version must be a non-empty string.")
 
     return raw_version
+
+
+def _source_version() -> str:
+    """Read __version__ from the package source without importing the package."""
+    source_path = REPOSITORY_ROOT / "src" / "pytradekit" / "__init__.py"
+    tree = ast.parse(source_path.read_text(encoding="utf-8"), filename=str(source_path))
+
+    for node in tree.body:
+        if not isinstance(node, ast.Assign):
+            continue
+        if not any(
+            isinstance(target, ast.Name) and target.id == "__version__"
+            for target in node.targets
+        ):
+            continue
+
+        raw_value: object = ast.literal_eval(node.value)
+        if isinstance(raw_value, str) and raw_value:
+            return raw_value
+
+        raise RuntimeError("Package __version__ must be a non-empty string.")
+
+    raise RuntimeError("Package __version__ assignment was not found.")
+
+
+def _qualify_release_metadata(expected_version: str) -> None:
+    """Validate repository metadata required for a versioned release."""
+    source_version = _source_version()
+    if source_version != expected_version:
+        raise RuntimeError(
+            "pyproject.toml and pytradekit.__version__ must declare the same version."
+        )
+
+    release_notes = REPOSITORY_ROOT / "docs" / "releases" / f"{expected_version}.md"
+    if not release_notes.is_file():
+        raise RuntimeError(
+            f"Release notes are required at docs/releases/{expected_version}.md."
+        )
+
+    lines = release_notes.read_text(encoding="utf-8").splitlines()
+    if not lines or not lines[0].startswith(f"# PyTradeKit {expected_version} - "):
+        raise RuntimeError(
+            "Release notes must start with '# PyTradeKit <version> - <title>'."
+        )
+
+    changelog = (REPOSITORY_ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    if f"## [{expected_version}] - " not in changelog:
+        raise RuntimeError("CHANGELOG.md does not contain the release version.")
+
+    readme = (REPOSITORY_ROOT / "README.md").read_text(encoding="utf-8")
+    expected_version_block = f"Current release version:\n\n~~~text\n{expected_version}\n~~~"
+    if expected_version_block not in readme:
+        raise RuntimeError("README.md does not declare the release version.")
+
+    for example in EXAMPLES:
+        if not (REPOSITORY_ROOT / example).is_file():
+            raise RuntimeError(f"Release example is missing: {example}")
 
 
 def _venv_python(environment: Path) -> Path:
@@ -109,8 +168,9 @@ def _qualify_clean_install(
 
 
 def main() -> int:
-    """Build, hash, clean-install, and smoke-test release artifacts."""
+    """Validate metadata, build, hash, clean-install, and smoke-test artifacts."""
     expected_version = _project_version()
+    _qualify_release_metadata(expected_version)
 
     with tempfile.TemporaryDirectory(prefix="pytradekit-release-") as raw_temp:
         temp_root = Path(raw_temp)
