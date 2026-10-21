@@ -4,16 +4,16 @@ PyTradeKit is a domain-first, broker-agnostic trading framework designed around 
 
 ## Current milestone
 
-PyTradeKit 0.2.0 - OMS & Execution
+PyTradeKit 0.3.0 - Portfolio & Risk
 
-PyTradeKit 0.2 adds a canonical Order Management System and a provider-neutral execution boundary on top of the 0.1 domain foundations.
+PyTradeKit 0.3 gives canonical economic meaning to execution fills and adds a deterministic pre-trade risk boundary before broker submission.
 
-The milestone deliberately uses a deterministic fake broker. It does not connect to a real broker or submit live trades.
+The milestone still uses a deterministic fake broker. It does not connect to a real broker or submit live trades.
 
 ## Requirements
 
 - Python 3.12+
-- no runtime dependencies for milestone 0.2
+- no runtime dependencies for milestone 0.3
 
 ## Development setup
 
@@ -44,25 +44,29 @@ pytradekit --version
 Current release version:
 
 ~~~text
-0.2.0
+0.3.0
 ~~~
 
-## Quick OMS example
+## Quick Portfolio and Risk model
 
 ~~~python
 from decimal import Decimal
 
-from pytradekit.orders import OrderSide, OrderType, TimeInForce
-from pytradekit.orders.application import SubmitOrderCommand
-from pytradekit.shared import CorrelationId, InstrumentId, Quantity
+from pytradekit.portfolio.domain import AccountId
+from pytradekit.risk.domain import RiskPolicy, RiskPolicyId, RiskScope
+from pytradekit.risk.domain.rules import MaxOrderSize
+from pytradekit.shared import Currency, Money
 
-command = SubmitOrderCommand(
-    instrument_id=InstrumentId.new(),
-    side=OrderSide.BUY,
-    order_type=OrderType.MARKET,
-    quantity=Quantity(Decimal("10")),
-    time_in_force=TimeInForce.DAY,
-    correlation_id=CorrelationId.new(),
+USD = Currency("USD")
+account_id = AccountId.new()
+
+policy = RiskPolicy(
+    id=RiskPolicyId.new(),
+    name="global-order-limit",
+    scope=RiskScope.GLOBAL,
+    limits=(MaxOrderSize(Money(Decimal("10000"), USD)),),
+    enabled=True,
+    version=1,
 )
 ~~~
 
@@ -73,6 +77,7 @@ python examples/01_foundations.py
 python examples/02_market_order_lifecycle.py
 python examples/03_uncertain_submission_reconciliation.py
 python examples/04_cancel_fill_race.py
+python examples/05_portfolio_risk.py
 ~~~
 
 ## Package topology
@@ -88,6 +93,16 @@ src/pytradekit/
 │   └── adapters/
 ├── execution/
 │   └── domain/
+├── portfolio/
+│   ├── domain/
+│   ├── application/
+│   ├── ports/
+│   └── adapters/
+├── risk/
+│   ├── domain/
+│   ├── application/
+│   ├── ports/
+│   └── adapters/
 ├── brokers/
 │   └── adapters/
 │       └── fake/
@@ -95,94 +110,139 @@ src/pytradekit/
 └── testing/
 ~~~
 
-## OMS capabilities
+## Portfolio capabilities
 
-### Orders domain
+### Portfolio domain
 
-- OrderId
-- OrderSide
-- OrderType
-- TimeInForce
-- OrderStatus
-- ExecutionCertainty
-- Order aggregate
-- explicit transitions and domain events
-- fill deduplication
-- overfill protection
-- terminal-state monotonicity
+- AccountId
+- Account
+- Balance
+- Position
+- PositionSide
+- signed position quantity
+- weighted average entry price
+- partial close
+- full close
+- long-to-short flip
+- short-to-long flip
+- realized PnL
+- duplicate-fill economic protection
 
-### Execution domain
+### Valuation
 
-- Fill and FillId
-- ExecutionReport
-- ExecutionStatus
-- SubmissionResult
-- CancelResult
+- PositionView
+- PortfolioSnapshot
+- market value
+- NAV
+- realized PnL
+- unrealized PnL
+- gross exposure
+- net exposure
+- leverage
 
 ### Application
 
-- SubmitOrder
-- CancelOrder
-- HandleExecutionReport
-- ProcessFill
-- GetOrder
-- OrderSnapshot
+- ApplyFillToPortfolio
+- BuildPortfolioSnapshot
 
-### Ports and adapters
+## Risk capabilities
 
-- ExecutionPort
-- OrderRepository
-- InMemoryOrderRepository
-- FakeExecutionAdapter
-- FakeExecutionScenario
-- FakeClock
+### Risk domain
 
-## Failure semantics
+- RiskPolicyId
+- RiskPolicy
+- RiskLimit
+- RiskScope
+- RiskDecision
+- RiskEvaluation
+- RiskViolation
+- RiskOrder
+- RiskContext
+- ProjectedPortfolio
 
-A timeout is not a rejection.
+### P0 rules
 
-PyTradeKit 0.2 uses the following policy:
+- MaxOrderSize
+- MaxPositionSize
+- MaxGrossExposure
+- MaxLeverage
+- DailyLoss
+
+### Trading halt
+
+- TradingHaltId
+- TradingHalt
+- GLOBAL scope
+- ACCOUNT scope
+- STRATEGY scope
+- explicit trigger
+- explicit release
+- reduce-only behavior
+
+## Pre-trade safety flow
 
 ~~~text
-request
--> timeout
--> UNCERTAIN
--> no blind retry
--> query or reconciliation
--> canonical execution report
--> convergence
+SubmitOrderCommand
+-> canonical Order
+-> projected portfolio
+-> risk policies and limits
+-> ALLOW / WARN / REJECT / HALT
+-> ExecutionPort only when allowed
 ~~~
 
-Duplicate fills have one economic effect only.
+Risk projection never mutates actual Position or Balance state.
 
-A late acceptance cannot regress a partially filled or filled order.
+A REJECT decision returns before ExecutionPort.submit.
 
-A full fill wins over a later cancellation confirmation.
+A MARKET order requires explicit reference pricing for risk evaluation.
+
+A LIMIT order uses its limit price.
+
+Missing required state fails safe for risk-increasing activity.
+
+## Fill accounting flow
+
+~~~text
+ExecutionReport
+-> Fill
+-> ProcessFill
+-> Order
+-> PortfolioEffectPort
+-> ApplyFillToPortfolio
+-> Position + Balance
+~~~
+
+Duplicate fills have one Portfolio economic effect only.
 
 ## Architecture protection
 
-CI enforces:
+CI enforces the original 0.1 and 0.2 boundaries plus milestone 0.3 boundaries.
+
+Important fitness functions include:
 
 ~~~text
-FF-001 Domain has no infrastructure dependency
-FF-002 Shared Kernel does not depend on bounded contexts
-FF-003 Broker SDK imports are forbidden outside broker adapters
-FF-004 No circular dependency
-FF-005 Public root exports are controlled
-FF-006 Orders domain does not depend on brokers or execution
-FF-007 Execution domain does not depend on brokers
+Portfolio domain does not depend on Risk
+Portfolio domain does not depend on brokers
+Risk domain does not depend on brokers
+Orders domain does not depend on Risk
+Portfolio and Risk domains do not depend on persistence frameworks
+Package import graph has no cycles
+Public root exports remain controlled
 ~~~
 
 ## Documentation
 
 - Foundations architecture: docs/architecture/foundations.md
 - OMS & Execution architecture: docs/architecture/oms-execution.md
+- Portfolio & Risk architecture: docs/architecture/portfolio-risk.md
 - Financial Value Objects: docs/guides/value-objects.md
 - Reference Data: docs/guides/reference-data.md
 - Orders: docs/guides/orders.md
+- Portfolio: docs/guides/portfolio.md
+- Risk: docs/guides/risk.md
 - Fake Execution: docs/guides/fake-execution.md
 - Testing: docs/guides/testing.md
-- 0.2.0 release notes: docs/releases/0.2.0.md
+- 0.3.0 release notes: docs/releases/0.3.0.md
 - ADRs: docs/adr/
 
 ## Quality commands
@@ -198,20 +258,21 @@ make release-check
 make check
 ~~~
 
-The release qualification builds wheel and sdist artifacts, calculates SHA-256 digests, installs the wheel in a clean virtual environment, imports the package, verifies the declared version, and runs every executable example.
+The release qualification validates version metadata, builds wheel and sdist artifacts, calculates SHA-256 digests, installs the wheel in a clean virtual environment, verifies the installed version, and runs every executable example.
 
-## Explicit 0.2 scope boundaries
+## Explicit 0.3 scope boundaries
 
-PyTradeKit 0.2 intentionally does not include:
+PyTradeKit 0.3 intentionally does not include:
 
 - real broker connectivity
-- database persistence
+- durable database persistence
 - restart recovery
-- portfolio accounting
-- risk engine
+- broker reconciliation
 - strategy runtime
-- backtest engine
+- backtest runtime
+- multi-currency FX conversion
 - HTTP API
+- distributed workers
 - production operations
 
 ## Critical path
