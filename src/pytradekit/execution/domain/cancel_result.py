@@ -25,6 +25,8 @@ class CancelResult:
         """Validate cancellation result consistency."""
         if not isinstance(self.status, CancelStatus):
             raise DomainValidationError("CancelResult status must be a CancelStatus.")
-        if self.status is CancelStatus.REJECTED:
-            if self.reason is None or not self.reason.strip():
-                raise DomainValidationError("Rejected cancellation requires a reason.")
+        if (
+            self.status is CancelStatus.REJECTED
+            and (self.reason is None or not self.reason.strip())
+        ):
+            raise DomainValidationError("Rejected cancellation requires a reason.")
