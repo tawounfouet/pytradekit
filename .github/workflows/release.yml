@@ -9,6 +9,8 @@ on:
       - src/pytradekit/__init__.py
       - LICENSE
       - docs/releases/**
+      - scripts/qualify_release.py
+      - examples/**
       - .github/workflows/release.yml
 
 permissions:
@@ -58,6 +60,10 @@ jobs:
         if: steps.state.outputs.exists != 'true'
         run: python -m pip install --upgrade build
 
+      - name: Requalify release candidate
+        if: steps.state.outputs.exists != 'true'
+        run: python scripts/qualify_release.py
+
       - name: Build release artifacts
         if: steps.state.outputs.exists != 'true'
         run: python -m build
@@ -76,4 +82,10 @@ jobs:
           TAG: ${{ steps.version.outputs.tag }}
           VERSION: ${{ steps.version.outputs.version }}
         run: |
-          gh release create "$TAG"             dist/*.whl             dist/*.tar.gz             dist/SHA256SUMS             --target "${{ github.sha }}"             --title "PyTradeKit $VERSION - Domain Foundations"             --notes-file "docs/releases/$VERSION.md"
+          gh release create "$TAG" \
+            dist/*.whl \
+            dist/*.tar.gz \
+            dist/SHA256SUMS \
+            --target "${{ github.sha }}" \
+            --title "PyTradeKit $VERSION - OMS & Execution" \
+            --notes-file "docs/releases/$VERSION.md"

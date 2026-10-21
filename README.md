@@ -4,16 +4,16 @@ PyTradeKit is a domain-first, broker-agnostic trading framework designed around 
 
 ## Current milestone
 
-PyTradeKit 0.1.x - Domain Foundations
+PyTradeKit 0.2.0 - OMS & Execution
 
-PyTradeKit 0.1 provides the domain foundations only. It does not yet connect to brokers or execute trades.
+PyTradeKit 0.2 adds a canonical Order Management System and a provider-neutral execution boundary on top of the 0.1 domain foundations.
 
-The milestone provides canonical financial primitives, provider-independent instrument identity, explicit UTC time semantics, deterministic testing primitives, and mechanically enforced architecture boundaries.
+The milestone deliberately uses a deterministic fake broker. It does not connect to a real broker or submit live trades.
 
 ## Requirements
 
 - Python 3.12+
-- no runtime dependencies for milestone 0.1
+- no runtime dependencies for milestone 0.2
 
 ## Development setup
 
@@ -44,34 +44,35 @@ pytradekit --version
 Current release version:
 
 ~~~text
-0.1.0
+0.2.0
 ~~~
 
-## First foundations example
+## Quick OMS example
 
 ~~~python
 from decimal import Decimal
 
-from pytradekit.shared import Currency, Price, Quantity
+from pytradekit.orders import OrderSide, OrderType, TimeInForce
+from pytradekit.orders.application import SubmitOrderCommand
+from pytradekit.shared import CorrelationId, InstrumentId, Quantity
 
-usd = Currency("USD")
-price = Price(Decimal("192.50"), usd)
-quantity = Quantity(Decimal("10"))
-
-notional = price * quantity
-print(notional)
+command = SubmitOrderCommand(
+    instrument_id=InstrumentId.new(),
+    side=OrderSide.BUY,
+    order_type=OrderType.MARKET,
+    quantity=Quantity(Decimal("10")),
+    time_in_force=TimeInForce.DAY,
+    correlation_id=CorrelationId.new(),
+)
 ~~~
 
-Expected output:
-
-~~~text
-Money(1925.00 USD)
-~~~
-
-Run the complete example with:
+Complete runnable examples:
 
 ~~~bash
 python examples/01_foundations.py
+python examples/02_market_order_lifecycle.py
+python examples/03_uncertain_submission_reconciliation.py
+python examples/04_cancel_fill_race.py
 ~~~
 
 ## Package topology
@@ -80,46 +81,85 @@ python examples/01_foundations.py
 src/pytradekit/
 ├── shared/
 ├── reference/
-│   └── domain/
-├── runtime/
+├── orders/
+│   ├── domain/
+│   ├── application/
 │   ├── ports/
 │   └── adapters/
+├── execution/
+│   └── domain/
+├── brokers/
+│   └── adapters/
+│       └── fake/
+├── runtime/
 └── testing/
-    ├── builders/
-    └── strategies/
 ~~~
 
-## Foundation capabilities
+## OMS capabilities
 
-### Shared
+### Orders domain
 
-- Currency
-- Money
-- Price
-- Quantity
-- Percentage
-- InstrumentId and EventId
-- CorrelationId and CausationId
-- UTC datetime validation
-- DomainEvent
-- common domain errors
+- OrderId
+- OrderSide
+- OrderType
+- TimeInForce
+- OrderStatus
+- ExecutionCertainty
+- Order aggregate
+- explicit transitions and domain events
+- fill deduplication
+- overfill protection
+- terminal-state monotonicity
 
-### Reference Data
+### Execution domain
 
-- AssetClass
-- canonical Instrument
-- ContractSpecification
-- InstrumentMapping
+- Fill and FillId
+- ExecutionReport
+- ExecutionStatus
+- SubmissionResult
+- CancelResult
 
-### Runtime and testing
+### Application
 
-- ClockPort
-- SystemClock
+- SubmitOrder
+- CancelOrder
+- HandleExecutionReport
+- ProcessFill
+- GetOrder
+- OrderSnapshot
+
+### Ports and adapters
+
+- ExecutionPort
+- OrderRepository
+- InMemoryOrderRepository
+- FakeExecutionAdapter
+- FakeExecutionScenario
 - FakeClock
-- InstrumentBuilder
-- reusable Hypothesis finance strategies
 
-### Architecture protection
+## Failure semantics
+
+A timeout is not a rejection.
+
+PyTradeKit 0.2 uses the following policy:
+
+~~~text
+request
+-> timeout
+-> UNCERTAIN
+-> no blind retry
+-> query or reconciliation
+-> canonical execution report
+-> convergence
+~~~
+
+Duplicate fills have one economic effect only.
+
+A late acceptance cannot regress a partially filled or filled order.
+
+A full fill wins over a later cancellation confirmation.
+
+## Architecture protection
 
 CI enforces:
 
@@ -129,15 +169,20 @@ FF-002 Shared Kernel does not depend on bounded contexts
 FF-003 Broker SDK imports are forbidden outside broker adapters
 FF-004 No circular dependency
 FF-005 Public root exports are controlled
+FF-006 Orders domain does not depend on brokers or execution
+FF-007 Execution domain does not depend on brokers
 ~~~
 
 ## Documentation
 
 - Foundations architecture: docs/architecture/foundations.md
+- OMS & Execution architecture: docs/architecture/oms-execution.md
 - Financial Value Objects: docs/guides/value-objects.md
 - Reference Data: docs/guides/reference-data.md
+- Orders: docs/guides/orders.md
+- Fake Execution: docs/guides/fake-execution.md
 - Testing: docs/guides/testing.md
-- 0.1.0 release notes: docs/releases/0.1.0.md
+- 0.2.0 release notes: docs/releases/0.2.0.md
 - ADRs: docs/adr/
 
 ## Quality commands
@@ -153,19 +198,21 @@ make release-check
 make check
 ~~~
 
-The release qualification builds wheel and sdist artifacts, calculates SHA-256 digests, installs the wheel in a clean virtual environment, imports the package, and runs the foundations example.
+The release qualification builds wheel and sdist artifacts, calculates SHA-256 digests, installs the wheel in a clean virtual environment, imports the package, verifies the declared version, and runs every executable example.
 
-## Explicit 0.1 scope boundaries
+## Explicit 0.2 scope boundaries
 
-PyTradeKit 0.1 intentionally does not include:
+PyTradeKit 0.2 intentionally does not include:
 
-- OMS
-- broker connectivity
+- real broker connectivity
 - database persistence
+- restart recovery
+- portfolio accounting
+- risk engine
+- strategy runtime
 - backtest engine
 - HTTP API
-- audit persistence
-- runtime profiles
+- production operations
 
 ## Critical path
 
@@ -194,4 +241,4 @@ make typography
 
 ## License
 
-PyTradeKit is licensed under the Apache License 2.0. See `LICENSE` for the full terms.
+PyTradeKit is licensed under the Apache License 2.0. See LICENSE for the full terms.

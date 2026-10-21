@@ -7,10 +7,17 @@ import os
 import subprocess
 import sys
 import tempfile
+import tomllib
 import venv
 from pathlib import Path
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
+EXAMPLES = (
+    Path("examples/01_foundations.py"),
+    Path("examples/02_market_order_lifecycle.py"),
+    Path("examples/03_uncertain_submission_reconciliation.py"),
+    Path("examples/04_cancel_fill_race.py"),
+)
 
 
 def _sha256(path: Path) -> str:
@@ -22,6 +29,19 @@ def _sha256(path: Path) -> str:
             digest.update(chunk)
 
     return digest.hexdigest()
+
+
+def _project_version() -> str:
+    """Read the package version from pyproject.toml."""
+    data = tomllib.loads(
+        (REPOSITORY_ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    )
+    raw_version: object = data["project"]["version"]
+
+    if not isinstance(raw_version, str) or not raw_version:
+        raise RuntimeError("Project version must be a non-empty string.")
+
+    return raw_version
 
 
 def _venv_python(environment: Path) -> Path:
@@ -51,7 +71,12 @@ def _build_artifacts(dist_dir: Path) -> tuple[Path, Path]:
     return wheels[0], sdists[0]
 
 
-def _qualify_clean_install(wheel: Path, environment: Path) -> None:
+def _qualify_clean_install(
+    wheel: Path,
+    environment: Path,
+    *,
+    expected_version: str,
+) -> None:
     """Install the wheel in a clean venv and run public smoke checks."""
     venv.EnvBuilder(with_pip=True).create(environment)
     python = _venv_python(environment)
@@ -62,19 +87,31 @@ def _qualify_clean_install(wheel: Path, environment: Path) -> None:
         check=True,
     )
     subprocess.run(
-        [str(python), "-c", "import pytradekit; print(pytradekit.__version__)"],
+        [
+            str(python),
+            "-c",
+            (
+                "import pytradekit; "
+                f"assert pytradekit.__version__ == {expected_version!r}; "
+                "print(pytradekit.__version__)"
+            ),
+        ],
         cwd=REPOSITORY_ROOT,
         check=True,
     )
-    subprocess.run(
-        [str(python), "examples/01_foundations.py"],
-        cwd=REPOSITORY_ROOT,
-        check=True,
-    )
+
+    for example in EXAMPLES:
+        subprocess.run(
+            [str(python), str(example)],
+            cwd=REPOSITORY_ROOT,
+            check=True,
+        )
 
 
 def main() -> int:
     """Build, hash, clean-install, and smoke-test release artifacts."""
+    expected_version = _project_version()
+
     with tempfile.TemporaryDirectory(prefix="pytradekit-release-") as raw_temp:
         temp_root = Path(raw_temp)
         dist_dir = temp_root / "dist"
@@ -83,12 +120,17 @@ def main() -> int:
 
         wheel, sdist = _build_artifacts(dist_dir)
 
+        print(f"version: {expected_version}")
         print(f"wheel: {wheel.name}")
         print(f"wheel sha256: {_sha256(wheel)}")
         print(f"sdist: {sdist.name}")
         print(f"sdist sha256: {_sha256(sdist)}")
 
-        _qualify_clean_install(wheel, environment)
+        _qualify_clean_install(
+            wheel,
+            environment,
+            expected_version=expected_version,
+        )
 
     print("Release artifact qualification passed.")
     return 0
