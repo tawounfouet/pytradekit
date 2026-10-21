@@ -7,7 +7,6 @@ from hypothesis import strategies as st
 
 from pytradekit.shared import CorrelationId, DomainEvent, EventId
 
-
 UTC_DATETIMES = st.datetimes(
     min_value=datetime(2000, 1, 1),
     max_value=datetime(2100, 1, 1),
