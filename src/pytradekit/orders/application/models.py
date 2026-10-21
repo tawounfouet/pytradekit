@@ -15,7 +15,8 @@ from pytradekit.orders.domain import (
     OrderType,
     TimeInForce,
 )
-from pytradekit.shared import CorrelationId, InstrumentId, Price, Quantity
+from pytradekit.portfolio.domain.account_id import AccountId
+from pytradekit.shared import CorrelationId, InstrumentId, Money, Price, Quantity
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -31,6 +32,10 @@ class SubmitOrderCommand:
     limit_price: Price | None = None
     client_order_id: str | None = None
     order_id: OrderId | None = None
+    account_id: AccountId | None = None
+    reference_price: Price | None = None
+    strategy_id: str | None = None
+    start_of_day_nav: Money | None = None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -89,7 +94,10 @@ class SubmitOrderResult:
     """Result returned by SubmitOrder."""
 
     order: OrderSnapshot
-    submission_status: SubmissionStatus
+    submission_status: SubmissionStatus | None
+    risk_decision: str | None = None
+    risk_violation_codes: tuple[str, ...] = ()
+    risk_issues: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
