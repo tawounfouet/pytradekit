@@ -20,10 +20,12 @@ class Currency:
 
     def __post_init__(self) -> None:
         """Normalize and validate the canonical currency code."""
-        if not isinstance(self.code, str):
+        raw_code: object = self.code
+
+        if not isinstance(raw_code, str):
             raise DomainValidationError("Currency code must be a string.")
 
-        normalized = self.code.strip().upper()
+        normalized = raw_code.strip().upper()
 
         if not normalized:
             raise DomainValidationError("Currency code must not be empty.")
