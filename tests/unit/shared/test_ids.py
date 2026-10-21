@@ -1,6 +1,7 @@
 """Unit tests for typed UUID identifiers."""
 
 from dataclasses import FrozenInstanceError
+from typing import cast
 from uuid import UUID
 
 import pytest
@@ -51,7 +52,7 @@ def test_typed_ids_with_same_uuid_but_different_types_are_not_equal() -> None:
     instrument_id = InstrumentId(value)
     event_id = EventId(value)
 
-    assert instrument_id != event_id
+    assert instrument_id != cast(object, event_id)
 
 
 def test_typed_id_is_immutable() -> None:
