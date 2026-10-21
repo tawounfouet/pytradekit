@@ -157,7 +157,9 @@ class FakeExecutionAdapter:
         for quantity in self._scenario.fill_quantities:
             cumulative += quantity.value
             if cumulative > order.quantity.value:
-                raise InvariantViolationError("Fake scenario fill quantities exceed order quantity.")
+                raise InvariantViolationError(
+                    "Fake scenario fill quantities exceed order quantity."
+                )
             fill_index += 1
             self._queue_fill(
                 order,
