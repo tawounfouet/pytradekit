@@ -11,8 +11,13 @@ from pytradekit.shared import Price
 class ExecutionModel(Protocol):
     """Decide whether and at what base price an order is fillable."""
 
-    name: str
-    version: str
+    @property
+    def name(self) -> str:
+        ...
+
+    @property
+    def version(self) -> str:
+        ...
 
     def fill_price(self, order: Order, bar: Bar) -> Price | None:
         ...

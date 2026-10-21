@@ -20,8 +20,13 @@ class FillContext:
 class CostModel(Protocol):
     """Calculate an explicit fee for one simulated fill."""
 
-    name: str
-    version: str
+    @property
+    def name(self) -> str:
+        ...
+
+    @property
+    def version(self) -> str:
+        ...
 
     def calculate(self, fill_context: FillContext) -> Money:
         ...

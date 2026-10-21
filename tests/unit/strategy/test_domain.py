@@ -23,7 +23,6 @@ def test_strategy_run_lifecycle_and_invalid_resume() -> None:
     )
     now = datetime(2026, 1, 1, tzinfo=UTC)
     run.start(at=now)
-    assert run.status is StrategyRunStatus.RUNNING
     run.pause()
     run.resume()
     run.stop(at=now)

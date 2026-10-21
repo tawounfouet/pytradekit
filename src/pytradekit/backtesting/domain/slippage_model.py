@@ -11,8 +11,13 @@ from pytradekit.shared import DomainValidationError, Price
 class SlippageModel(Protocol):
     """Transform a base execution price into an explicit simulated price."""
 
-    name: str
-    version: str
+    @property
+    def name(self) -> str:
+        ...
+
+    @property
+    def version(self) -> str:
+        ...
 
     def apply(self, price: Price, side: OrderSide) -> Price:
         ...

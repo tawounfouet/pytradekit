@@ -9,8 +9,13 @@ from pytradekit.shared import DomainValidationError
 class LatencyModel(Protocol):
     """Describe how many future eligible events must pass before fill evaluation."""
 
-    name: str
-    version: str
+    @property
+    def name(self) -> str:
+        ...
+
+    @property
+    def version(self) -> str:
+        ...
 
     @property
     def future_events(self) -> int:
