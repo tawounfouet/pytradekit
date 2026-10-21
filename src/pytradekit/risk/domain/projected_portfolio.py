@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 
 from pytradekit.orders.domain import OrderSide
-from pytradekit.portfolio.domain import PortfolioSnapshot, PortfolioInvariantError
+from pytradekit.portfolio.domain import PortfolioInvariantError, PortfolioSnapshot
 from pytradekit.portfolio.domain.valuation import safe_leverage
 from pytradekit.shared import InstrumentId, Money, Price, Quantity
 
