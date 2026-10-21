@@ -4,7 +4,7 @@ from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 from pytradekit.orders.domain import OrderSide
-from pytradekit.portfolio.domain import AccountId, Position, PositionSide
+from pytradekit.portfolio.domain import AccountId, Position
 from pytradekit.shared import Currency, InstrumentId, Price, Quantity
 
 USD = Currency("USD")
@@ -37,7 +37,7 @@ def test_long_lifecycle_and_realized_pnl() -> None:
 
     assert position.quantity == Decimal("20")
     assert position.average_price == Price(Decimal("110"), USD)
-    assert position.side is PositionSide.LONG
+    assert position.side.value == "long"
 
     position.apply_fill(
         side=OrderSide.SELL,
@@ -59,7 +59,7 @@ def test_long_lifecycle_and_realized_pnl() -> None:
 
     assert position.quantity == 0
     assert position.average_price is None
-    assert position.side is PositionSide.FLAT
+    assert position.side.value == "flat"
     assert position.realized_pnl.amount == Decimal("-50")
 
 
@@ -80,7 +80,7 @@ def test_position_flip_long_to_short_and_back_to_long() -> None:
 
     assert position.quantity == Decimal("-5")
     assert position.average_price == Price(Decimal("90"), USD)
-    assert position.side is PositionSide.SHORT
+    assert position.side.value == "short"
     assert position.realized_pnl.amount == Decimal("-100")
 
     position.apply_fill(
@@ -92,5 +92,5 @@ def test_position_flip_long_to_short_and_back_to_long() -> None:
 
     assert position.quantity == Decimal("3")
     assert position.average_price == Price(Decimal("80"), USD)
-    assert position.side is PositionSide.LONG
+    assert position.side.value == "long"
     assert position.realized_pnl.amount == Decimal("-50")
