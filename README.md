@@ -4,7 +4,7 @@ PyTradeKit is a **domain-first, broker-agnostic trading framework** designed aro
 
 ## Current milestone
 
-**PyTradeKit 0.1.x — Domain Foundations**
+**PyTradeKit 0.1.x - Domain Foundations**
 
 The 0.1 milestone establishes the canonical financial language and architectural foundations required by the future OMS, Portfolio/Risk, Backtest, and Broker Integration milestones.
 
@@ -89,6 +89,18 @@ The folders are intentionally skeletal in the bootstrap commit. Domain implement
 → 0.9 Release Hardening
 → 1.0 Stable MVP
 ```
+
+## Typography policy
+
+Project-authored content uses the ASCII hyphen-minus `-` instead of the em dash character.
+
+The repository enforces this rule with:
+
+```bash
+make typography
+```
+
+The same check is part of `make check` and CI.
 
 ## License
 
