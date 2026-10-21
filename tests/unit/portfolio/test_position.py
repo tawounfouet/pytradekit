@@ -35,8 +35,10 @@ def test_long_lifecycle_and_realized_pnl() -> None:
         occurred_at=T0 + timedelta(seconds=1),
     )
 
-    assert position.quantity == Decimal("20")
-    assert position.average_price == Price(Decimal("110"), USD)
+    quantity_after_increase = position.quantity
+    average_after_increase = position.average_price
+    assert quantity_after_increase == Decimal("20")
+    assert average_after_increase == Price(Decimal("110"), USD)
 
     position.apply_fill(
         side=OrderSide.SELL,
@@ -45,9 +47,12 @@ def test_long_lifecycle_and_realized_pnl() -> None:
         occurred_at=T0 + timedelta(seconds=2),
     )
 
-    assert position.quantity == Decimal("15")
-    assert position.average_price == Price(Decimal("110"), USD)
-    assert position.realized_pnl.amount == Decimal("100")
+    quantity_after_reduction = position.quantity
+    average_after_reduction = position.average_price
+    pnl_after_reduction = position.realized_pnl.amount
+    assert quantity_after_reduction == Decimal("15")
+    assert average_after_reduction == Price(Decimal("110"), USD)
+    assert pnl_after_reduction == Decimal("100")
 
     position.apply_fill(
         side=OrderSide.SELL,
@@ -76,9 +81,12 @@ def test_position_flip_long_to_short_and_back_to_long() -> None:
         occurred_at=T0 + timedelta(seconds=1),
     )
 
-    assert position.quantity == Decimal("-5")
-    assert position.average_price == Price(Decimal("90"), USD)
-    assert position.realized_pnl.amount == Decimal("-100")
+    quantity_after_short_flip = position.quantity
+    average_after_short_flip = position.average_price
+    pnl_after_short_flip = position.realized_pnl.amount
+    assert quantity_after_short_flip == Decimal("-5")
+    assert average_after_short_flip == Price(Decimal("90"), USD)
+    assert pnl_after_short_flip == Decimal("-100")
 
     position.apply_fill(
         side=OrderSide.BUY,
