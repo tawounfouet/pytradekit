@@ -23,6 +23,7 @@ class TradingHaltId:
 
     @classmethod
     def new(cls) -> Self:
+        """Create a new halt identifier."""
         return cls(uuid4())
 
 
@@ -44,11 +45,12 @@ class TradingHalt:
             )
         if self.scope is RiskScope.GLOBAL and self.scope_id is not None:
             raise DomainValidationError("GLOBAL TradingHalt must not define scope_id.")
-        if self.scope is not RiskScope.GLOBAL:
-            if self.scope_id is None or not self.scope_id.strip():
-                raise DomainValidationError(
-                    "Non-global TradingHalt requires a non-empty scope_id."
-                )
+        if self.scope is not RiskScope.GLOBAL and (
+            self.scope_id is None or not self.scope_id.strip()
+        ):
+            raise DomainValidationError(
+                "Non-global TradingHalt requires a non-empty scope_id."
+            )
         if not isinstance(self.reason, str) or not self.reason.strip():
             raise DomainValidationError("TradingHalt reason must be a non-empty string.")
         require_utc_datetime(self.triggered_at, field_name="TradingHalt triggered_at")
@@ -64,9 +66,11 @@ class TradingHalt:
 
     @property
     def active(self) -> bool:
+        """Return whether the halt is still active."""
         return self.released_at is None
 
     def release(self, *, occurred_at: datetime) -> TradingHalt:
+        """Return a released copy without mutating the original halt."""
         timestamp = require_utc_datetime(occurred_at, field_name="TradingHalt release time")
         if timestamp < self.triggered_at:
             raise DomainValidationError(
