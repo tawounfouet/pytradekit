@@ -34,7 +34,7 @@ from pytradekit.portfolio.adapters import (
     OrdersPortfolioEffectAdapter,
 )
 from pytradekit.portfolio.application import ApplyFillToPortfolio, BuildPortfolioSnapshot
-from pytradekit.portfolio.domain import Account, Balance, PortfolioSnapshot
+from pytradekit.portfolio.domain import Account, Balance
 from pytradekit.reference import ContractSpecification
 from pytradekit.risk.adapters import (
     InMemoryPortfolioView,

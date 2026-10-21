@@ -31,6 +31,7 @@ class Signal:
         if not isinstance(self.direction, SignalDirection):
             raise DomainValidationError("Signal direction must be a SignalDirection.")
         require_utc_datetime(self.generated_at, field_name="Signal generated_at")
-        if self.strength is not None:
-            if not isinstance(self.strength, Decimal) or not self.strength.is_finite():
-                raise DomainValidationError("Signal strength must be a finite Decimal or None.")
+        if self.strength is not None and (
+            not isinstance(self.strength, Decimal) or not self.strength.is_finite()
+        ):
+            raise DomainValidationError("Signal strength must be a finite Decimal or None.")

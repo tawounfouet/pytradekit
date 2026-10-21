@@ -1,7 +1,7 @@
 """Deterministic target sizing helpers."""
 
 from dataclasses import dataclass
-from decimal import Decimal, ROUND_DOWN
+from decimal import ROUND_DOWN, Decimal
 
 from pytradekit.portfolio.domain import PortfolioSnapshot
 from pytradekit.reference import ContractSpecification
