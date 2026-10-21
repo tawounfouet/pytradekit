@@ -6,6 +6,42 @@ The project is currently pre-1.0 and public APIs remain experimental unless expl
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-22
+
+### Added
+
+- AccountId, Account, Balance, Position, and PositionSide portfolio primitives.
+- Signed position accounting with weighted average price, partial closes, full closes, and position flips.
+- Realized PnL, cash accounting, fee accounting, and duplicate-fill economic protection.
+- PortfolioSnapshot and PositionView immutable read models.
+- NAV, realized and unrealized PnL, gross exposure, net exposure, and leverage calculations.
+- BuildPortfolioSnapshot application service.
+- RiskPolicyId, RiskPolicy, RiskLimit, RiskScope, RiskDecision, RiskEvaluation, RiskViolation, RiskOrder, and RiskContext.
+- ProjectedPortfolio for deterministic pre-trade hypothetical state.
+- MaxOrderSize, MaxPositionSize, MaxGrossExposure, MaxLeverage, and DailyLoss P0 risk rules.
+- TradingHalt and TradingHaltId with GLOBAL, ACCOUNT, and STRATEGY scopes.
+- Explicit halt trigger and release use cases with reduce-only behavior.
+- PortfolioViewPort, PositionRepository, BalanceRepository, ProcessedFillRegistry, RiskPolicyRepository, and TradingHaltRepository.
+- Consumer-owned RiskEvaluationPort and PortfolioEffectPort for Orders integration.
+- OrdersRiskEvaluationAdapter and OrdersPortfolioEffectAdapter.
+- Fill -> Portfolio integration through ProcessFill and HandleExecutionReport.
+- Projected Risk -> SubmitOrder gate with broker-call prevention on rejection.
+- Portfolio and Risk architecture fitness functions and repository contract tests.
+- Portfolio accounting property tests.
+- Portfolio/Risk end-to-end qualification tests.
+- Portfolio & Risk architecture guide and Portfolio/Risk usage guides.
+- Executable Portfolio/Risk release example.
+
+### Quality
+
+- risk rejection is mechanically qualified to avoid any ExecutionPort.submit call.
+- duplicate fills are mechanically qualified as one Portfolio economic effect.
+- signed position accounting is qualified across arbitrary fill sequences.
+- trading halt reduce-only behavior is qualified.
+- strict mypy, Ruff, Import Linter, architecture tests, contracts, unit tests, property tests, and E2E tests pass together.
+- release qualification validates version metadata, release notes, changelog state, README version state, wheel, sdist, SHA-256 output, clean installation, and all executable examples.
+- GitHub Release title is derived from the versioned release notes rather than hard-coded to a milestone name.
+
 ## [0.2.0] - 2026-10-21
 
 ### Added
