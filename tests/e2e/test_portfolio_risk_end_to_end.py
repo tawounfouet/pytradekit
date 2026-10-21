@@ -4,10 +4,20 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 from pytradekit.brokers.adapters.fake import FakeExecutionAdapter, FakeExecutionScenario
-from pytradekit.execution import CancelResult, CancelStatus, ExecutionReport, SubmissionResult, SubmissionStatus
+from pytradekit.execution import (
+    CancelResult,
+    CancelStatus,
+    ExecutionReport,
+    SubmissionResult,
+    SubmissionStatus,
+)
 from pytradekit.orders import Order, OrderSide, OrderStatus, OrderType, TimeInForce
 from pytradekit.orders.adapters import InMemoryOrderRepository
-from pytradekit.orders.application import HandleExecutionReport, SubmitOrder, SubmitOrderCommand
+from pytradekit.orders.application import (
+    HandleExecutionReport,
+    SubmitOrder,
+    SubmitOrderCommand,
+)
 from pytradekit.portfolio.adapters import (
     InMemoryBalanceRepository,
     InMemoryPositionRepository,
@@ -25,7 +35,14 @@ from pytradekit.risk.adapters import (
 from pytradekit.risk.application import EvaluateOrderRisk
 from pytradekit.risk.domain import RiskPolicy, RiskPolicyId, RiskScope
 from pytradekit.risk.domain.rules import MaxOrderSize
-from pytradekit.shared import CorrelationId, Currency, InstrumentId, Money, Price, Quantity
+from pytradekit.shared import (
+    CorrelationId,
+    Currency,
+    InstrumentId,
+    Money,
+    Price,
+    Quantity,
+)
 from pytradekit.testing import FakeClock
 
 NOW = datetime(2026, 10, 21, 20, 0, tzinfo=UTC)
@@ -40,6 +57,7 @@ class CountingExecution:
         self.submit_calls = 0
 
     def submit(self, order: Order) -> SubmissionResult:
+        """Record the call and acknowledge submission."""
         self.submit_calls += 1
         return SubmissionResult(
             status=SubmissionStatus.ACKNOWLEDGED,
@@ -47,9 +65,11 @@ class CountingExecution:
         )
 
     def cancel(self, order: Order) -> CancelResult:
+        """Acknowledge cancellation for protocol completeness."""
         return CancelResult(status=CancelStatus.ACKNOWLEDGED)
 
     def query_order(self, order: Order) -> ExecutionReport | None:
+        """Return no additional execution state."""
         return None
 
 
