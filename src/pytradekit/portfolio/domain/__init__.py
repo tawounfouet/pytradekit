@@ -8,6 +8,7 @@ from pytradekit.portfolio.domain.errors import (
     PortfolioError,
     PortfolioInvariantError,
 )
+from pytradekit.portfolio.domain.portfolio_snapshot import PortfolioSnapshot, PositionView
 from pytradekit.portfolio.domain.position import Position
 from pytradekit.portfolio.domain.position_side import PositionSide
 
@@ -18,6 +19,8 @@ __all__ = [
     "BalanceNotFoundError",
     "PortfolioError",
     "PortfolioInvariantError",
+    "PortfolioSnapshot",
     "Position",
     "PositionSide",
+    "PositionView",
 ]
