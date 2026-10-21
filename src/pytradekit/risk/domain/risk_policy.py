@@ -32,8 +32,9 @@ class RiskPolicy:
             raise DomainValidationError("RiskPolicy version must be a positive integer.")
         if self.scope is RiskScope.GLOBAL and self.scope_id is not None:
             raise DomainValidationError("GLOBAL RiskPolicy must not define scope_id.")
-        if self.scope is not RiskScope.GLOBAL:
-            if self.scope_id is None or not self.scope_id.strip():
-                raise DomainValidationError(
-                    "Non-global RiskPolicy requires a non-empty scope_id."
-                )
+        if self.scope is not RiskScope.GLOBAL and (
+            self.scope_id is None or not self.scope_id.strip()
+        ):
+            raise DomainValidationError(
+                "Non-global RiskPolicy requires a non-empty scope_id."
+            )
