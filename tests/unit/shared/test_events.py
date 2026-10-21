@@ -1,7 +1,7 @@
 """Unit tests for DomainEvent."""
 
 from dataclasses import FrozenInstanceError
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 from typing import cast
 
 import pytest
@@ -18,7 +18,7 @@ from pytradekit.shared.errors import DomainValidationError
 def make_event(**overrides: object) -> DomainEvent:
     values: dict[str, object] = {
         "event_id": EventId.new(),
-        "occurred_at": datetime(2026, 10, 21, 19, 0, tzinfo=timezone.utc),
+        "occurred_at": datetime(2026, 10, 21, 19, 0, tzinfo=UTC),
         "correlation_id": CorrelationId.new(),
         "causation_id": None,
         "event_version": 1,
