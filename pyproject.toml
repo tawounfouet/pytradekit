@@ -1,0 +1,75 @@
+[build-system]
+requires = ["setuptools>=75", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pytradekit"
+version = "0.1.0a1"
+description = "Domain-first, broker-agnostic trading framework."
+readme = "README.md"
+requires-python = ">=3.12"
+authors = [
+  { name = "Thomas AWOUNFOUET" },
+]
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.12",
+  "Typing :: Typed",
+]
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+  "build>=1.2",
+  "coverage[toml]>=7.6",
+  "hypothesis>=6.115",
+  "import-linter>=2.1",
+  "mypy>=1.13",
+  "pytest>=8.3",
+  "pytest-cov>=5.0",
+  "ruff>=0.7",
+]
+
+[project.scripts]
+pytradekit = "pytradekit.__main__:main"
+
+[project.urls]
+Repository = "https://github.com/tawounfouet/pytradekit"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+pytradekit = ["py.typed"]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+addopts = "-ra --strict-config --strict-markers"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["src", "tests", "scripts"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_unreachable = true
+pretty = true
+
+[tool.coverage.run]
+branch = true
+source = ["pytradekit"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true

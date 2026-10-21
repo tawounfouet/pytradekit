@@ -1,10 +1,10 @@
 # PyTradeKit
 
-PyTradeKit is a domain-first, broker-agnostic trading framework designed around explicit domain semantics, deterministic behavior, recoverability, testability, and progressive broker qualification.
+PyTradeKit is a **domain-first, broker-agnostic trading framework** designed around explicit domain semantics, deterministic behavior, recoverability, testability, and progressive broker qualification.
 
 ## Current milestone
 
-**PyTradeKit 0.1.x — Domain Foundations**
+**PyTradeKit 0.1.x - Domain Foundations**
 
 The 0.1 milestone establishes the canonical financial language and architectural foundations required by the future OMS, Portfolio/Risk, Backtest, and Broker Integration milestones.
 
@@ -20,15 +20,62 @@ PyTradeKit follows:
 - Modular Monolith
 - Vertical-slice delivery
 
-The initial core is intentionally infrastructure-free: no database, broker SDK, network dependency, or web framework.
+The initial core is intentionally infrastructure-free: **no database, no broker SDK, no network dependency, and no web framework**.
 
 ## Requirements
 
 - Python 3.12+
 
-## Development status
+## Development setup
 
-The project is entering implementation with the following critical path:
+```bash
+git clone https://github.com/tawounfouet/pytradekit.git
+cd pytradekit
+
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -e ".[dev]"
+
+make check
+```
+
+On Windows PowerShell, activate the virtual environment with:
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+## Version
+
+```bash
+pytradekit --version
+```
+
+Bootstrap version:
+
+```text
+0.1.0a1
+```
+
+## Package topology
+
+```text
+src/pytradekit/
+├── shared/
+├── reference/
+│   └── domain/
+├── runtime/
+│   ├── ports/
+│   └── adapters/
+└── testing/
+    ├── builders/
+    └── strategies/
+```
+
+The folders are intentionally skeletal in the bootstrap commit. Domain implementations are added incrementally during milestone 0.1.
+
+## Critical path
 
 ```text
 0.1 Foundations
@@ -42,6 +89,18 @@ The project is entering implementation with the following critical path:
 → 0.9 Release Hardening
 → 1.0 Stable MVP
 ```
+
+## Typography policy
+
+Project-authored content uses the ASCII hyphen-minus `-` instead of the em dash character.
+
+The repository enforces this rule with:
+
+```bash
+make typography
+```
+
+The same check is part of `make check` and CI.
 
 ## License
 
