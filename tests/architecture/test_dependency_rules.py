@@ -1,7 +1,5 @@
 """Architecture fitness functions for dependency boundaries."""
 
-from pathlib import Path
-
 from tests.architecture._imports import imported_modules, python_sources
 
 FORBIDDEN_SHARED_PREFIXES = (
