@@ -24,8 +24,8 @@ from pytradekit.orders.domain.events import (
     OrderFilled,
     OrderPartiallyFilled,
     OrderRejected,
-    OrderSubmitted,
     OrderSubmissionUncertain,
+    OrderSubmitted,
     OrderValidated,
 )
 from pytradekit.orders.domain.execution_certainty import ExecutionCertainty
