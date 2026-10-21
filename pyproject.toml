@@ -73,3 +73,31 @@ source = ["pytradekit"]
 [tool.coverage.report]
 show_missing = true
 skip_covered = true
+
+[tool.importlinter]
+root_package = "pytradekit"
+
+[[tool.importlinter.contracts]]
+name = "Shared Kernel is independent"
+type = "forbidden"
+source_modules = ["pytradekit.shared"]
+forbidden_modules = [
+  "pytradekit.reference",
+  "pytradekit.runtime",
+  "pytradekit.testing",
+]
+
+[[tool.importlinter.contracts]]
+name = "Reference domain is infrastructure independent"
+type = "forbidden"
+source_modules = ["pytradekit.reference.domain"]
+forbidden_modules = [
+  "pytradekit.runtime",
+  "pytradekit.testing",
+]
+
+[[tool.importlinter.contracts]]
+name = "Runtime ports do not depend on adapters"
+type = "forbidden"
+source_modules = ["pytradekit.runtime.ports"]
+forbidden_modules = ["pytradekit.runtime.adapters"]
