@@ -23,12 +23,16 @@ class FakeExecutionScenario:
 
     def __post_init__(self) -> None:
         """Validate scenario consistency."""
-        if self.submission_status is SubmissionStatus.REJECTED:
-            if self.submission_reason is None or not self.submission_reason.strip():
-                raise DomainValidationError("Rejected fake submission requires a reason.")
-        if self.cancel_status is CancelStatus.REJECTED:
-            if self.cancel_reason is None or not self.cancel_reason.strip():
-                raise DomainValidationError("Rejected fake cancellation requires a reason.")
+        if (
+            self.submission_status is SubmissionStatus.REJECTED
+            and (self.submission_reason is None or not self.submission_reason.strip())
+        ):
+            raise DomainValidationError("Rejected fake submission requires a reason.")
+        if (
+            self.cancel_status is CancelStatus.REJECTED
+            and (self.cancel_reason is None or not self.cancel_reason.strip())
+        ):
+            raise DomainValidationError("Rejected fake cancellation requires a reason.")
         if (self.fill_quantities or self.fill_remaining) and self.fill_price is None:
             raise DomainValidationError("Fake fill scenario requires fill_price.")
         if any(quantity.value <= 0 for quantity in self.fill_quantities):
