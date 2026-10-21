@@ -85,3 +85,8 @@ class FakeExecutionScenario:
     def cancel_rejected(cls, *, reason: str) -> FakeExecutionScenario:
         """Acknowledge submission but reject cancellation."""
         return cls(cancel_status=CancelStatus.REJECTED, cancel_reason=reason)
+
+    @classmethod
+    def cancel_timeout(cls) -> FakeExecutionScenario:
+        """Acknowledge submission but leave cancellation outcome uncertain."""
+        return cls(cancel_status=CancelStatus.UNCERTAIN)
