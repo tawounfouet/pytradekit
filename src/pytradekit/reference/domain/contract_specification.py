@@ -126,7 +126,7 @@ class ContractSpecification:
         if self.max_quantity is not None and value > self.max_quantity:
             return False
 
-        if self.quantity_step is not None and value % self.quantity_step != 0:
-            return False
+        if self.quantity_step is None:
+            return True
 
-        return True
+        return value % self.quantity_step == 0
