@@ -9,6 +9,7 @@ from pytradekit.risk.domain.risk_policy import RiskPolicy
 from pytradekit.risk.domain.risk_policy_id import RiskPolicyId
 from pytradekit.risk.domain.risk_scope import RiskScope
 from pytradekit.risk.domain.risk_violation import RiskViolation
+from pytradekit.risk.domain.trading_halt import TradingHalt, TradingHaltId
 
 __all__ = [
     "ProjectedPortfolio",
@@ -21,4 +22,6 @@ __all__ = [
     "RiskPolicyId",
     "RiskScope",
     "RiskViolation",
+    "TradingHalt",
+    "TradingHaltId",
 ]
