@@ -16,16 +16,19 @@ class MaxOrderSize:
 
     @property
     def decision(self) -> RiskDecision:
+        """Return the decision produced by a violation."""
         return RiskDecision.REJECT
 
     def __post_init__(self) -> None:
         if self.max_notional.amount <= 0:
             raise DomainValidationError("MaxOrderSize max_notional must be positive.")
-        if self.max_quantity is not None:
-            if not self.max_quantity.is_finite() or self.max_quantity <= 0:
-                raise DomainValidationError("MaxOrderSize max_quantity must be positive.")
+        if self.max_quantity is not None and (
+            not self.max_quantity.is_finite() or self.max_quantity <= 0
+        ):
+            raise DomainValidationError("MaxOrderSize max_quantity must be positive.")
 
     def evaluate(self, context: RiskContext) -> RiskViolation | None:
+        """Evaluate order notional and optional quantity boundaries."""
         observed = context.projected.order_notional
         if observed.currency != self.max_notional.currency:
             return RiskViolation(
