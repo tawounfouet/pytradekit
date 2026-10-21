@@ -30,6 +30,8 @@ class SubmissionResult:
             raise DomainValidationError("SubmissionResult external_order_id must not be empty.")
         if self.status is SubmissionStatus.ACKNOWLEDGED and self.external_order_id is None:
             raise DomainValidationError("Acknowledged submission requires external_order_id.")
-        if self.status is SubmissionStatus.REJECTED:
-            if self.reason is None or not self.reason.strip():
-                raise DomainValidationError("Rejected submission requires a reason.")
+        if (
+            self.status is SubmissionStatus.REJECTED
+            and (self.reason is None or not self.reason.strip())
+        ):
+            raise DomainValidationError("Rejected submission requires a reason.")
