@@ -24,6 +24,10 @@ from pytradekit.shared import (
 NOW = datetime(2026, 10, 21, 20, 0, tzinfo=UTC)
 
 
+def _assert_status(order: Order, expected: OrderStatus) -> None:
+    assert order.status == expected
+
+
 def _market_order(*, quantity: str = "10") -> Order:
     order = Order.create_market(
         order_id=OrderId.new(),
@@ -49,7 +53,7 @@ def test_order_happy_path_reaches_filled() -> None:
         occurred_at=NOW,
         external_order_id="broker-1",
     )
-    assert order.status is OrderStatus.PARTIALLY_FILLED
+    _assert_status(order, OrderStatus.PARTIALLY_FILLED)
     assert order.filled_quantity == Quantity(Decimal("4"))
 
     assert order.apply_fill(
@@ -58,7 +62,7 @@ def test_order_happy_path_reaches_filled() -> None:
         occurred_at=NOW,
         external_order_id="broker-1",
     )
-    assert order.status is OrderStatus.FILLED
+    _assert_status(order, OrderStatus.FILLED)
     assert order.remaining_quantity == Quantity(Decimal("0"))
 
 
@@ -133,11 +137,11 @@ def test_cancel_fill_race_preserves_fill_then_allows_cancel_confirmation() -> No
         occurred_at=NOW,
     )
 
-    assert order.status is OrderStatus.PARTIALLY_FILLED
+    _assert_status(order, OrderStatus.PARTIALLY_FILLED)
     assert order.cancel_requested is True
 
     assert order.confirm_cancel(occurred_at=NOW) is True
-    assert order.status is OrderStatus.CANCELLED
+    _assert_status(order, OrderStatus.CANCELLED)
     assert order.filled_quantity == Quantity(Decimal("4"))
 
 

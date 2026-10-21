@@ -135,14 +135,14 @@ class FakeExecutionAdapter:
     def drain_reports(self, order_id: OrderId | None = None) -> tuple[ExecutionReport, ...]:
         """Return and remove pending fake reports for deterministic delivery in tests."""
         if order_id is not None:
-            reports = tuple(self._pending_reports.pop(order_id, []))
-            return reports
+            order_reports = tuple(self._pending_reports.pop(order_id, []))
+            return order_reports
 
-        reports: list[ExecutionReport] = []
+        all_reports: list[ExecutionReport] = []
         for current_order_id in sorted(self._pending_reports, key=str):
-            reports.extend(self._pending_reports[current_order_id])
+            all_reports.extend(self._pending_reports[current_order_id])
         self._pending_reports.clear()
-        return tuple(reports)
+        return tuple(all_reports)
 
     def inject_report(self, report: ExecutionReport) -> None:
         """Inject a duplicate, late, or out-of-order report explicitly."""
