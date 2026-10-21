@@ -41,10 +41,10 @@ On Windows PowerShell, activate the virtual environment with:
 pytradekit --version
 ~~~
 
-Current pre-release version:
+Current release version:
 
 ~~~text
-0.1.0a1
+0.1.0
 ~~~
 
 ## First foundations example
