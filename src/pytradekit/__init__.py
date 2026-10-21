@@ -5,6 +5,6 @@ The root package deliberately exposes only the package version during the
 package surfaces instead of being promoted prematurely to the root API.
 """
 
-__version__ = "0.1.0a1"
+__version__ = "0.1.0"
 
 __all__ = ["__version__"]
