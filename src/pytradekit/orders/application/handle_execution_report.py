@@ -4,17 +4,31 @@ from pytradekit.execution import ExecutionReport, ExecutionStatus
 from pytradekit.orders.application.models import OrderSnapshot
 from pytradekit.orders.application.process_fill import ProcessFill
 from pytradekit.orders.domain import InvalidOrderError, OrderNotFoundError
-from pytradekit.orders.ports import OrderRepository
+from pytradekit.orders.ports import OrderRepository, PortfolioEffectPort
+from pytradekit.portfolio.domain import AccountId
 
 
 class HandleExecutionReport:
     """Apply canonical external execution facts without transport-order regression."""
 
-    def __init__(self, *, repository: OrderRepository) -> None:
+    def __init__(
+        self,
+        *,
+        repository: OrderRepository,
+        portfolio_effects: PortfolioEffectPort | None = None,
+    ) -> None:
         self._repository = repository
-        self._process_fill = ProcessFill(repository=repository)
+        self._process_fill = ProcessFill(
+            repository=repository,
+            portfolio_effects=portfolio_effects,
+        )
 
-    def execute(self, report: ExecutionReport) -> OrderSnapshot:
+    def execute(
+        self,
+        report: ExecutionReport,
+        *,
+        account_id: AccountId | None = None,
+    ) -> OrderSnapshot:
         """Apply one execution report to the referenced order."""
         if report.status in {ExecutionStatus.PARTIALLY_FILLED, ExecutionStatus.FILLED}:
             fill = report.fill
@@ -23,6 +37,7 @@ class HandleExecutionReport:
             return self._process_fill.execute(
                 fill,
                 external_order_id=report.external_order_id,
+                account_id=account_id,
             )
 
         order = self._repository.get(report.order_id)
