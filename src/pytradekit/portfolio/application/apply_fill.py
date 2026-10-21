@@ -48,9 +48,11 @@ class ApplyFillToPortfolio:
     ) -> ApplyFillResult:
         balance = self._balances.get(account_id, fill.price.currency)
         if balance is None:
-            raise BalanceNotFoundError(
-                f"Balance for account {account_id} and currency {fill.price.currency} was not found."
+            message = (
+                f"Balance for account {account_id} and currency "
+                f"{fill.price.currency} was not found."
             )
+            raise BalanceNotFoundError(message)
 
         position = self._positions.get(account_id, instrument_id)
         if position is None:
@@ -65,7 +67,9 @@ class ApplyFillToPortfolio:
             return ApplyFillResult(applied=False, position=position, balance=balance)
 
         if fill.fee is not None and fill.fee.currency != balance.currency:
-            raise PortfolioInvariantError("Fill fee currency must match accounting balance currency.")
+            raise PortfolioInvariantError(
+                "Fill fee currency must match accounting balance currency."
+            )
 
         position.apply_fill(
             side=side,
