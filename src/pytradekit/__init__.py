@@ -5,6 +5,6 @@ application types are exported from their bounded package surfaces instead of
 being promoted to a broad implicit root API.
 """
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 __all__ = ["__version__"]
