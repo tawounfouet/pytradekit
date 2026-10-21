@@ -11,4 +11,5 @@ The project is currently pre-1.0 and all public APIs remain experimental.
 - Initial repository bootstrap for the 0.1.x Domain Foundations milestone.
 - Python 3.12+ package skeleton using a `src/` layout.
 - Ruff, mypy, pytest, Hypothesis, coverage, import-linter, and package build tooling.
-- GitHub Actions CI for lint, typing, tests, and wheel/sdist build.
+- GitHub Actions CI for typography, lint, typing, tests, and wheel/sdist build.
+- Repository-wide guard preventing the forbidden punctuation character from being committed.
