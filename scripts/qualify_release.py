@@ -19,6 +19,13 @@ EXAMPLES = (
     Path("examples/03_uncertain_submission_reconciliation.py"),
     Path("examples/04_cancel_fill_race.py"),
     Path("examples/05_portfolio_risk.py"),
+    Path("examples/06_strategy_backtest.py"),
+)
+
+RELEASE_DOCUMENTS = (
+    Path("docs/architecture/strategy-backtest.md"),
+    Path("docs/guides/strategy.md"),
+    Path("docs/guides/backtesting.md"),
 )
 
 
@@ -97,6 +104,10 @@ def _qualify_release_metadata(expected_version: str) -> None:
     expected_version_block = f"Current release version:\n\n~~~text\n{expected_version}\n~~~"
     if expected_version_block not in readme:
         raise RuntimeError("README.md does not declare the release version.")
+
+    for document in RELEASE_DOCUMENTS:
+        if not (REPOSITORY_ROOT / document).is_file():
+            raise RuntimeError(f"Release documentation is missing: {document}")
 
     for example in EXAMPLES:
         if not (REPOSITORY_ROOT / example).is_file():

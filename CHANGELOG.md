@@ -6,6 +6,37 @@ The project is currently pre-1.0 and public APIs remain experimental unless expl
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-22
+
+### Added
+
+- StrategyId, StrategyVersion, StrategyRunId, StrategyRunStatus, StrategyRun, and explicit StrategyState.
+- StrategyProtocol and StrategyRuntime for deterministic market-data and timer callbacks.
+- Signal, TargetPosition, OrderIntent, and StrategyRequirements with explicit semantic separation.
+- Bar, MarketDataEvent, TimerEvent, HistoricalDataset, DataQuality, and canonical dataset checksums.
+- BacktestClock as a deterministic ClockPort implementation controlled only by the runtime.
+- HistoricalMarketDataAdapter with dataset checksum, ordering, range, interval, and duplicate validation.
+- FixedQuantitySizing, FixedNotionalSizing, PercentNAVSizing, and RebalanceService.
+- ExecutionModel, CostModel, SlippageModel, LatencyModel, and SimulatedExecutionAdapter.
+- Next-eligible-bar MARKET execution and deterministic LIMIT fill rules.
+- RunBacktest orchestration through the existing Risk, OMS, ExecutionReport, Fill, and Portfolio core.
+- BacktestRun, BacktestRunId, RunManifest, BacktestReport, BacktestMetrics, and equity-curve capture.
+- Deterministic strategy-run, backtest-run, order, correlation, and fill identities derived from run semantics.
+- Golden Backtest qualification with deterministic replay and fixed expected economics.
+- Strategy and Backtest architecture guide, Strategy guide, Backtesting guide, and executable release example.
+
+### Quality
+
+- Strategy domain remains broker independent and cannot import backtesting adapters.
+- Market-data domain remains strategy and broker independent.
+- historical data is validated before iteration and no future row access surface is exposed to strategy code.
+- BacktestClock cannot move backwards and does not depend on wall-clock time.
+- simulated execution implements the canonical ExecutionPort instead of a backtest-specific OMS.
+- Risk, OMS, Fill, and Portfolio semantics are reused unchanged in backtests.
+- Golden Backtest qualifies same-manifest deterministic replay.
+- strict mypy, Ruff, Import Linter, architecture tests, contracts, unit tests, property tests, E2E tests, and release artifact qualification pass together.
+- release qualification validates version metadata, 0.4 documentation, release notes, changelog state, README version state, wheel, sdist, SHA-256 output, clean installation, and all executable examples.
+
 ## [0.3.0] - 2026-10-22
 
 ### Added

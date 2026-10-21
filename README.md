@@ -4,16 +4,16 @@ PyTradeKit is a domain-first, broker-agnostic trading framework designed around 
 
 ## Current milestone
 
-PyTradeKit 0.3.0 - Portfolio & Risk
+PyTradeKit 0.4.0 - Strategy & Backtest Runtime
 
-PyTradeKit 0.3 gives canonical economic meaning to execution fills and adds a deterministic pre-trade risk boundary before broker submission.
+PyTradeKit 0.4 adds a broker-agnostic strategy runtime and deterministic historical backtesting while reusing the same Risk, OMS, Fill, and Portfolio core introduced by earlier milestones.
 
-The milestone still uses a deterministic fake broker. It does not connect to a real broker or submit live trades.
+The milestone remains fully local and simulated. It does not connect to a real broker or submit live trades.
 
 ## Requirements
 
 - Python 3.12+
-- no runtime dependencies for milestone 0.3
+- no runtime dependencies for milestone 0.4
 
 ## Development setup
 
@@ -29,7 +29,7 @@ python -m pip install -e ".[dev]"
 make check
 ~~~
 
-On Windows PowerShell, activate the virtual environment with:
+On Windows PowerShell:
 
 ~~~powershell
 .venv\Scripts\Activate.ps1
@@ -44,33 +44,137 @@ pytradekit --version
 Current release version:
 
 ~~~text
-0.3.0
+0.4.0
 ~~~
 
-## Quick Portfolio and Risk model
+## Milestone flow
 
-~~~python
-from decimal import Decimal
-
-from pytradekit.portfolio.domain import AccountId
-from pytradekit.risk.domain import RiskPolicy, RiskPolicyId, RiskScope
-from pytradekit.risk.domain.rules import MaxOrderSize
-from pytradekit.shared import Currency, Money
-
-USD = Currency("USD")
-account_id = AccountId.new()
-
-policy = RiskPolicy(
-    id=RiskPolicyId.new(),
-    name="global-order-limit",
-    scope=RiskScope.GLOBAL,
-    limits=(MaxOrderSize(Money(Decimal("10000"), USD)),),
-    enabled=True,
-    version=1,
-)
+~~~text
+HistoricalDataset
+-> validated MarketDataEvent timeline
+-> BacktestClock
+-> StrategyRuntime
+-> Signal / TargetPosition
+-> Portfolio Construction
+-> OrderIntent
+-> Risk
+-> OMS
+-> SimulatedExecutionAdapter
+-> ExecutionReport / Fill
+-> Portfolio
+-> BacktestReport
 ~~~
 
-Complete runnable examples:
+Backtest does not own a parallel Risk engine, OMS, Order model, Fill model, or Portfolio model.
+
+## Strategy semantics
+
+PyTradeKit keeps four concepts separate:
+
+~~~text
+Signal
+!= TargetPosition
+!= OrderIntent
+!= Order
+~~~
+
+- Signal expresses a market view.
+- TargetPosition expresses desired portfolio state.
+- OrderIntent expresses the trade needed to move toward that target.
+- Order remains the canonical OMS aggregate from milestone 0.2.
+
+Strategy code never talks directly to a broker or ExecutionPort.
+
+## Historical data and time
+
+Milestone 0.4 introduces:
+
+- Bar
+- MarketDataEvent
+- TimerEvent
+- HistoricalDataset
+- dataset identity, version, and SHA-256 checksum
+- deterministic event ordering
+- BacktestClock
+- HistoricalMarketDataAdapter
+
+The core temporal guarantee is:
+
+~~~text
+at time t
+strategy sees only information <= t
+~~~
+
+The historical adapter exposes an event stream rather than a full future-indexable DataFrame.
+
+BacktestClock advances only when the runtime processes a validated event. There is no implicit datetime.now() in strategy execution.
+
+## Portfolio construction
+
+TargetPosition can express:
+
+- fixed quantity
+- fixed notional
+- percent NAV
+
+RebalanceService computes:
+
+~~~text
+target position - current position = delta
+~~~
+
+and converts a non-zero delta into a canonical OrderIntent using ContractSpecification constraints.
+
+## Simulated execution
+
+SimulatedExecutionAdapter satisfies the same ExecutionPort used by OMS integrations.
+
+P0 execution behavior:
+
+~~~text
+MARKET decided at close t
+-> evaluated on the next eligible bar
+-> filled at that bar open
+
+BUY LIMIT
+-> fill when future bar low <= limit
+
+SELL LIMIT
+-> fill when future bar high >= limit
+~~~
+
+Cost, slippage, and latency are explicit models recorded in RunManifest.
+
+## Reproducibility
+
+RunManifest captures at least:
+
+- PyTradeKit version
+- strategy identity and version
+- strategy configuration hash
+- dataset identity, version, and checksum
+- risk-policy identity and version
+- execution model
+- cost model
+- slippage model
+- latency model
+- random seed
+- runtime profile
+- deterministic start timestamp
+
+The milestone qualifies the property:
+
+~~~text
+same code
++ same manifest
++ same dataset
++ same seed
+= same semantic result
+~~~
+
+The Golden Backtest runs through Risk, OMS, simulated execution, Fill processing, and Portfolio accounting.
+
+## Runnable examples
 
 ~~~bash
 python examples/01_foundations.py
@@ -78,6 +182,7 @@ python examples/02_market_order_lifecycle.py
 python examples/03_uncertain_submission_reconciliation.py
 python examples/04_cancel_fill_race.py
 python examples/05_portfolio_risk.py
+python examples/06_strategy_backtest.py
 ~~~
 
 ## Package topology
@@ -87,147 +192,43 @@ src/pytradekit/
 ├── shared/
 ├── reference/
 ├── orders/
-│   ├── domain/
-│   ├── application/
-│   ├── ports/
-│   └── adapters/
 ├── execution/
-│   └── domain/
 ├── portfolio/
-│   ├── domain/
-│   ├── application/
-│   ├── ports/
-│   └── adapters/
 ├── risk/
+├── strategy/
 │   ├── domain/
 │   ├── application/
 │   ├── ports/
-│   └── adapters/
+│   ├── adapters/
+│   └── portfolio_construction/
+├── market_data/
+│   └── domain/
+├── backtesting/
+│   ├── domain/
+│   ├── application/
+│   ├── adapters/
+│   └── clock/
 ├── brokers/
-│   └── adapters/
-│       └── fake/
 ├── runtime/
 └── testing/
 ~~~
 
-## Portfolio capabilities
-
-### Portfolio domain
-
-- AccountId
-- Account
-- Balance
-- Position
-- PositionSide
-- signed position quantity
-- weighted average entry price
-- partial close
-- full close
-- long-to-short flip
-- short-to-long flip
-- realized PnL
-- duplicate-fill economic protection
-
-### Valuation
-
-- PositionView
-- PortfolioSnapshot
-- market value
-- NAV
-- realized PnL
-- unrealized PnL
-- gross exposure
-- net exposure
-- leverage
-
-### Application
-
-- ApplyFillToPortfolio
-- BuildPortfolioSnapshot
-
-## Risk capabilities
-
-### Risk domain
-
-- RiskPolicyId
-- RiskPolicy
-- RiskLimit
-- RiskScope
-- RiskDecision
-- RiskEvaluation
-- RiskViolation
-- RiskOrder
-- RiskContext
-- ProjectedPortfolio
-
-### P0 rules
-
-- MaxOrderSize
-- MaxPositionSize
-- MaxGrossExposure
-- MaxLeverage
-- DailyLoss
-
-### Trading halt
-
-- TradingHaltId
-- TradingHalt
-- GLOBAL scope
-- ACCOUNT scope
-- STRATEGY scope
-- explicit trigger
-- explicit release
-- reduce-only behavior
-
-## Pre-trade safety flow
-
-~~~text
-SubmitOrderCommand
--> canonical Order
--> projected portfolio
--> risk policies and limits
--> ALLOW / WARN / REJECT / HALT
--> ExecutionPort only when allowed
-~~~
-
-Risk projection never mutates actual Position or Balance state.
-
-A REJECT decision returns before ExecutionPort.submit.
-
-A MARKET order requires explicit reference pricing for risk evaluation.
-
-A LIMIT order uses its limit price.
-
-Missing required state fails safe for risk-increasing activity.
-
-## Fill accounting flow
-
-~~~text
-ExecutionReport
--> Fill
--> ProcessFill
--> Order
--> PortfolioEffectPort
--> ApplyFillToPortfolio
--> Position + Balance
-~~~
-
-Duplicate fills have one Portfolio economic effect only.
-
 ## Architecture protection
 
-CI enforces the original 0.1 and 0.2 boundaries plus milestone 0.3 boundaries.
+CI protects all earlier milestone boundaries plus 0.4-specific boundaries.
 
-Important fitness functions include:
+Important invariants include:
 
 ~~~text
-Portfolio domain does not depend on Risk
-Portfolio domain does not depend on brokers
-Risk domain does not depend on brokers
-Orders domain does not depend on Risk
-Portfolio and Risk domains do not depend on persistence frameworks
-Package import graph has no cycles
-Public root exports remain controlled
+Strategy domain does not depend on brokers
+Strategy domain does not depend on backtesting adapters
+Market-data domain does not depend on Strategy
+Market-data domain does not depend on brokers
+Backtest reuses canonical Risk
+Backtest reuses canonical OMS
+Backtest reuses canonical Fill
+Backtest reuses canonical Portfolio
+Package import graph remains acyclic
 ~~~
 
 ## Documentation
@@ -235,14 +236,13 @@ Public root exports remain controlled
 - Foundations architecture: docs/architecture/foundations.md
 - OMS & Execution architecture: docs/architecture/oms-execution.md
 - Portfolio & Risk architecture: docs/architecture/portfolio-risk.md
-- Financial Value Objects: docs/guides/value-objects.md
-- Reference Data: docs/guides/reference-data.md
-- Orders: docs/guides/orders.md
-- Portfolio: docs/guides/portfolio.md
-- Risk: docs/guides/risk.md
-- Fake Execution: docs/guides/fake-execution.md
-- Testing: docs/guides/testing.md
-- 0.3.0 release notes: docs/releases/0.3.0.md
+- Strategy & Backtest architecture: docs/architecture/strategy-backtest.md
+- Strategy guide: docs/guides/strategy.md
+- Backtesting guide: docs/guides/backtesting.md
+- Portfolio guide: docs/guides/portfolio.md
+- Risk guide: docs/guides/risk.md
+- Testing guide: docs/guides/testing.md
+- 0.4.0 release notes: docs/releases/0.4.0.md
 - ADRs: docs/adr/
 
 ## Quality commands
@@ -258,22 +258,25 @@ make release-check
 make check
 ~~~
 
-The release qualification validates version metadata, builds wheel and sdist artifacts, calculates SHA-256 digests, installs the wheel in a clean virtual environment, verifies the installed version, and runs every executable example.
+Release qualification validates version metadata, required 0.4 documentation, wheel and sdist builds, SHA-256 digests, clean wheel installation, installed-version identity, and every executable example.
 
-## Explicit 0.3 scope boundaries
+## Explicit 0.4 scope boundaries
 
-PyTradeKit 0.3 intentionally does not include:
+PyTradeKit 0.4 intentionally does not include:
 
 - real broker connectivity
 - durable database persistence
 - restart recovery
 - broker reconciliation
-- strategy runtime
-- backtest runtime
+- corporate-action processing
 - multi-currency FX conversion
+- sophisticated exchange microstructure
+- partial-fill simulation beyond the current P0 model
 - HTTP API
 - distributed workers
 - production operations
+
+These belong to later milestones.
 
 ## Critical path
 
@@ -293,8 +296,6 @@ PyTradeKit 0.3 intentionally does not include:
 ## Typography policy
 
 Project-authored content uses the ASCII hyphen-minus character instead of the em dash character.
-
-The repository enforces this rule with:
 
 ~~~bash
 make typography
