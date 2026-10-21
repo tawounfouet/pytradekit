@@ -194,4 +194,4 @@ make typography
 
 ## License
 
-A project license must be selected explicitly before the first public versioned release.
+PyTradeKit is licensed under the Apache License 2.0. See `LICENSE` for the full terms.
