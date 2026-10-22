@@ -11,7 +11,7 @@ import os
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
-from decimal import Decimal, ROUND_DOWN
+from decimal import ROUND_DOWN, Decimal
 from enum import Enum
 from threading import Thread
 from time import monotonic, sleep
@@ -463,11 +463,13 @@ class AlpacaPaperControlledOrderProbe:
     def _validate_asset(self, asset: Asset) -> None:
         if not asset.tradable:
             raise RuntimeError(f"{asset.symbol} is not tradable")
-        if self._config.market_qty != self._config.market_qty.to_integral_value():
-            if not asset.fractionable:
-                raise RuntimeError(
-                    f"{asset.symbol} is not fractionable but fractional MARKET qty was configured"
-                )
+        if (
+            self._config.market_qty != self._config.market_qty.to_integral_value()
+            and not asset.fractionable
+        ):
+            raise RuntimeError(
+                f"{asset.symbol} is not fractionable but fractional MARKET qty was configured"
+            )
 
         min_order = _optional_decimal(asset.min_order_size)
         if min_order is not None and self._config.market_qty < min_order:
