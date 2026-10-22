@@ -20,6 +20,7 @@ EXAMPLES = (
     Path("examples/04_cancel_fill_race.py"),
     Path("examples/05_portfolio_risk.py"),
     Path("examples/06_strategy_backtest.py"),
+    Path("examples/07_alpaca_paper_runtime.py"),
 )
 
 RELEASE_DOCUMENTS = (
