@@ -1,5 +1,7 @@
 """Architecture fitness functions for LOT-06 observability."""
 
+from pathlib import Path
+
 from tests.architecture._imports import imported_modules, python_sources
 
 
@@ -33,7 +35,7 @@ def test_ff_045_telemetry_surfaces_have_explicit_secret_guards() -> None:
     missing = [
         f"{path}: {marker}"
         for path, marker in required.items()
-        if marker not in open(path, encoding="utf-8").read()
+        if marker not in Path(path).read_text(encoding="utf-8")
     ]
     assert not missing, (
         "Telemetry secret guard missing:\n"
