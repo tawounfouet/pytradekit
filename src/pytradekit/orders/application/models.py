@@ -99,6 +99,8 @@ class SubmitOrderResult:
     risk_decision: str | None = None
     risk_violation_codes: tuple[str, ...] = ()
     risk_issues: tuple[str, ...] = ()
+    safety_reason_codes: tuple[str, ...] = ()
+    risk_override_applied: bool = False
 
 
 @dataclass(frozen=True, slots=True)

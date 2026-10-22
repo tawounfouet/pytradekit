@@ -32,7 +32,11 @@ from pytradekit.shared import (
     Price,
     Quantity,
 )
-from pytradekit.testing import ExplicitTestOrderAuthorizationGate, FakeClock
+from pytradekit.testing import (
+    ExplicitTestOrderAuthorizationGate,
+    ExplicitTestOrderSafetyGate,
+    FakeClock,
+)
 
 NOW = datetime(2026, 10, 22, 0, 0, tzinfo=UTC)
 USD = Currency("USD")
@@ -98,6 +102,7 @@ def risk_rejection_demo() -> None:
         clock=clock,
         risk=OrdersRiskEvaluationAdapter(risk),
         authorization_gate=ExplicitTestOrderAuthorizationGate(),
+        safety_gate=ExplicitTestOrderSafetyGate(),
     )
 
     result = submit.execute(
@@ -157,6 +162,7 @@ def fill_accounting_demo() -> None:
         execution=execution,
         clock=clock,
         authorization_gate=ExplicitTestOrderAuthorizationGate(),
+        safety_gate=ExplicitTestOrderSafetyGate(),
     )
     handle = HandleExecutionReport(
         repository=repository,

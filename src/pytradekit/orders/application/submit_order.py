@@ -12,6 +12,8 @@ from pytradekit.orders.ports import (
     ExecutionPort,
     OrderAuthorizationGatePort,
     OrderRepository,
+    OrderSafetyDeniedError,
+    OrderSafetyGatePort,
     RiskEvaluationPort,
 )
 from pytradekit.runtime.ports import ClockPort
@@ -29,6 +31,7 @@ class SubmitOrder:
         risk: RiskEvaluationPort | None = None,
         consistency_gate: ConsistencyGatePort | None = None,
         authorization_gate: OrderAuthorizationGatePort,
+        safety_gate: OrderSafetyGatePort,
     ) -> None:
         self._repository = repository
         self._execution = execution
@@ -36,6 +39,7 @@ class SubmitOrder:
         self._risk = risk
         self._consistency_gate = consistency_gate
         self._authorization_gate = authorization_gate
+        self._safety_gate = safety_gate
 
     def execute(self, command: SubmitOrderCommand) -> SubmitOrderResult:
         """Execute one order submission without blind retry or safety bypass."""
@@ -95,10 +99,11 @@ class SubmitOrder:
                 )
             self._consistency_gate.ensure_risk_increase_allowed(account_id)
 
-        self._repository.add(order)
         risk_decision: str | None = None
         risk_violation_codes: tuple[str, ...] = ()
         risk_issues: tuple[str, ...] = ()
+        risk_allowed = True
+        risk_increasing = True
 
         if self._risk is not None:
             account_id = command.account_id
@@ -114,15 +119,31 @@ class SubmitOrder:
             risk_decision = gate.decision
             risk_violation_codes = gate.violation_codes
             risk_issues = gate.issues
-            if not gate.allowed:
+            risk_allowed = gate.allowed
+            risk_increasing = gate.risk_increasing
+
+        safety = self._safety_gate.evaluate_submit(
+            account_id,
+            strategy_id=command.strategy_id,
+            instrument_id=order.instrument_id,
+            risk_allowed=risk_allowed,
+            risk_increasing=risk_increasing,
+            risk_violation_codes=risk_violation_codes,
+        )
+        if not safety.allowed:
+            if not risk_allowed and "RISK_POLICY_DENIED" in safety.reason_codes:
+                self._repository.add(order)
                 return SubmitOrderResult(
                     order=OrderSnapshot.from_order(order),
                     submission_status=None,
                     risk_decision=risk_decision,
                     risk_violation_codes=risk_violation_codes,
                     risk_issues=risk_issues,
+                    safety_reason_codes=safety.reason_codes,
                 )
+            raise OrderSafetyDeniedError(safety.reason_codes)
 
+        self._repository.add(order)
         order.mark_submitted(occurred_at=self._clock.now())
         self._repository.save(order)
 
@@ -152,4 +173,6 @@ class SubmitOrder:
             risk_decision=risk_decision,
             risk_violation_codes=risk_violation_codes,
             risk_issues=risk_issues,
+            safety_reason_codes=safety.reason_codes,
+            risk_override_applied=safety.risk_override_applied,
         )

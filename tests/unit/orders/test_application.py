@@ -17,7 +17,11 @@ from pytradekit.orders.application import (
 )
 from pytradekit.portfolio.domain import AccountId
 from pytradekit.shared import CorrelationId, Currency, InstrumentId, Price, Quantity
-from pytradekit.testing import ExplicitTestOrderAuthorizationGate, FakeClock
+from pytradekit.testing import (
+    ExplicitTestOrderAuthorizationGate,
+    ExplicitTestOrderSafetyGate,
+    FakeClock,
+)
 
 NOW = datetime(2026, 10, 21, 20, 0, tzinfo=UTC)
 USD = Currency("USD")
@@ -53,6 +57,7 @@ def test_market_order_partial_then_full_fill_end_to_end() -> None:
         execution=adapter,
         clock=clock,
         authorization_gate=ExplicitTestOrderAuthorizationGate(),
+        safety_gate=ExplicitTestOrderSafetyGate(),
     )
     handle = HandleExecutionReport(repository=repository)
 
@@ -90,6 +95,7 @@ def test_limit_order_remains_accepted_until_execution_report() -> None:
         execution=adapter,
         clock=clock,
         authorization_gate=ExplicitTestOrderAuthorizationGate(),
+        safety_gate=ExplicitTestOrderSafetyGate(),
     )
 
     result = submit.execute(_submit_command(order_type=OrderType.LIMIT))
@@ -110,6 +116,7 @@ def test_submit_timeout_stays_uncertain_and_converges_by_query() -> None:
         execution=adapter,
         clock=clock,
         authorization_gate=ExplicitTestOrderAuthorizationGate(),
+        safety_gate=ExplicitTestOrderSafetyGate(),
     )
     handle = HandleExecutionReport(repository=repository)
 
@@ -140,6 +147,7 @@ def test_cancel_flow_waits_for_execution_report() -> None:
         execution=adapter,
         clock=clock,
         authorization_gate=ExplicitTestOrderAuthorizationGate(),
+        safety_gate=ExplicitTestOrderSafetyGate(),
     )
     handle = HandleExecutionReport(repository=repository)
     cancel = CancelOrder(
@@ -147,6 +155,7 @@ def test_cancel_flow_waits_for_execution_report() -> None:
         execution=adapter,
         clock=clock,
         authorization_gate=ExplicitTestOrderAuthorizationGate(),
+        safety_gate=ExplicitTestOrderSafetyGate(),
     )
 
     result = submit.execute(_submit_command())
@@ -181,6 +190,7 @@ def test_cancel_fill_race_applies_real_fill_before_cancel_confirmation() -> None
         execution=adapter,
         clock=clock,
         authorization_gate=ExplicitTestOrderAuthorizationGate(),
+        safety_gate=ExplicitTestOrderSafetyGate(),
     )
     handle = HandleExecutionReport(repository=repository)
     cancel = CancelOrder(
@@ -188,6 +198,7 @@ def test_cancel_fill_race_applies_real_fill_before_cancel_confirmation() -> None
         execution=adapter,
         clock=clock,
         authorization_gate=ExplicitTestOrderAuthorizationGate(),
+        safety_gate=ExplicitTestOrderSafetyGate(),
     )
 
     submitted = submit.execute(_submit_command())

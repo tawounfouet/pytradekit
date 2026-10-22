@@ -40,4 +40,5 @@ class OrdersRiskEvaluationAdapter:
             decision=result.decision.value,
             violation_codes=tuple(item.code for item in result.violations),
             issues=result.issues,
+            risk_increasing=result.risk_increasing,
         )

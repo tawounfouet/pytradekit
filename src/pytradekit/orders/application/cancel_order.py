@@ -11,6 +11,7 @@ from pytradekit.orders.ports import (
     ExecutionPort,
     OrderAuthorizationGatePort,
     OrderRepository,
+    OrderSafetyGatePort,
 )
 from pytradekit.runtime.ports import ClockPort
 
@@ -25,11 +26,13 @@ class CancelOrder:
         execution: ExecutionPort,
         clock: ClockPort,
         authorization_gate: OrderAuthorizationGatePort,
+        safety_gate: OrderSafetyGatePort,
     ) -> None:
         self._repository = repository
         self._execution = execution
         self._clock = clock
         self._authorization_gate = authorization_gate
+        self._safety_gate = safety_gate
 
     def execute(self, command: CancelOrderCommand) -> CancelOrderResult:
         """Execute one cancellation request without blind retry."""
@@ -39,6 +42,7 @@ class CancelOrder:
                 "Order cancellation requires account_id for authorization."
             )
         self._authorization_gate.ensure_cancel_allowed(account_id)
+        self._safety_gate.ensure_cancel_allowed(account_id)
 
         order = self._repository.get(command.order_id)
         if order is None:
