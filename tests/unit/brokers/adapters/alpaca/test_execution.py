@@ -201,7 +201,7 @@ def _api_error(status: int, *, code: int = 40010001, message: str = "provider er
         response=SimpleNamespace(status_code=status),
         request=None,
     )
-    return APIError(
+    return APIError(  # type: ignore[no-untyped-call]
         f'{{"code": {code}, "message": "{message}"}}',
         http_error=http_error,
     )
