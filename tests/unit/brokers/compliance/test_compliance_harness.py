@@ -10,6 +10,7 @@ from tests.compliance_fakes import (
     compliance_manifest,
     pass_executor,
 )
+
 from pytradekit.brokers.compliance import (
     BROKER_ADAPTER_CONTRACT_V1_CANDIDATE,
     PROVIDER_CAPABILITY_MANIFEST_VERSION,
