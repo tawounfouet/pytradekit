@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import os
+import re
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
-import re
 
 from pytradekit.runtime.errors import RuntimeConfigurationError
 
