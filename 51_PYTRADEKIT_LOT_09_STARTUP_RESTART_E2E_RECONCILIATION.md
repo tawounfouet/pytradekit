@@ -4,7 +4,7 @@
 **Milestone :** `0.5.x - Persistence + Alpaca Paper`  
 **Lot :** `LOT-09 - Startup, Restart & End-to-End Reconciliation`  
 **Date :** 2026-10-22  
-**Statut :** Implementation  
+**Statut :** CI qualified  
 **Precedents :** LOT-01 a LOT-08  
 **Provider :** Alpaca PAPER  
 **SDK gele :** `alpaca-py==0.44.0`
@@ -1903,27 +1903,41 @@ Apres LOT-09 :
 
 ```text
 architecture qualified       YES
-code qualified               pending CI
-PostgreSQL E2E qualified     pending CI
+code qualified               YES
+PostgreSQL E2E qualified     YES
 real PAPER qualified         NO
 LIVE qualified               OUT OF SCOPE
 ```
 
 ---
 
-## 107. Expected CI gate
+## 107. CI qualification result
 
-Le lot doit passer :
+GitHub Actions run :
 
 ```text
-Typography
-Ruff
-mypy strict
-Import architecture
-Architecture/public contracts
-Unit/property/integration tests
-PostgreSQL qualification
-Release artifact qualification
+#154
+39721122198
+```
+
+Resultat :
+
+```text
+Typography                         PASS
+Ruff                               PASS
+mypy strict                        PASS - 347 source files
+Import architecture                PASS
+Architecture/public contracts      PASS
+Unit/property/integration tests    PASS - 365 tests
+PostgreSQL qualification           PASS
+Release artifact qualification     PASS
+```
+
+Warning externe conserve :
+
+```text
+websockets.legacy DeprecationWarning
+source: alpaca-py dependency path
 ```
 
 ---
@@ -2065,7 +2079,7 @@ LOT-05 PAPER Runtime Configuration           DONE
 LOT-06 Alpaca Anti-Corruption Layer          DONE
 LOT-07 Alpaca Execution                      DONE
 LOT-08 Alpaca Market Data & Snapshots        DONE
-LOT-09 Startup, Restart & E2E Reconciliation IMPLEMENTED
+LOT-09 Startup, Restart & E2E Reconciliation DONE
 
 LOT-10 Production Qualification              NEXT
 ```
