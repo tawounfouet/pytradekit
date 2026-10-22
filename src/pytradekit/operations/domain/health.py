@@ -115,6 +115,8 @@ class HealthSnapshot:
     def aggregate_status(self) -> HealthStatus:
         """Aggregate without hiding unhealthy or unknown evidence."""
         statuses = {report.status for report in self.reports}
+        if not statuses:
+            return HealthStatus.UNKNOWN
         if HealthStatus.UNHEALTHY in statuses:
             return HealthStatus.UNHEALTHY
         if HealthStatus.UNKNOWN in statuses:
