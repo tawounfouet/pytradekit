@@ -192,7 +192,12 @@ class ReconcileAccount:
             )
 
             unresolved = sum(
-                item.status is not ResolutionStatus.VERIFIED for item in resolutions
+                item.status
+                not in {
+                    ResolutionStatus.VERIFIED,
+                    ResolutionStatus.REJECTED,
+                }
+                for item in resolutions
             )
             result = self._convergence.evaluate(
                 internal_completeness=verification.internal.completeness,
@@ -322,24 +327,35 @@ class ReconcileAccount:
         initial_by_id = {item.id: item for item in initial}
         remaining_keys = {(item.type, item.entity_id) for item in remaining}
         for resolution in resolutions:
-            if resolution.status is not ResolutionStatus.APPLIED:
-                continue
             mismatch = initial_by_id[resolution.mismatch_id]
-            completed_at = resolution.completed_at
-            if completed_at is None or verification_cut <= completed_at:
-                resolution.mark_failed(
+            mismatch_key = (mismatch.type, mismatch.entity_id)
+            if resolution.status is ResolutionStatus.APPLIED:
+                completed_at = resolution.completed_at
+                if completed_at is None or verification_cut <= completed_at:
+                    resolution.mark_failed(
+                        completed_at=self._clock.now(),
+                        verification_status="verification_not_fresh",
+                    )
+                elif mismatch_key in remaining_keys:
+                    resolution.mark_failed(
+                        completed_at=self._clock.now(),
+                        verification_status="mismatch_remains",
+                    )
+                else:
+                    resolution.mark_verified(
+                        verification_status="fresh_evidence_converged"
+                    )
+            elif (
+                resolution.status is ResolutionStatus.PLANNED
+                and mismatch_key not in remaining_keys
+                and verification_cut > resolution.started_at
+            ):
+                resolution.mark_rejected(
                     completed_at=self._clock.now(),
-                    verification_status="verification_not_fresh",
-                )
-            elif (mismatch.type, mismatch.entity_id) in remaining_keys:
-                resolution.mark_failed(
-                    completed_at=self._clock.now(),
-                    verification_status="mismatch_remains",
+                    verification_status="superseded_by_fresh_convergence",
                 )
             else:
-                resolution.mark_verified(
-                    verification_status="fresh_evidence_converged"
-                )
+                continue
             self._repository.save_resolution(resolution)
             self._repository.checkpoint()
 

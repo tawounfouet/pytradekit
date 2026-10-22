@@ -62,6 +62,23 @@ class Resolution:
         self.status = ResolutionStatus.VERIFIED
         self.verification_status = verification_status.strip()
 
+    def mark_rejected(
+        self,
+        *,
+        completed_at: datetime,
+        verification_status: str,
+    ) -> None:
+        """Close a planned action that fresh convergence proves unnecessary."""
+
+        if self.status is not ResolutionStatus.PLANNED:
+            raise DomainValidationError("Only a planned resolution can be rejected.")
+        require_utc_datetime(completed_at, field_name="Resolution completed_at")
+        if not verification_status.strip():
+            raise DomainValidationError("Rejection status must be non-empty.")
+        self.status = ResolutionStatus.REJECTED
+        self.completed_at = completed_at
+        self.verification_status = verification_status.strip()
+
     def mark_failed(self, *, completed_at: datetime, verification_status: str) -> None:
         """Record a failed application or verification."""
 
