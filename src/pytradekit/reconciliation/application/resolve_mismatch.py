@@ -37,14 +37,18 @@ def _resolution_policy(mismatch_type: MismatchType) -> tuple[ResolutionType, str
             ResolutionType.IMPORT_MISSING_EXTERNAL_EVENT,
             "Import the proven provider execution through the canonical fill path.",
         )
+    if mismatch_type is MismatchType.UNKNOWN_EXTERNAL_FILL:
+        return (
+            ResolutionType.IMPORT_EXTERNAL_ACTIVITY,
+            "Import the proven external fill only if it maps to a canonical order.",
+        )
     if mismatch_type in {
         MismatchType.UNKNOWN_EXTERNAL_ORDER,
-        MismatchType.UNKNOWN_EXTERNAL_FILL,
         MismatchType.UNKNOWN_EXTERNAL_ACTIVITY,
     }:
         return (
-            ResolutionType.IMPORT_EXTERNAL_ACTIVITY,
-            "Preserve proven external activity explicitly before convergence.",
+            ResolutionType.MANUAL_REVIEW,
+            "Unknown external origin must remain explicit until proven.",
         )
     if mismatch_type in {
         MismatchType.SNAPSHOT_INCOMPLETE,

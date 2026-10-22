@@ -1,5 +1,6 @@
-"""PostgreSQL reconciliation evidence adapters."""
+"""PostgreSQL reconciliation evidence and recovery adapters."""
 
+from .recovery import PostgresResolutionExecutor, RecoveryEvidenceError
 from .repository import (
     ConcurrentReconciliationError,
     PostgresReconciliationRepository,
@@ -9,5 +10,7 @@ from .repository import (
 __all__ = [
     "ConcurrentReconciliationError",
     "PostgresReconciliationRepository",
+    "PostgresResolutionExecutor",
     "ReconciliationRecordExistsError",
+    "RecoveryEvidenceError",
 ]

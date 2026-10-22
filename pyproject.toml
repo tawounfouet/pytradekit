@@ -4,13 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pytradekit"
-version = "0.6.0a4"
+version = "0.6.0b1"
 description = "Domain-first, broker-agnostic trading framework."
 readme = "README.md"
 requires-python = ">=3.12"
-authors = [
-  { name = "Thomas AWOUNFOUET" },
-]
+authors = [{ name = "Thomas AWOUNFOUET" }]
 license = "Apache-2.0"
 classifiers = [
   "Development Status :: 2 - Pre-Alpha",
@@ -22,14 +20,8 @@ classifiers = [
 dependencies = []
 
 [project.optional-dependencies]
-postgres = [
-  "SQLAlchemy>=2.0,<3",
-  "alembic>=1.13,<2",
-  "psycopg[binary]>=3.2,<4",
-]
-alpaca = [
-  "alpaca-py==0.44.0",
-]
+postgres = ["SQLAlchemy>=2.0,<3", "alembic>=1.13,<2", "psycopg[binary]>=3.2,<4"]
+alpaca = ["alpaca-py==0.44.0"]
 dev = [
   "build>=1.2",
   "coverage[toml]>=7.6",
@@ -90,20 +82,13 @@ root_package = "pytradekit"
 name = "Shared Kernel is independent"
 type = "forbidden"
 source_modules = ["pytradekit.shared"]
-forbidden_modules = [
-  "pytradekit.reference",
-  "pytradekit.runtime",
-  "pytradekit.testing",
-]
+forbidden_modules = ["pytradekit.reference", "pytradekit.runtime", "pytradekit.testing"]
 
 [[tool.importlinter.contracts]]
 name = "Reference domain is infrastructure independent"
 type = "forbidden"
 source_modules = ["pytradekit.reference.domain"]
-forbidden_modules = [
-  "pytradekit.runtime",
-  "pytradekit.testing",
-]
+forbidden_modules = ["pytradekit.runtime", "pytradekit.testing"]
 
 [[tool.importlinter.contracts]]
 name = "Runtime ports do not depend on adapters"
@@ -115,25 +100,16 @@ forbidden_modules = ["pytradekit.runtime.adapters"]
 name = "Strategy domain is broker independent"
 type = "forbidden"
 source_modules = ["pytradekit.strategy.domain"]
-forbidden_modules = [
-  "pytradekit.brokers",
-  "pytradekit.backtesting.adapters",
-]
+forbidden_modules = ["pytradekit.brokers", "pytradekit.backtesting.adapters"]
 
 [[tool.importlinter.contracts]]
 name = "Market data domain is strategy and broker independent"
 type = "forbidden"
 source_modules = ["pytradekit.market_data.domain"]
-forbidden_modules = [
-  "pytradekit.strategy",
-  "pytradekit.brokers",
-]
+forbidden_modules = ["pytradekit.strategy", "pytradekit.brokers"]
 
 [[tool.importlinter.contracts]]
 name = "Reconciliation domain is provider independent"
 type = "forbidden"
 source_modules = ["pytradekit.reconciliation.domain"]
-forbidden_modules = [
-  "pytradekit.brokers.adapters",
-  "pytradekit.persistence",
-]
+forbidden_modules = ["pytradekit.brokers.adapters", "pytradekit.persistence"]
