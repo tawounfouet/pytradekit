@@ -33,6 +33,8 @@ services:
       PYTRADEKIT_ALPACA_SECRET_KEY_REF: file:///run/secrets/alpaca_secret_key
       PYTRADEKIT_DATABASE_URL_REF: file:///run/secrets/database_url
       PYTRADEKIT_SECRET_FILE_ROOT: /run/secrets
+      PYTRADEKIT_DATABASE_REQUIRE_TLS: "false"
+      PYTRADEKIT_RUN_MIGRATIONS: "1"
     secrets:
       - alpaca_api_key
       - alpaca_secret_key

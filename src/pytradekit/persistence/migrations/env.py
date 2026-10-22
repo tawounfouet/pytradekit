@@ -1,9 +1,12 @@
 """Alembic environment for PyTradeKit PostgreSQL persistence."""
 
+import os
 from logging.config import fileConfig
+from pathlib import Path
 
 from alembic import context
 from sqlalchemy import engine_from_config, pool
+from sqlalchemy.engine import make_url
 
 from pytradekit.execution.adapters.postgres import models as execution_models
 from pytradekit.orders.adapters.postgres import models as order_models
@@ -12,6 +15,8 @@ from pytradekit.persistence.database import Base
 from pytradekit.portfolio.adapters.postgres import models as portfolio_models
 from pytradekit.reconciliation.adapters.postgres import models as reconciliation_models
 from pytradekit.risk.adapters.postgres import models as risk_models
+from pytradekit.runtime.adapters import build_default_secrets
+from pytradekit.runtime.configuration import SecretRef
 
 config = context.config
 
@@ -28,6 +33,39 @@ _registered_models = (
     reconciliation_models,
 )
 target_metadata = Base.metadata
+
+
+def _database_url() -> str:
+    reference = SecretRef(
+        os.environ.get(
+            "PYTRADEKIT_DATABASE_URL_REF",
+            "env://PYTRADEKIT_DATABASE_URL",
+        )
+    )
+    secret_root = Path(
+        os.environ.get("PYTRADEKIT_SECRET_FILE_ROOT", "/run/secrets")
+    )
+    raw_url = build_default_secrets(file_root=secret_root).resolve(reference)
+    require_tls = (
+        os.environ.get("PYTRADEKIT_DATABASE_REQUIRE_TLS", "true")
+        .strip()
+        .lower()
+        not in {"0", "false", "no"}
+    )
+    url = make_url(raw_url)
+    if require_tls and url.query.get("sslmode") is None:
+        url = url.update_query_dict({"sslmode": "require"})
+    return url.render_as_string(hide_password=False)
+
+
+def _configure_database_url() -> None:
+    config.set_main_option(
+        "sqlalchemy.url",
+        _database_url().replace("%", "%%"),
+    )
+
+
+_configure_database_url()
 
 
 def run_migrations_offline() -> None:

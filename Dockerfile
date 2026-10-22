@@ -9,8 +9,9 @@ RUN groupadd --gid 10001 pytradekit \
 
 WORKDIR /app
 
-COPY pyproject.toml README.md LICENSE ./
+COPY pyproject.toml README.md LICENSE alembic.ini ./
 COPY src ./src
+COPY --chmod=755 scripts/container_entrypoint.sh /usr/local/bin/pytradekit-entrypoint
 
 RUN python -m pip install --upgrade pip \
     && python -m pip install ".[postgres,alpaca]"
@@ -22,5 +23,5 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health/live', timeout=3).read()"
 
-ENTRYPOINT ["pytradekit"]
+ENTRYPOINT ["pytradekit-entrypoint"]
 CMD ["serve-health", "--host", "0.0.0.0", "--port", "8080"]

@@ -7,6 +7,7 @@ from tests.architecture._imports import python_sources
 CONFIG = Path("src/pytradekit/runtime/configuration.py")
 COMPOSE = Path("docker-compose.yml")
 DOCKERFILE = Path("Dockerfile")
+ALEMBIC = Path("alembic.ini")
 
 
 def test_ff_047_0_7_cannot_enable_live_runtime() -> None:
@@ -40,3 +41,10 @@ def test_container_runs_unprivileged_and_exposes_read_only_health() -> None:
     assert "read_only: true" in compose
     assert "no-new-privileges:true" in compose
     assert "cap_drop:" in compose
+
+
+def test_alembic_configuration_contains_no_persisted_database_url() -> None:
+    source = ALEMBIC.read_text(encoding="utf-8")
+
+    assert "postgresql+psycopg://" not in source
+    assert "sqlalchemy.url =" in source
