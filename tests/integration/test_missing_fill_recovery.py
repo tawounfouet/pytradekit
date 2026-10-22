@@ -37,7 +37,7 @@ USD = Currency("USD")
 
 
 def test_same_external_fill_has_one_canonical_economic_effect(
-    postgres_session_factory: sessionmaker[Session],
+    postgres_session: Session,
 ) -> None:
     account_id = AccountId.new()
     instrument_id = InstrumentId.new()
@@ -59,8 +59,14 @@ def test_same_external_fill_has_one_canonical_economic_effect(
     )
     order.pull_domain_events()
 
+    isolated_factory: sessionmaker[Session] = sessionmaker(
+        bind=postgres_session.connection(),
+        expire_on_commit=False,
+        join_transaction_mode="create_savepoint",
+    )
+
     def uow_factory() -> PostgresUnitOfWork:
-        return PostgresUnitOfWork(postgres_session_factory)
+        return PostgresUnitOfWork(isolated_factory)
 
     with uow_factory() as uow:
         uow.accounts.save(
