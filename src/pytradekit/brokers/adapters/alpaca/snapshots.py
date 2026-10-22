@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import Protocol
+from uuid import UUID
 
 from alpaca.data.enums import DataFeed
 from alpaca.data.models.quotes import Quote as AlpacaQuote
@@ -35,7 +36,7 @@ from .mappers import (
 class AlpacaSnapshotTradingClient(Protocol):
     """Read-only Trading API surface required by LOT-08."""
 
-    def get_asset(self, symbol_or_asset_id: object) -> object:
+    def get_asset(self, symbol_or_asset_id: UUID | str) -> object:
         """Return one provider asset."""
 
         ...
@@ -110,7 +111,7 @@ class AlpacaMarketDataSnapshots:
         """Load and translate one Alpaca US equity asset."""
 
         mapping = self._require_mapping(instrument_id)
-        lookup: object = mapping.external_id or mapping.external_symbol
+        lookup: UUID | str = mapping.external_id or mapping.external_symbol
 
         try:
             response = self._trading_client.get_asset(lookup)
