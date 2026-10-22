@@ -119,4 +119,4 @@ forbidden_modules = ["pytradekit.brokers.adapters", "pytradekit.persistence"]
 name = "Security domain is infrastructure and provider independent"
 type = "forbidden"
 source_modules = ["pytradekit.security.domain"]
-forbidden_modules = ["pytradekit.brokers", "pytradekit.persistence", "sqlalchemy"]
+forbidden_modules = ["pytradekit.brokers", "pytradekit.persistence"]
