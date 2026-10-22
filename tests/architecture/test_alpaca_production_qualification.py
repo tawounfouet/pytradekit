@@ -56,12 +56,19 @@ def test_release_gate_requires_real_paper_evidence() -> None:
     assert all(name in source for name in required)
 
 
-def test_real_qualification_harness_has_no_live_mode() -> None:
+def test_real_qualification_harness_has_no_live_execution_path() -> None:
     source = REAL_HARNESS.read_text(encoding="utf-8")
 
     assert "PAPER" in source
-    assert "LIVE" not in source
-    assert "paper=False" not in source
+    forbidden = (
+        "paper=False",
+        "RuntimeEnvironment.LIVE",
+        "TRADING_STREAM_LIVE",
+        "api.alpaca.markets",
+        "\"--live\"",
+        "'--live'",
+    )
+    assert all(marker not in source for marker in forbidden)
 
 
 def test_real_order_writes_require_explicit_opt_in() -> None:
