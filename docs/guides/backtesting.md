@@ -80,7 +80,7 @@ Construct RunBacktestCommand with:
 Then execute:
 
 ~~~python
-report = RunBacktest().execute(command)
+report = RunBacktest(authorization_gate=authorization_gate).execute(command)
 ~~~
 
 ## Inspect the report
@@ -109,8 +109,8 @@ BacktestMetrics contains:
 For a deterministic strategy and unchanged inputs:
 
 ~~~python
-first = RunBacktest().execute(command)
-second = RunBacktest().execute(command)
+first = RunBacktest(authorization_gate=authorization_gate).execute(command)
+second = RunBacktest(authorization_gate=authorization_gate).execute(command)
 
 assert first == second
 ~~~

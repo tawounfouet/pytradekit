@@ -6,6 +6,45 @@ The project is currently pre-1.0 and public APIs remain experimental unless expl
 
 ## [Unreleased]
 
+## [0.7.0a2] - 2026-10-22
+
+### Added
+
+- LOT-02 Authorization & Scoped Permissions.
+- AuthorizationDecision, AuthorizationPolicy, AuthorizationService, and stable reason codes.
+- PrincipalProvider and authorization audit ports.
+- Explicit SUBMIT_ORDER and CANCEL_ORDER authorization before economic side effects.
+- Negative and property tests for missing permissions, disabled actors, expired assignments, and scope mismatch.
+- E2E proof that denied order actions never reach ExecutionPort.
+
+### Safety
+
+- SubmitOrder and CancelOrder require an explicit OrderAuthorizationGatePort.
+- Orders depends on a consumer-owned authorization port and does not import Security directly.
+- Missing account context fails closed on sensitive order actions.
+- LIVE remains unavailable.
+
+## [0.7.0a1] - 2026-10-22
+
+### Added
+
+- LOT-01 Identity, Actors & RBAC.
+- Typed ActorId, ActorType, Actor, RoleId, Role, Permission, and PermissionSet.
+- AuthenticatedPrincipal and PrincipalContext.
+- Typed environment, account, and operation authorization scopes.
+- Time-bound RoleAssignment with deterministic expiry.
+- In-memory and PostgreSQL security repositories.
+- Alembic security schema migration.
+- FF-036 provider independence for security.domain.
+
+### Safety
+
+- Security domain is provider-neutral and SQLAlchemy-independent.
+- Actor contains no password or secret.
+- Scope wildcard semantics use typed values rather than magic strings.
+- LIVE remains unavailable.
+
+
 ## [0.6.0] - 2026-10-22
 
 ### Qualified Release

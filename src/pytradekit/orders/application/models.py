@@ -43,6 +43,7 @@ class CancelOrderCommand:
     """Application command for cancelling an existing order."""
 
     order_id: OrderId
+    account_id: AccountId | None = None
 
 
 @dataclass(frozen=True, slots=True)

@@ -27,6 +27,7 @@ from pytradekit.strategy import (
     StrategyVersion,
     TargetPosition,
 )
+from pytradekit.testing import ExplicitTestOrderAuthorizationGate
 
 
 class GoldenStrategy:
@@ -138,7 +139,9 @@ def _golden_inputs() -> RunBacktestCommand:
 
 
 def test_golden_backtest_reuses_core_and_has_expected_economics() -> None:
-    report = RunBacktest().execute(_golden_inputs())
+    report = RunBacktest(
+        authorization_gate=ExplicitTestOrderAuthorizationGate()
+    ).execute(_golden_inputs())
     assert report.final_nav.amount == Decimal("10020")
     assert report.metrics.number_of_orders == 2
     assert report.metrics.number_of_fills == 2
@@ -148,6 +151,10 @@ def test_golden_backtest_reuses_core_and_has_expected_economics() -> None:
 
 
 def test_same_manifest_replays_to_same_semantic_report() -> None:
-    first = RunBacktest().execute(_golden_inputs())
-    second = RunBacktest().execute(_golden_inputs())
+    first = RunBacktest(
+        authorization_gate=ExplicitTestOrderAuthorizationGate()
+    ).execute(_golden_inputs())
+    second = RunBacktest(
+        authorization_gate=ExplicitTestOrderAuthorizationGate()
+    ).execute(_golden_inputs())
     assert first == second

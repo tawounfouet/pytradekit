@@ -14,12 +14,14 @@ from pytradekit.orders.application import (
     SubmitOrder,
     SubmitOrderCommand,
 )
+from pytradekit.portfolio.domain import AccountId
 from pytradekit.shared import CorrelationId, Currency, InstrumentId, Price, Quantity
-from pytradekit.testing import FakeClock
+from pytradekit.testing import ExplicitTestOrderAuthorizationGate, FakeClock
 
 NOW = datetime(2026, 10, 21, 20, 0, tzinfo=UTC)
 USD = Currency("USD")
 PRICE = Price(Decimal("101.25"), USD)
+ACCOUNT_ID = AccountId.new()
 
 
 def _command(*, order_type: OrderType = OrderType.MARKET) -> SubmitOrderCommand:
@@ -30,6 +32,7 @@ def _command(*, order_type: OrderType = OrderType.MARKET) -> SubmitOrderCommand:
         quantity=Quantity(Decimal("10")),
         time_in_force=TimeInForce.DAY,
         correlation_id=CorrelationId.new(),
+        account_id=ACCOUNT_ID,
         limit_price=PRICE if order_type is OrderType.LIMIT else None,
     )
 
@@ -47,7 +50,12 @@ def test_market_order_partial_fill_then_full_fill() -> None:
         ),
         clock=clock,
     )
-    submit = SubmitOrder(repository=repository, execution=execution, clock=clock)
+    submit = SubmitOrder(
+        repository=repository,
+        execution=execution,
+        clock=clock,
+        authorization_gate=ExplicitTestOrderAuthorizationGate(),
+    )
     handle = HandleExecutionReport(repository=repository)
     get_order = GetOrder(repository=repository)
 
@@ -71,16 +79,31 @@ def test_limit_order_can_be_cancelled_after_acceptance() -> None:
         scenario=FakeExecutionScenario.accept_immediately(),
         clock=clock,
     )
-    submit = SubmitOrder(repository=repository, execution=execution, clock=clock)
+    submit = SubmitOrder(
+        repository=repository,
+        execution=execution,
+        clock=clock,
+        authorization_gate=ExplicitTestOrderAuthorizationGate(),
+    )
     handle = HandleExecutionReport(repository=repository)
-    cancel = CancelOrder(repository=repository, execution=execution, clock=clock)
+    cancel = CancelOrder(
+        repository=repository,
+        execution=execution,
+        clock=clock,
+        authorization_gate=ExplicitTestOrderAuthorizationGate(),
+    )
     get_order = GetOrder(repository=repository)
 
     submitted = submit.execute(_command(order_type=OrderType.LIMIT))
     for report in execution.drain_reports(submitted.order.order_id):
         handle.execute(report)
 
-    cancellation = cancel.execute(CancelOrderCommand(order_id=submitted.order.order_id))
+    cancellation = cancel.execute(
+        CancelOrderCommand(
+            order_id=submitted.order.order_id,
+            account_id=ACCOUNT_ID,
+        )
+    )
     assert cancellation.order.status is OrderStatus.CANCEL_REQUESTED
 
     for report in execution.drain_reports(submitted.order.order_id):

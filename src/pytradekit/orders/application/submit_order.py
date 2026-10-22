@@ -10,6 +10,7 @@ from pytradekit.orders.domain import InvalidOrderError, Order, OrderId, OrderTyp
 from pytradekit.orders.ports import (
     ConsistencyGatePort,
     ExecutionPort,
+    OrderAuthorizationGatePort,
     OrderRepository,
     RiskEvaluationPort,
 )
@@ -27,15 +28,23 @@ class SubmitOrder:
         clock: ClockPort,
         risk: RiskEvaluationPort | None = None,
         consistency_gate: ConsistencyGatePort | None = None,
+        authorization_gate: OrderAuthorizationGatePort,
     ) -> None:
         self._repository = repository
         self._execution = execution
         self._clock = clock
         self._risk = risk
         self._consistency_gate = consistency_gate
+        self._authorization_gate = authorization_gate
 
     def execute(self, command: SubmitOrderCommand) -> SubmitOrderResult:
         """Execute one order submission without blind retry or safety bypass."""
+        account_id = command.account_id
+        if account_id is None:
+            raise InvalidOrderError(
+                "Order submission requires account_id for authorization."
+            )
+        self._authorization_gate.ensure_submit_allowed(account_id)
 
         order_id = command.order_id or OrderId.new()
         now = self._clock.now()

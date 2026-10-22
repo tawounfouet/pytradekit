@@ -4,13 +4,13 @@ PyTradeKit is a domain-first, broker-agnostic trading framework designed around 
 
 ## Current milestone
 
-PyTradeKit 0.6.0 - Reconciliation & Recovery
+PyTradeKit 0.7.0a2 - Authorization & Scoped Permissions
 
-PyTradeKit 0.6 formalizes reconciliation as a first-class domain and recovery capability on top of the durable Alpaca PAPER runtime delivered in 0.5.
+PyTradeKit 0.7 adds explicit identity, scoped RBAC, and authorization on top of the qualified reconciliation and recovery baseline.
 
-PyTradeKit 0.6.0 is the Qualified Release for Reconciliation & Recovery. LOT-01 through LOT-08 are complete, and the failure matrix is qualified end to end across deterministic, PostgreSQL, architecture, fault, and release-artifact gates.
+PyTradeKit 0.7.0a2 delivers LOT-01 and LOT-02: Identity, Actors & RBAC plus Authorization & Scoped Permissions.
 
-The Alpaca integration remains PAPER-only. LIVE trading is not available or qualified in 0.6.0.
+The Alpaca integration remains PAPER-only. LIVE trading is not available or qualified in 0.7.0a2.
 
 ## Requirements
 
@@ -48,7 +48,7 @@ pytradekit --version
 Current release version:
 
 ~~~text
-0.6.0
+0.7.0a2
 ~~~
 
 ## Milestone flow

@@ -12,6 +12,7 @@ def test_fresh_database_contains_persistence_schemas(postgres_engine: Engine) ->
     assert "risk" in inspector.get_schema_names()
     assert "runtime" in inspector.get_schema_names()
     assert "reconciliation" in inspector.get_schema_names()
+    assert "security" in inspector.get_schema_names()
 
     assert "orders" in inspector.get_table_names(schema="orders")
     assert "fills" in inspector.get_table_names(schema="execution")
@@ -24,3 +25,7 @@ def test_fresh_database_contains_persistence_schemas(postgres_engine: Engine) ->
     assert "runs" in inspector.get_table_names(schema="reconciliation")
     assert "mismatches" in inspector.get_table_names(schema="reconciliation")
     assert "resolutions" in inspector.get_table_names(schema="reconciliation")
+    assert "actors" in inspector.get_table_names(schema="security")
+    assert "roles" in inspector.get_table_names(schema="security")
+    assert "role_permissions" in inspector.get_table_names(schema="security")
+    assert "role_assignments" in inspector.get_table_names(schema="security")
