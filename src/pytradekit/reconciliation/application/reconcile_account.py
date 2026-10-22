@@ -9,6 +9,7 @@ from pytradekit.reconciliation.application.resolve_mismatch import ResolveMismat
 from pytradekit.reconciliation.application.verify_reconciliation import VerifyReconciliation
 from pytradekit.reconciliation.domain import (
     BrokerSnapshot,
+    JsonEvidence,
     Mismatch,
     MismatchId,
     MismatchSeverity,
@@ -317,7 +318,7 @@ def _same_economic_cut(
     return False
 
 
-def _watermark_evidence(watermark: SnapshotWatermark) -> dict[str, str | int | None]:
+def _watermark_evidence(watermark: SnapshotWatermark) -> JsonEvidence:
     return {
         "captured_at": watermark.captured_at.isoformat(),
         "internal_version": watermark.internal_version,

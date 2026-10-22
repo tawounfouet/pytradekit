@@ -6,6 +6,7 @@ from datetime import datetime
 
 from pytradekit.reconciliation.domain import (
     CanonicalPosition,
+    JsonEvidence,
     Mismatch,
     MismatchSeverity,
     MismatchType,
@@ -92,7 +93,7 @@ class PositionComparator:
         return sort_mismatches(result)
 
 
-def _evidence(position: CanonicalPosition) -> dict[str, str]:
+def _evidence(position: CanonicalPosition) -> JsonEvidence:
     return {
         "instrument_id": str(position.instrument_id),
         "quantity": str(position.quantity),

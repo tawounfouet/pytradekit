@@ -6,6 +6,7 @@ from datetime import datetime
 
 from pytradekit.reconciliation.domain import (
     CanonicalBalance,
+    JsonEvidence,
     Mismatch,
     MismatchSeverity,
     MismatchType,
@@ -53,7 +54,7 @@ class BalanceComparator:
         return sort_mismatches(result)
 
 
-def _evidence(balance: CanonicalBalance | None) -> dict[str, str] | None:
+def _evidence(balance: CanonicalBalance | None) -> JsonEvidence | None:
     if balance is None:
         return None
     return {

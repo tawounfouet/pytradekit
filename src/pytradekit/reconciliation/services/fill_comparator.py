@@ -6,6 +6,7 @@ from datetime import datetime
 
 from pytradekit.reconciliation.domain import (
     CanonicalFill,
+    JsonEvidence,
     Mismatch,
     MismatchSeverity,
     MismatchType,
@@ -93,7 +94,7 @@ class FillComparator:
         return sort_mismatches(result)
 
 
-def _evidence(fill: CanonicalFill) -> dict[str, str]:
+def _evidence(fill: CanonicalFill) -> JsonEvidence:
     return {
         "external_fill_id": fill.external_fill_id,
         "order_id": str(fill.order_id) if fill.order_id is not None else "",

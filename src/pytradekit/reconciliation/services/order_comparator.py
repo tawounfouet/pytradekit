@@ -6,6 +6,7 @@ from datetime import datetime
 
 from pytradekit.reconciliation.domain import (
     CanonicalOrder,
+    JsonEvidence,
     Mismatch,
     MismatchSeverity,
     MismatchType,
@@ -163,7 +164,7 @@ def _sort_key(order: CanonicalOrder) -> tuple[str, str, str]:
     )
 
 
-def _evidence(order: CanonicalOrder) -> dict[str, str | bool]:
+def _evidence(order: CanonicalOrder) -> JsonEvidence:
     return {
         "order_id": str(order.order_id) if order.order_id is not None else "",
         "client_order_id": order.client_order_id or "",

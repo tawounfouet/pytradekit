@@ -22,7 +22,10 @@ class ExternalActivityClassification:
 class ExternalActivityClassifier:
     """Classify only what stable canonical identity proves."""
 
-    def classify_order(self, order: CanonicalOrder) -> ExternalActivityClassification:
+    def classify_order(
+        self,
+        order: CanonicalOrder,
+    ) -> ExternalActivityClassification:
         if order.order_id is not None:
             return ExternalActivityClassification(
                 entity_type="order",
@@ -40,7 +43,11 @@ class ExternalActivityClassifier:
             reason="No canonical order identity proves the origin.",
         )
 
-    def classify_fill(self, fill: CanonicalFill) -> ExternalActivityClassification:
+    def classify_fill(
+        self,
+        fill: CanonicalFill,
+    ) -> ExternalActivityClassification:
+        origin: ExternalActivityOrigin
         if fill.origin is not ExternalActivityOrigin.INTERNAL:
             origin = fill.origin
         elif fill.order_id is not None:
