@@ -39,6 +39,10 @@ from pytradekit.shared import Currency
 
 from .contract import ALPACA_PROVIDER_KEY
 from .errors import AlpacaOperation, translate_alpaca_error
+from .generic_reconciliation import (
+    AlpacaGenericReconciliationRuntime,
+    build_alpaca_generic_reconciliation_runtime,
+)
 from .execution import AlpacaExecutionAdapter
 from .mappers import map_order_state_snapshot
 from .reference_resolver import StaticAlpacaReferenceResolver
@@ -259,16 +263,21 @@ class AlpacaPaperRuntimeSystem:
     trade_updates: AlpacaTradeUpdateProcessor
     stream: AlpacaTradeUpdateStreamRunner
     coordinator: AlpacaStartupCoordinator
+    reconciliation: AlpacaGenericReconciliationRuntime
 
     def start(self) -> TradingReadinessReport:
         """Run startup reconciliation and return full trading readiness."""
 
-        return self.coordinator.start()
+        baseline = self.coordinator.start()
+        return self.reconciliation.startup(baseline)
 
     def stop(self) -> None:
-        """Stop private provider streaming."""
+        """Stop private provider streaming and reconciliation resources."""
 
-        self.coordinator.stop()
+        try:
+            self.coordinator.stop()
+        finally:
+            self.reconciliation.close()
 
 
 def build_alpaca_paper_runtime_system(
@@ -318,12 +327,20 @@ def build_alpaca_paper_runtime_system(
         account_id=account_id,
         provider_account_mask=composition.profile.masked_account_id,
     )
+    reconciliation = build_alpaca_generic_reconciliation_runtime(
+        composition=composition,
+        snapshots=snapshots,
+        account_id=account_id,
+        clock=clock,
+        uow_factory=uow_factory,
+    )
     return AlpacaPaperRuntimeSystem(
         execution=execution,
         snapshots=snapshots,
         trade_updates=trade_updates,
         stream=stream,
         coordinator=coordinator,
+        reconciliation=reconciliation,
     )
 
 
