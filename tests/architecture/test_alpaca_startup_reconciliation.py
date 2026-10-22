@@ -79,3 +79,12 @@ def test_no_live_environment_is_introduced_by_lot09() -> None:
 
     assert "TRADING_STREAM_LIVE" not in combined
     assert "paper=False" not in combined
+
+
+def test_runtime_startup_delegates_to_generic_reconciliation_gate() -> None:
+    source = STARTUP_PATH.read_text(encoding="utf-8")
+
+    baseline_position = source.index("baseline = self.coordinator.start()")
+    generic_position = source.index("return self.reconciliation.startup(baseline)")
+
+    assert baseline_position < generic_position
