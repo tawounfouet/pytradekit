@@ -6,6 +6,41 @@ The project is currently pre-1.0 and public APIs remain experimental unless expl
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-10-22
+
+### Stable Qualified Release
+
+- Security, Governance & Production Operations milestone completed through LOT-08.
+- Identity, Actors & RBAC qualified.
+- Scoped authorization and negative provider-reachability proofs qualified.
+- SafetyState, SafetyDecision and SafetyGate qualified.
+- KillSwitch and RiskOverride governance qualified with durable PostgreSQL state.
+- Health, liveness, operational readiness, metrics, tracing and stateful alerting qualified.
+- Secrets and single-node deployment hardening qualified.
+- Adversarial production qualification promoted from 0.7.0rc2 without functional scope expansion.
+- 563 tests pass on the stable release candidate, with dedicated 0.7 production qualification, architecture, fault, deployment and artifact gates.
+- PostgreSQL stale governance writers are rejected through optimistic concurrency.
+- Release artifacts are rebuilt, clean-installed and smoke-tested before publication.
+
+### Safety
+
+- Unauthorized sensitive actions cannot reach the execution provider.
+- Safety-denied actions cannot reach the execution provider.
+- KillSwitch cannot be bypassed by RiskOverride.
+- UNKNOWN and INCONSISTENT economic truth cannot be overridden.
+- Expired RiskOverride cannot bypass configured risk policy.
+- Critical health failures close unsafe admission.
+- Alert sink and telemetry failures cannot corrupt economic state.
+- Secret-provider failures fail closed without leaking credential material.
+- LIVE remains unavailable by design.
+
+### Compatibility
+
+- Python 3.12+.
+- Alpaca remains PAPER-only and pinned to alpaca-py==0.44.0.
+- Production-like deployment baseline remains single-node.
+- Public APIs remain pre-1.0 and experimental unless explicitly documented otherwise.
+
 ## [0.7.0rc2] - 2026-10-22
 
 ### Added
