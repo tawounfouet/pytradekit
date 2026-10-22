@@ -22,6 +22,11 @@ classifiers = [
 dependencies = []
 
 [project.optional-dependencies]
+postgres = [
+  "SQLAlchemy>=2.0,<3",
+  "alembic>=1.13,<2",
+  "psycopg[binary]>=3.2,<4",
+]
 dev = [
   "build>=1.2",
   "coverage[toml]>=7.6",
