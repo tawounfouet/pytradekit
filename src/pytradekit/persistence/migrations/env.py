@@ -59,7 +59,8 @@ def _database_url() -> str:
 
 
 def _configure_database_url() -> None:
-    if config.get_main_option("sqlalchemy.url").strip():
+    current_url = config.get_main_option("sqlalchemy.url") or ""
+    if current_url.strip():
         return
     config.set_main_option(
         "sqlalchemy.url",
