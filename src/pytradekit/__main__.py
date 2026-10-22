@@ -7,8 +7,12 @@ import json
 import os
 from collections.abc import Sequence
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from pytradekit import __version__
+
+if TYPE_CHECKING:
+    from pytradekit.runtime.deployment import DeploymentPreflight
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -48,7 +52,7 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _build_preflight(*, local_development: bool):
+def _build_preflight(*, local_development: bool) -> DeploymentPreflight:
     from pytradekit.runtime import RuntimeProfile, RuntimeSecurityConfig
     from pytradekit.runtime.adapters import build_default_secrets
     from pytradekit.runtime.deployment import DeploymentPreflight
