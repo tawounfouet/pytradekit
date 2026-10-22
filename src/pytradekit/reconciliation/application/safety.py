@@ -14,6 +14,7 @@ from pytradekit.reconciliation.domain import (
     ReconciliationRunId,
     StateConfidence,
 )
+from pytradekit.strategy.ports import StrategyAdmissionPort
 
 
 class UnsafeConsistencyError(RuntimeError):
@@ -58,22 +59,25 @@ class ConsistencyRegistry:
             return self._evidence.get(account_id)
 
 
-class ConsistencyAdmissionPolicy(ConsistencyGatePort):
+class ConsistencyAdmissionPolicy(ConsistencyGatePort, StrategyAdmissionPort):
     """Allow new risk only for CONSISTENT + HIGH evidence."""
 
     def __init__(self, registry: ConsistencyRegistry) -> None:
         self._registry = registry
 
     def ensure_risk_increase_allowed(self, account_id: AccountId) -> None:
-        evidence = self._registry.get(account_id)
-        if evidence is None:
-            raise UnsafeConsistencyError(
-                "Risk increase is blocked because no reconciliation evidence exists."
-            )
-        if (
-            evidence.status is not ConsistencyStatus.CONSISTENT
-            or evidence.confidence is not StateConfidence.HIGH
-        ):
+        if not self.allow_new_targets(account_id):
             raise UnsafeConsistencyError(
                 "Risk increase is blocked by reconciliation consistency or confidence."
             )
+
+    def allow_new_targets(self, account_id: AccountId) -> bool:
+        """Return whether strategy and order paths may create new risk targets."""
+
+        evidence = self._registry.get(account_id)
+        if evidence is None:
+            return False
+        return (
+            evidence.status is ConsistencyStatus.CONSISTENT
+            and evidence.confidence is StateConfidence.HIGH
+        )
