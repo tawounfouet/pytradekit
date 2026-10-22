@@ -7,7 +7,7 @@ from pytradekit.orders.ports.portfolio_effect_port import PortfolioEffectPort
 from pytradekit.orders.ports.risk_evaluation_port import RiskEvaluationPort, RiskGateResult
 
 __all__ = [
-    "ConsistencyGatePort",
+    "ConsistencyGatePort",\n    "OrderAuthorizationGatePort",
     "ExecutionPort",
     "OrderRepository",
     "PortfolioEffectPort",

@@ -3,6 +3,10 @@
 from pytradekit.security.domain.actor import Actor
 from pytradekit.security.domain.actor_id import ActorId
 from pytradekit.security.domain.actor_type import ActorType
+from pytradekit.security.domain.authorization_decision import (
+    AuthorizationDecision,
+    AuthorizationReason,
+)
 from pytradekit.security.domain.authorization_scope import (
     AccountScopeKind,
     AuthorizationEnvironment,
@@ -22,7 +26,9 @@ __all__ = [
     "ActorId",
     "ActorType",
     "AuthenticatedPrincipal",
+    "AuthorizationDecision",
     "AuthorizationEnvironment",
+    "AuthorizationReason",
     "AuthorizationScope",
     "OperationScopeKind",
     "Permission",

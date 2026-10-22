@@ -4,7 +4,7 @@ PyTradeKit is a domain-first, broker-agnostic trading framework designed around 
 
 ## Current milestone
 
-PyTradeKit 0.7.0a1 - Identity, Actors & RBAC
+PyTradeKit 0.7.0a2 - Authorization & Scoped Permissions
 
 PyTradeKit 0.6 formalizes reconciliation as a first-class domain and recovery capability on top of the durable Alpaca PAPER runtime delivered in 0.5.
 
