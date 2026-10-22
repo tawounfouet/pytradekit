@@ -4,7 +4,6 @@ from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
 import pytest
-
 from tests.compliance_fakes import compliance_manifest
 
 from pytradekit.brokers.compliance import (
