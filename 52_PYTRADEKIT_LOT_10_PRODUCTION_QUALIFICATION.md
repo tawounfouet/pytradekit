@@ -4,7 +4,7 @@
 **Milestone :** `0.5.x - Persistence + Alpaca Paper`  
 **Lot :** `LOT-10 - Production Qualification`  
 **Date :** 2026-10-22  
-**Statut :** Implementation complete - real PAPER evidence pending  
+**Statut :** CI qualified - real PAPER evidence pending  
 **Provider :** Alpaca PAPER  
 **SDK gele :** `alpaca-py==0.44.0`  
 **LIVE :** out of scope
@@ -1698,9 +1698,32 @@ No Alpaca credentials are available to this implementation session.
 
 ---
 
-## 118. Current expected evidence state
+## 118. Current evidence state
 
-After CI passes but before real PAPER execution:
+Deterministic qualification is complete.
+
+GitHub Actions:
+
+```text
+run_number = 159
+run_id     = 39724152573
+head       = f079e0ef9cad637b54398b9e2841fc666931a13d
+```
+
+Qualified gates:
+
+```text
+Typography                         PASS
+Ruff                               PASS
+mypy strict                        PASS - 360 source files
+Import architecture                PASS
+Architecture/public contracts      PASS - 77 tests
+Production fault qualification     PASS - 26 tests
+Full test suite                    PASS - 396 tests
+Release artifact qualification     PASS
+```
+
+Release evidence therefore stands at:
 
 ```text
 ci_quality_gate                    PASS
@@ -1772,7 +1795,7 @@ LOT-06 Alpaca Anti-Corruption Layer          DONE
 LOT-07 Alpaca Execution                      DONE
 LOT-08 Alpaca Market Data & Snapshots        DONE
 LOT-09 Startup, Restart & E2E Reconciliation DONE
-LOT-10 Production Qualification              IMPLEMENTED
+LOT-10 Production Qualification              CI QUALIFIED
 
 v0.5.0 final release                         REAL PAPER GATE PENDING
 ```
