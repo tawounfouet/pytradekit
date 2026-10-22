@@ -14,7 +14,7 @@ from alpaca.data.requests import StockLatestQuoteRequest
 from alpaca.trading.client import TradingClient
 from alpaca.trading.enums import OrderSide, OrderStatus, OrderType, TimeInForce
 from alpaca.trading.models import Order
-from alpaca.trading.requests import OrderRequest
+from alpaca.trading.requests import LimitOrderRequest, OrderRequest
 from alpaca.trading.stream import TradingStream
 
 from pytradekit.brokers.adapters.alpaca.controlled_order_probe import (
@@ -154,7 +154,7 @@ class _FakeCommandClient:
         )
         side = cast(OrderSide, request.side)
         qty = Decimal(str(request.qty))
-        order_type = cast(OrderType, request.type)
+        order_type = request.type
 
         if order_type is OrderType.MARKET:
             status = OrderStatus.FILLED
@@ -164,7 +164,8 @@ class _FakeCommandClient:
         else:
             status = OrderStatus.NEW
             filled_qty = "0"
-            limit_price = str(request.limit_price)
+            limit_request = cast(LimitOrderRequest, request)
+            limit_price = str(limit_request.limit_price)
 
         order = _order(
             client_order_id=client_order_id,
