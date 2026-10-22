@@ -30,7 +30,7 @@ NOW = datetime(2026, 10, 22, 21, 10, tzinfo=UTC)
 
 
 class _FailingTraceExporter:
-    def export(self, record) -> None:
+    def export(self, record: TraceRecord) -> None:
         _ = record
         raise RuntimeError("collector unavailable")
 
