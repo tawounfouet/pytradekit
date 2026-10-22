@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 
 from pytradekit.portfolio.domain import AccountId
 from pytradekit.reconciliation.application.resolve_mismatch import ResolveMismatch
@@ -171,7 +172,16 @@ class ReconcileAccount:
                 account_id=account_id,
                 scope=scope,
             )
-            self._verify_applied(resolutions, initial, verification.mismatches)
+            verification_cut = min(
+                verification.internal.watermark.captured_at,
+                verification.broker.watermark.captured_at,
+            )
+            self._verify_applied(
+                resolutions,
+                initial,
+                verification.mismatches,
+                verification_cut=verification_cut,
+            )
 
             unresolved = sum(
                 item.status is not ResolutionStatus.VERIFIED for item in resolutions
@@ -297,6 +307,8 @@ class ReconcileAccount:
         resolutions: tuple[Resolution, ...],
         initial: tuple[Mismatch, ...],
         remaining: tuple[Mismatch, ...],
+        *,
+        verification_cut: datetime,
     ) -> None:
         initial_by_id = {item.id: item for item in initial}
         remaining_keys = {(item.type, item.entity_id) for item in remaining}
@@ -304,7 +316,13 @@ class ReconcileAccount:
             if resolution.status is not ResolutionStatus.APPLIED:
                 continue
             mismatch = initial_by_id[resolution.mismatch_id]
-            if (mismatch.type, mismatch.entity_id) in remaining_keys:
+            completed_at = resolution.completed_at
+            if completed_at is None or verification_cut <= completed_at:
+                resolution.mark_failed(
+                    completed_at=self._clock.now(),
+                    verification_status="verification_not_fresh",
+                )
+            elif (mismatch.type, mismatch.entity_id) in remaining_keys:
                 resolution.mark_failed(
                     completed_at=self._clock.now(),
                     verification_status="mismatch_remains",
