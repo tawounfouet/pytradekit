@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
 from uuid import uuid4
 
 from alpaca.trading.models import Order as AlpacaOrder
 from alpaca.trading.models import TradeUpdate
+import pytest
+from sqlalchemy import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from pytradekit.brokers import (
@@ -56,6 +58,25 @@ NOW = datetime(2026, 10, 22, 13, 0, tzinfo=UTC)
 USD = Currency("USD")
 PROVIDER_ACCOUNT_ID = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
 PROVIDER_ORDER_ID = "11111111-2222-3333-4444-555555555555"
+
+
+@pytest.fixture
+def lot09_session_factory(
+    postgres_engine: Engine,
+) -> Iterator[sessionmaker[Session]]:
+    """Keep real UoW commits visible inside a test and rollback all state afterwards."""
+
+    connection = postgres_engine.connect()
+    outer_transaction = connection.begin()
+    factory = sessionmaker(
+        bind=connection,
+        expire_on_commit=False,
+    )
+    try:
+        yield factory
+    finally:
+        outer_transaction.rollback()
+        connection.close()
 
 
 def _factory(
@@ -224,8 +245,9 @@ def _alpaca_order(order: Order, *, status: str, filled_qty: str) -> AlpacaOrder:
 
 
 def test_uncertain_order_converges_then_remains_converged_after_restart(
-    postgres_session_factory: sessionmaker[Session],
+    lot09_session_factory: sessionmaker[Session],
 ) -> None:
+    postgres_session_factory = lot09_session_factory
     account_id = AccountId.new()
     order = _submitted_order(uncertain=True)
     account_snapshot = _account_snapshot(account_id)
@@ -299,8 +321,9 @@ def test_uncertain_order_converges_then_remains_converged_after_restart(
 
 
 def test_trade_update_replay_applies_one_fill_one_portfolio_effect_and_one_outbox(
-    postgres_session_factory: sessionmaker[Session],
+    lot09_session_factory: sessionmaker[Session],
 ) -> None:
+    postgres_session_factory = lot09_session_factory
     account_id = AccountId.new()
     order = _submitted_order(uncertain=False)
     order.accept(
