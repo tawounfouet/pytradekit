@@ -12,14 +12,16 @@ from pytradekit.orders.application import (
     SubmitOrder,
     SubmitOrderCommand,
 )
+from pytradekit.portfolio.domain import AccountId
 from pytradekit.shared import CorrelationId, Currency, InstrumentId, Price, Quantity
-from pytradekit.testing import FakeClock
+from pytradekit.testing import ExplicitTestOrderAuthorizationGate, FakeClock
 
 
 def main() -> None:
     """Submit a market order and process deterministic partial fills."""
     clock = FakeClock.at(datetime(2026, 10, 21, 20, 0, tzinfo=UTC))
     repository = InMemoryOrderRepository()
+    account_id = AccountId.new()
     price = Price(Decimal("101.25"), Currency("USD"))
     execution = FakeExecutionAdapter(
         scenario=FakeExecutionScenario.partial_then_fill(
@@ -31,7 +33,12 @@ def main() -> None:
         ),
         clock=clock,
     )
-    submit = SubmitOrder(repository=repository, execution=execution, clock=clock)
+    submit = SubmitOrder(
+        repository=repository,
+        execution=execution,
+        clock=clock,
+        authorization_gate=ExplicitTestOrderAuthorizationGate(),
+    )
     handle = HandleExecutionReport(repository=repository)
     get_order = GetOrder(repository=repository)
 
@@ -43,6 +50,7 @@ def main() -> None:
             quantity=Quantity(Decimal("10")),
             time_in_force=TimeInForce.DAY,
             correlation_id=CorrelationId.new(),
+            account_id=account_id,
         )
     )
 

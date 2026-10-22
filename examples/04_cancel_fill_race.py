@@ -15,8 +15,9 @@ from pytradekit.orders.application import (
     SubmitOrder,
     SubmitOrderCommand,
 )
+from pytradekit.portfolio.domain import AccountId
 from pytradekit.shared import CorrelationId, Currency, InstrumentId, Price, Quantity
-from pytradekit.testing import FakeClock
+from pytradekit.testing import ExplicitTestOrderAuthorizationGate, FakeClock
 
 
 def main() -> None:
@@ -24,12 +25,24 @@ def main() -> None:
     now = datetime(2026, 10, 21, 20, 0, tzinfo=UTC)
     clock = FakeClock.at(now)
     repository = InMemoryOrderRepository()
+    account_id = AccountId.new()
     execution = FakeExecutionAdapter(
         scenario=FakeExecutionScenario.accept_immediately(),
         clock=clock,
     )
-    submit = SubmitOrder(repository=repository, execution=execution, clock=clock)
-    cancel = CancelOrder(repository=repository, execution=execution, clock=clock)
+    authorization = ExplicitTestOrderAuthorizationGate()
+    submit = SubmitOrder(
+        repository=repository,
+        execution=execution,
+        clock=clock,
+        authorization_gate=authorization,
+    )
+    cancel = CancelOrder(
+        repository=repository,
+        execution=execution,
+        clock=clock,
+        authorization_gate=authorization,
+    )
     handle = HandleExecutionReport(repository=repository)
     get_order = GetOrder(repository=repository)
 
@@ -41,12 +54,16 @@ def main() -> None:
             quantity=Quantity(Decimal("5")),
             time_in_force=TimeInForce.DAY,
             correlation_id=CorrelationId.new(),
+            account_id=account_id,
         )
     )
     execution.drain_reports(submitted.order.order_id)
 
     cancellation = cancel.execute(
-        CancelOrderCommand(order_id=submitted.order.order_id)
+        CancelOrderCommand(
+            order_id=submitted.order.order_id,
+            account_id=account_id,
+        )
     )
     cancel_reports = execution.drain_reports(submitted.order.order_id)
     print(f"after cancel request: {cancellation.order.status.value}")

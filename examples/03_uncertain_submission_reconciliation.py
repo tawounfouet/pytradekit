@@ -12,21 +12,28 @@ from pytradekit.orders.application import (
     SubmitOrder,
     SubmitOrderCommand,
 )
+from pytradekit.portfolio.domain import AccountId
 from pytradekit.shared import CorrelationId, InstrumentId, Quantity
-from pytradekit.testing import FakeClock
+from pytradekit.testing import ExplicitTestOrderAuthorizationGate, FakeClock
 
 
 def main() -> None:
     """Show timeout -> uncertainty -> query -> safe convergence."""
     clock = FakeClock.at(datetime(2026, 10, 21, 20, 0, tzinfo=UTC))
     repository = InMemoryOrderRepository()
+    account_id = AccountId.new()
     execution = FakeExecutionAdapter(
         scenario=FakeExecutionScenario.submit_timeout(
             resolve_as=ExecutionStatus.ACCEPTED,
         ),
         clock=clock,
     )
-    submit = SubmitOrder(repository=repository, execution=execution, clock=clock)
+    submit = SubmitOrder(
+        repository=repository,
+        execution=execution,
+        clock=clock,
+        authorization_gate=ExplicitTestOrderAuthorizationGate(),
+    )
     handle = HandleExecutionReport(repository=repository)
 
     result = submit.execute(
@@ -37,6 +44,7 @@ def main() -> None:
             quantity=Quantity(Decimal("1")),
             time_in_force=TimeInForce.DAY,
             correlation_id=CorrelationId.new(),
+            account_id=account_id,
         )
     )
     submission_status = result.submission_status
