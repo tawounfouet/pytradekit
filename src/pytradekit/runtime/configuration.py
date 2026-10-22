@@ -6,8 +6,12 @@ import os
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
+import re
 
 from pytradekit.runtime.errors import RuntimeConfigurationError
+
+
+_SECRET_SCHEME = re.compile(r"^[a-z][a-z0-9+.-]*$")
 
 
 class RuntimeEnvironment(StrEnum):
@@ -30,6 +34,13 @@ class SecretRef:
             raise RuntimeConfigurationError(
                 "SecretRef must include an explicit scheme such as env://."
             )
+        scheme, locator = normalized.split("://", 1)
+        if not _SECRET_SCHEME.fullmatch(scheme.lower()):
+            raise RuntimeConfigurationError("SecretRef scheme is invalid.")
+        if not locator.strip():
+            raise RuntimeConfigurationError("SecretRef locator must not be empty.")
+        if any(character in normalized for character in ("\n", "\r", "\x00")):
+            raise RuntimeConfigurationError("SecretRef contains invalid control characters.")
         object.__setattr__(self, "value", normalized)
 
     @property
@@ -71,6 +82,9 @@ class RuntimeProfile:
     api_secret_ref: SecretRef
     database_url_ref: SecretRef
     market_data_feed: str = "iex"
+    trading_endpoint: str = "https://paper-api.alpaca.markets"
+    data_endpoint: str = "https://data.alpaca.markets"
+    stream_endpoint: str = "wss://paper-api.alpaca.markets/stream"
 
     def __post_init__(self) -> None:
         name = self.name.strip() if isinstance(self.name, str) else ""
@@ -110,6 +124,16 @@ class RuntimeProfile:
         object.__setattr__(self, "expected_account_id", account_id)
         object.__setattr__(self, "market_data_feed", feed)
 
+        from pytradekit.runtime.deployment_security import (
+            validate_alpaca_paper_endpoints,
+        )
+
+        validate_alpaca_paper_endpoints(
+            trading_endpoint=self.trading_endpoint,
+            data_endpoint=self.data_endpoint,
+            stream_endpoint=self.stream_endpoint,
+        )
+
     @property
     def masked_account_id(self) -> str:
         """Return the provider account identifier in masked form."""
@@ -128,7 +152,10 @@ class RuntimeProfile:
             f"api_key_ref={self.api_key_ref!s}, "
             f"api_secret_ref={self.api_secret_ref!s}, "
             f"database_url_ref={self.database_url_ref!s}, "
-            f"market_data_feed={self.market_data_feed!r}"
+            f"market_data_feed={self.market_data_feed!r}, "
+            f"trading_endpoint={self.trading_endpoint!r}, "
+            f"data_endpoint={self.data_endpoint!r}, "
+            f"stream_endpoint={self.stream_endpoint!r}"
             ")"
         )
 
@@ -158,10 +185,37 @@ class RuntimeProfile:
                 source,
                 "PYTRADEKIT_ALPACA_EXPECTED_ACCOUNT_ID",
             ),
-            api_key_ref=SecretRef("env://PYTRADEKIT_ALPACA_PAPER_API_KEY"),
-            api_secret_ref=SecretRef("env://PYTRADEKIT_ALPACA_PAPER_SECRET_KEY"),
-            database_url_ref=SecretRef("env://PYTRADEKIT_DATABASE_URL"),
+            api_key_ref=SecretRef(
+                source.get(
+                    "PYTRADEKIT_ALPACA_API_KEY_REF",
+                    "env://PYTRADEKIT_ALPACA_PAPER_API_KEY",
+                )
+            ),
+            api_secret_ref=SecretRef(
+                source.get(
+                    "PYTRADEKIT_ALPACA_SECRET_KEY_REF",
+                    "env://PYTRADEKIT_ALPACA_PAPER_SECRET_KEY",
+                )
+            ),
+            database_url_ref=SecretRef(
+                source.get(
+                    "PYTRADEKIT_DATABASE_URL_REF",
+                    "env://PYTRADEKIT_DATABASE_URL",
+                )
+            ),
             market_data_feed=source.get("PYTRADEKIT_ALPACA_DATA_FEED", "iex"),
+            trading_endpoint=source.get(
+                "PYTRADEKIT_ALPACA_TRADING_ENDPOINT",
+                "https://paper-api.alpaca.markets",
+            ),
+            data_endpoint=source.get(
+                "PYTRADEKIT_ALPACA_DATA_ENDPOINT",
+                "https://data.alpaca.markets",
+            ),
+            stream_endpoint=source.get(
+                "PYTRADEKIT_ALPACA_STREAM_ENDPOINT",
+                "wss://paper-api.alpaca.markets/stream",
+            ),
         )
 
 

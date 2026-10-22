@@ -27,6 +27,7 @@ from pytradekit.runtime import (
     ReadinessCheckStatus,
     RuntimeEnvironment,
     RuntimeProfile,
+    RuntimeSecurityConfig,
     SecretsPort,
     StartupReadinessReport,
 )
@@ -264,16 +265,26 @@ class AlpacaPaperRuntimeComposition:
 def build_alpaca_paper_runtime(
     profile: RuntimeProfile,
     secrets: SecretsPort,
+    *,
+    security: RuntimeSecurityConfig | None = None,
 ) -> AlpacaPaperRuntimeComposition:
     """Compose the frozen Alpaca PAPER bootstrap infrastructure."""
 
     _require_alpaca_paper_profile(profile)
+    security_config = security or RuntimeSecurityConfig.local_development()
 
     api_key = secrets.resolve(profile.api_key_ref)
     secret_key = secrets.resolve(profile.api_secret_ref)
     database_url = secrets.resolve(profile.database_url_ref)
 
-    engine = create_database_engine(database_url)
+    engine = create_database_engine(
+        database_url,
+        require_tls=security_config.database_require_tls,
+        connect_timeout_seconds=security_config.database_connect_timeout_seconds,
+        statement_timeout_ms=security_config.database_statement_timeout_ms,
+        pool_size=security_config.database_pool_size,
+        max_overflow=security_config.database_max_overflow,
+    )
     session_factory = create_session_factory(engine)
     read_client = TradingClient(
         api_key=api_key,
