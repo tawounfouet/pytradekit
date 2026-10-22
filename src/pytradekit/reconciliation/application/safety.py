@@ -58,6 +58,12 @@ class ConsistencyRegistry:
         with self._lock:
             return self._evidence.get(account_id)
 
+    def clear(self, account_id: AccountId) -> None:
+        """Invalidate prior admission evidence before an uncertainty workflow."""
+
+        with self._lock:
+            self._evidence.pop(account_id, None)
+
 
 class ConsistencyAdmissionPolicy(ConsistencyGatePort, StrategyAdmissionPort):
     """Allow new risk only for CONSISTENT + HIGH evidence."""

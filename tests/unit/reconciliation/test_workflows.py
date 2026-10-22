@@ -77,3 +77,39 @@ def test_operational_triggers_use_the_same_reconciliation_service() -> None:
         ReconciliationTrigger.PERIODIC,
     ]
     assert workflows.state is RecoveryState.RECOVERED
+
+
+def test_recovery_containment_runs_before_reconciliation() -> None:
+    service = RecordingReconciliation()
+    account_id = AccountId.new()
+    observations: list[str] = []
+
+    class ObservedService:
+        def execute(
+            self,
+            *,
+            account_id: AccountId,
+            trigger: ReconciliationTrigger,
+            correlation_id: CorrelationId,
+            scope: ReconciliationScope = ReconciliationScope.FULL,
+        ) -> ReconciliationOutcome:
+            observations.append("reconcile")
+            return service.execute(
+                account_id=account_id,
+                trigger=trigger,
+                correlation_id=correlation_id,
+                scope=scope,
+            )
+
+    workflows = RecoveryWorkflowCoordinator(
+        reconciliation=cast(ReconciliationServicePort, ObservedService()),
+        containment=lambda _: observations.append("contain"),
+    )
+
+    workflows.reconnect(
+        account_id=account_id,
+        correlation_id=CorrelationId.new(),
+    )
+
+    assert observations == ["contain", "reconcile"]
+    assert workflows.state is RecoveryState.RECOVERED

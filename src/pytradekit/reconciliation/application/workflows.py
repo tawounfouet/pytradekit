@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from threading import Lock
 from typing import Protocol
 
@@ -39,9 +40,11 @@ class RecoveryWorkflowCoordinator:
         *,
         reconciliation: ReconciliationServicePort,
         stale_runs: StaleRunRecovery | None = None,
+        containment: Callable[[AccountId], None] | None = None,
     ) -> None:
         self._reconciliation = reconciliation
         self._stale_runs = stale_runs
+        self._containment = containment
         self._lock = Lock()
         self._state = RecoveryState.IDLE
 
@@ -133,6 +136,8 @@ class RecoveryWorkflowCoordinator:
         scope: ReconciliationScope = ReconciliationScope.FULL,
     ) -> ReconciliationOutcome:
         self._set_state(RecoveryState.CONTAINING)
+        if self._containment is not None:
+            self._containment(account_id)
         if self._stale_runs is not None:
             self._stale_runs.close_stale()
         self._set_state(RecoveryState.OBSERVING)

@@ -78,3 +78,19 @@ def test_unsafe_evidence_blocks_risk_increase(
         ConsistencyAdmissionPolicy(registry).ensure_risk_increase_allowed(
             run.account_id
         )
+
+
+def test_clearing_safe_evidence_fail_closes_admission() -> None:
+    run = _completed(
+        status=ConsistencyStatus.CONSISTENT,
+        confidence=StateConfidence.HIGH,
+    )
+    registry = ConsistencyRegistry()
+    registry.record(run)
+    policy = ConsistencyAdmissionPolicy(registry)
+    policy.ensure_risk_increase_allowed(run.account_id)
+
+    registry.clear(run.account_id)
+
+    with pytest.raises(UnsafeConsistencyError):
+        policy.ensure_risk_increase_allowed(run.account_id)

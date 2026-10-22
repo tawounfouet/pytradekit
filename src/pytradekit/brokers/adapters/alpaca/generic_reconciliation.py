@@ -21,6 +21,7 @@ from pytradekit.reconciliation.application import (
     ConsistencyAdmissionPolicy,
     ConsistencyRegistry,
     ReconcileAccount,
+    ReconciliationOutcome,
     RecoveryWorkflowCoordinator,
     StaleRunRecovery,
 )
@@ -123,6 +124,38 @@ class AlpacaGenericReconciliationRuntime:
             state_confidence=confidence,
         )
 
+    def periodic(self) -> ReconciliationOutcome:
+        """Run periodic reconciliation while fail-closing admission first."""
+
+        return self.workflows.periodic(
+            account_id=self.account_id,
+            correlation_id=CorrelationId.new(),
+        )
+
+    def reconnect(self) -> ReconciliationOutcome:
+        """Reconcile after transport reconnect before risk may resume."""
+
+        return self.workflows.reconnect(
+            account_id=self.account_id,
+            correlation_id=CorrelationId.new(),
+        )
+
+    def submit_uncertainty(self) -> ReconciliationOutcome:
+        """Reconcile after an uncertain provider submission outcome."""
+
+        return self.workflows.submit_uncertainty(
+            account_id=self.account_id,
+            correlation_id=CorrelationId.new(),
+        )
+
+    def incident(self) -> ReconciliationOutcome:
+        """Run incident-triggered reconciliation under containment."""
+
+        return self.workflows.incident(
+            account_id=self.account_id,
+            correlation_id=CorrelationId.new(),
+        )
+
     def close(self) -> None:
         """Close the dedicated durable evidence session."""
 
@@ -177,6 +210,7 @@ def build_alpaca_generic_reconciliation_runtime(
     workflows = RecoveryWorkflowCoordinator(
         reconciliation=service,
         stale_runs=stale_runs,
+        containment=registry.clear,
     )
     return AlpacaGenericReconciliationRuntime(
         account_id=account_id,
