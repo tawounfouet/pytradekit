@@ -238,6 +238,23 @@ class SafetyPolicy:
                 evaluated_at,
             )
 
+        if action is SafetyAction.RELEASE_KILL_SWITCH:
+            allowed = state is SafetyState.SAFE
+            return self._decision(
+                allowed,
+                state,
+                action,
+                (
+                    (SafetyReason.ALLOWED,)
+                    if allowed
+                    else (
+                        SafetyReason.HARD_SAFETY_CANNOT_BE_OVERRIDDEN,
+                        *state_reasons,
+                    )
+                ),
+                evaluated_at,
+            )
+
         if action is SafetyAction.CREATE_RISK_OVERRIDE:
             allowed = state is SafetyState.SAFE
             return self._decision(

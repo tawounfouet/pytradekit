@@ -125,8 +125,10 @@ class SubmitOrder:
         safety = self._safety_gate.evaluate_submit(
             account_id,
             strategy_id=command.strategy_id,
+            instrument_id=order.instrument_id,
             risk_allowed=risk_allowed,
             risk_increasing=risk_increasing,
+            risk_violation_codes=risk_violation_codes,
         )
         if not safety.allowed:
             if not risk_allowed and "RISK_POLICY_DENIED" in safety.reason_codes:

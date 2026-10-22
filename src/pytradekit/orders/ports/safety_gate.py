@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from pytradekit.portfolio.domain import AccountId
-from pytradekit.shared import PyTradeKitError
+from pytradekit.shared import InstrumentId, PyTradeKitError
 
 
 @dataclass(frozen=True, slots=True)
@@ -33,8 +33,10 @@ class OrderSafetyGatePort(Protocol):
         account_id: AccountId,
         *,
         strategy_id: str | None,
+        instrument_id: InstrumentId,
         risk_allowed: bool,
         risk_increasing: bool,
+        risk_violation_codes: tuple[str, ...],
     ) -> OrderSafetyGateResult:
         ...
 

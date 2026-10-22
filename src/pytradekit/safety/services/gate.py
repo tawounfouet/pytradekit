@@ -1,5 +1,7 @@
 """Central safety gate."""
 
+from datetime import datetime
+
 from pytradekit.runtime.ports import ClockPort
 from pytradekit.safety.domain import SafetyAction, SafetyDecision, SafetyEvidence
 from pytradekit.safety.services.policy import SafetyPolicy
@@ -37,6 +39,10 @@ class SafetyGate:
             kill_switch_active=kill_switch_active,
             risk_override_active=risk_override_active,
         )
+
+    def now(self) -> datetime:
+        """Return the injected deterministic clock value."""
+        return self._clock.now()
 
     def get_state(self, evidence: SafetyEvidence) -> SafetyDecision:
         """Expose derived state using the non-mutating VIEW action."""
