@@ -63,3 +63,20 @@ detect
 -> prove convergence
 -> resume only when consistency and confidence allow it
 ~~~
+
+
+## Final rc2 qualification evidence
+
+The corrected rc2 source candidate was qualified on:
+
+~~~text
+commit                       422f92f2ee88d004ce6317153ad49c1013a45f80
+CI run                       39818837375
+PostgreSQL                   16
+full test suite              455 passed
+architecture/public imports  PASS
+production fault suite       PASS
+release artifact qualifier   PASS
+~~~
+
+The release workflow was then hardened so a new version cannot be published until the same complete quality gate succeeds inside the publication job itself.

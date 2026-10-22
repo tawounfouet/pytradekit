@@ -6,6 +6,26 @@ The project is currently pre-1.0 and public APIs remain experimental unless expl
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-10-22
+
+### Qualified Release
+
+- Reconciliation & Recovery is qualified from domain foundations through failure recovery and fresh convergence verification.
+- LOT-01 through LOT-08 are complete.
+- 455 tests pass against PostgreSQL 16 on the final rc2 qualification candidate.
+- FF-027 through FF-035 pass and protect provider independence, infrastructure boundaries, canonical recovery paths, safety admission, and stale-repair ordering.
+- Missing Fill recovery, duplicate replay, stale repair, partial snapshots, reconnect, durable-state outage, uncertain submit, process kill, and Outbox transaction failure are qualified.
+- Recovery invalidates old admission evidence before observation and restores unrestricted risk only from fresh CONSISTENT/HIGH evidence.
+- Release publication is hardened to run the complete deterministic quality gate with PostgreSQL before creating a new GitHub tag.
+- Reconciliation architecture, Recovery architecture, guide, incident runbooks, qualification runbook, and manual reconciliation example are mandatory release artifacts.
+
+### Compatibility
+
+- Python 3.12+.
+- Alpaca remains PAPER-only and pinned to alpaca-py==0.44.0.
+- Public APIs remain pre-1.0 and experimental unless explicitly documented otherwise.
+- Distributed leases/fencing, full RBAC, production kill switch, advanced alert routing, and LIVE qualification move to later milestones.
+
 ## [0.6.0rc2] - 2026-10-22
 
 ### Added

@@ -4,13 +4,13 @@ PyTradeKit is a domain-first, broker-agnostic trading framework designed around 
 
 ## Current milestone
 
-PyTradeKit 0.6.0rc2 - Reconciliation & Recovery
+PyTradeKit 0.6.0 - Reconciliation & Recovery
 
 PyTradeKit 0.6 formalizes reconciliation as a first-class domain and recovery capability on top of the durable Alpaca PAPER runtime delivered in 0.5.
 
-The 0.6.0rc2 candidate completes LOT-08 qualification. It proves the reconciliation and recovery failure matrix end to end, including stale repair rejection, missing Fill recovery, process-kill restart, broker disconnect, durable-state outage, partial snapshots, external activity blocking, submit uncertainty, duplicate recovery, and transactional Outbox failure.
+PyTradeKit 0.6.0 is the Qualified Release for Reconciliation & Recovery. LOT-01 through LOT-08 are complete, and the failure matrix is qualified end to end across deterministic, PostgreSQL, architecture, fault, and release-artifact gates.
 
-The Alpaca integration remains PAPER-only. LIVE trading is not available or qualified in 0.6.0rc2.
+The Alpaca integration remains PAPER-only. LIVE trading is not available or qualified in 0.6.0.
 
 ## Requirements
 
@@ -48,7 +48,7 @@ pytradekit --version
 Current release version:
 
 ~~~text
-0.6.0rc2
+0.6.0
 ~~~
 
 ## Milestone flow
@@ -309,6 +309,7 @@ package import graph remains acyclic
 - 0.6 release qualification runbook: docs/runbooks/PYTRADEKIT_0_6_RELEASE_QUALIFICATION.md
 - 0.6.0rc1 release notes: docs/releases/0.6.0rc1.md
 - 0.6.0rc2 release notes: docs/releases/0.6.0rc2.md
+- 0.6.0 Qualified Release notes: docs/releases/0.6.0.md
 - ADRs: docs/adr/
 
 ## Quality commands
@@ -326,9 +327,9 @@ make check
 
 Release qualification validates version metadata, release notes, changelog state, README version state, wheel and sdist builds, SHA-256 digests, clean wheel installation, installed-version identity, and executable examples.
 
-## Explicit 0.6.0rc2 scope boundaries
+## Explicit 0.6.0 scope boundaries
 
-PyTradeKit 0.6.0rc2 intentionally does not include:
+PyTradeKit 0.6.0 intentionally does not include:
 
 - LIVE trading
 - IBKR or cTrader implementation
