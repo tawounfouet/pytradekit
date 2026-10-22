@@ -7,11 +7,9 @@ from decimal import Decimal, InvalidOperation
 from typing import Never
 from uuid import NAMESPACE_URL, uuid5
 
-from alpaca.trading.enums import (
-    AssetClass as AlpacaAssetClass,
-    PositionSide as AlpacaPositionSide,
-    TradeEvent as AlpacaTradeEvent,
-)
+from alpaca.trading.enums import AssetClass as AlpacaAssetClass
+from alpaca.trading.enums import PositionSide as AlpacaPositionSide
+from alpaca.trading.enums import TradeEvent as AlpacaTradeEvent
 from alpaca.trading.models import Asset, Order, Position, TradeAccount, TradeUpdate
 
 from pytradekit.brokers import (
