@@ -2,12 +2,6 @@
 
 from datetime import UTC, datetime
 
-from tests.compliance_fakes import (
-    FakeProviderFixture,
-    compliance_manifest,
-    pass_executor,
-)
-
 from pytradekit.brokers.compliance import (
     BROKER_ADAPTER_CONTRACT_V1_CANDIDATE,
     PROVIDER_CAPABILITY_MANIFEST_VERSION,
@@ -21,7 +15,12 @@ from pytradekit.brokers.compliance import (
     ComplianceScenario,
     EvidenceSanitizer,
 )
-from pytradekit.testing import FakeClock
+from pytradekit.testing import (
+    FakeClock,
+    FakeProviderFixture,
+    compliance_manifest,
+    pass_compliance_executor,
+)
 
 
 def test_common_harness_generates_equivalent_c3_reports_for_two_fixtures() -> None:
@@ -49,7 +48,7 @@ def test_common_harness_generates_equivalent_c3_reports_for_two_fixtures() -> No
         contract=BROKER_ADAPTER_CONTRACT_V1_CANDIDATE,
         requirements=(requirement,),
         scenarios=(scenario,),
-        executors={scenario.scenario_id: pass_executor},
+        executors={scenario.scenario_id: pass_compliance_executor},
         sanitizer=EvidenceSanitizer(),
         report_generator=ComplianceReportGenerator(),
         clock=FakeClock.at(datetime(2026, 10, 23, 12, tzinfo=UTC)),

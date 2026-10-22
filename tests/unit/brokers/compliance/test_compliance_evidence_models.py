@@ -4,8 +4,6 @@ from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
 import pytest
-from tests.compliance_fakes import compliance_manifest
-
 from pytradekit.brokers.compliance import (
     BROKER_ADAPTER_CONTRACT_V1_CANDIDATE_VERSION,
     BrokerCapability,
@@ -21,6 +19,7 @@ from pytradekit.brokers.compliance import (
     StaleEvidencePolicy,
 )
 from pytradekit.runtime import RuntimeEnvironment
+from pytradekit.testing import compliance_manifest
 
 
 def test_c3_requirement_requires_paper_evidence() -> None:

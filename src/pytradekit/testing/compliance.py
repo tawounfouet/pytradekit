@@ -1,4 +1,4 @@
-"""Reusable deterministic fixtures for broker compliance tests."""
+"""Deterministic broker compliance fixtures for tests and qualification suites."""
 
 from __future__ import annotations
 
@@ -90,7 +90,7 @@ class FakeProviderFixture:
             raise RuntimeError("cleanup failed")
 
 
-def pass_executor(
+def pass_compliance_executor(
     fixture: ProviderFixture,
     scenario: ComplianceScenario,
 ) -> ComplianceObservation:
