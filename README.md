@@ -4,16 +4,18 @@ PyTradeKit is a domain-first, broker-agnostic trading framework designed around 
 
 ## Current milestone
 
-PyTradeKit 0.4.0 - Strategy & Backtest Runtime
+PyTradeKit 0.5.0 - Persistence + Alpaca PAPER
 
-PyTradeKit 0.4 adds a broker-agnostic strategy runtime and deterministic historical backtesting while reusing the same Risk, OMS, Fill, and Portfolio core introduced by earlier milestones.
+PyTradeKit 0.5 adds the first durable provider-connected PAPER runtime while preserving the Risk, OMS, Fill, Portfolio, Strategy, and Backtest core delivered by earlier milestones.
 
-The milestone remains fully local and simulated. It does not connect to a real broker or submit live trades.
+The Alpaca integration is PAPER-only. LIVE trading is not available or qualified in 0.5.
 
 ## Requirements
 
 - Python 3.12+
-- no runtime dependencies for milestone 0.4
+- optional PostgreSQL dependencies through the `postgres` extra
+- optional Alpaca dependencies through the `alpaca` extra
+- development tooling through the `dev` extra
 
 ## Development setup
 
@@ -24,7 +26,7 @@ cd pytradekit
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
-python -m pip install -e ".[dev]"
+python -m pip install -e ".[dev,postgres,alpaca]"
 
 make check
 ~~~
@@ -44,32 +46,141 @@ pytradekit --version
 Current release version:
 
 ~~~text
-0.4.0
+0.5.0
 ~~~
 
 ## Milestone flow
 
 ~~~text
-HistoricalDataset
--> validated MarketDataEvent timeline
--> BacktestClock
--> StrategyRuntime
--> Signal / TargetPosition
--> Portfolio Construction
--> OrderIntent
+Canonical Order
 -> Risk
--> OMS
--> SimulatedExecutionAdapter
+-> durable PostgreSQL state
+-> Runtime Admission Gate
+-> ExecutionPort
+-> AlpacaExecutionAdapter
+-> Alpaca PAPER
+-> private trade_updates
+-> Inbox
+-> Alpaca ACL
 -> ExecutionReport / Fill
--> Portfolio
--> BacktestReport
+-> OMS + Portfolio
+-> Outbox
+-> PostgreSQL commit
+-> restart reconciliation
+-> TRADING_READY
 ~~~
 
-Backtest does not own a parallel Risk engine, OMS, Order model, Fill model, or Portfolio model.
+## Persistence
 
-## Strategy semantics
+0.5 introduces durable PostgreSQL infrastructure:
 
-PyTradeKit keeps four concepts separate:
+- SQLAlchemy adapters
+- Alembic migrations
+- context-owned repositories
+- PostgresUnitOfWork
+- transactional Inbox
+- transactional Outbox
+- ProcessedFillRegistry
+- optimistic concurrency
+
+The provider call is not hidden inside a long database transaction.
+
+## Alpaca PAPER safety
+
+The 0.5 provider contract is intentionally narrow:
+
+~~~text
+provider          Alpaca
+environment       PAPER
+sdk               alpaca-py==0.44.0
+asset scope       US_EQUITY
+order types       MARKET / LIMIT
+time in force     DAY
+market data       IEX
+LIVE              unavailable
+~~~
+
+Safety invariants include:
+
+~~~text
+no blind retry of economic writes
+one explicit submit/cancel transport attempt
+UNCERTAIN instead of guessed failure
+client_order_id recovery
+provider IDs remain external
+no synthetic Fill
+unknown divergence blocks TRADING_READY
+~~~
+
+## Startup and restart
+
+Runtime startup uses durable local state plus provider observations.
+
+~~~text
+load configuration
+-> resolve secrets
+-> verify PostgreSQL
+-> verify PAPER account
+-> load local durable state
+-> load provider snapshots
+-> reconcile
+-> start authenticated trade_updates
+-> reconcile again
+-> TRADING_READY
+~~~
+
+`READY_FOR_STARTUP` and `TRADING_READY` are intentionally different states.
+
+## Runtime lifecycle
+
+0.5 provides:
+
+~~~text
+STARTING
+READY
+DEGRADED
+DRAINING
+STOPPED
+~~~
+
+During DRAINING:
+
+- new submits are blocked
+- cancellation and query paths remain available while safe
+- shutdown waits for bounded active work
+- forced shutdown remains observable
+
+## Qualification
+
+0.5 separates deterministic integration qualification from real provider qualification.
+
+Deterministic qualification covers:
+
+- PostgreSQL restart convergence
+- duplicate provider events
+- pre-commit crash rollback
+- post-commit replay idempotency
+- 429 / 5xx write uncertainty
+- graceful shutdown
+- architecture and typing gates
+- package artifact qualification
+
+Real Alpaca PAPER qualification additionally proved:
+
+- MARKET execution
+- LIMIT submission
+- CANCEL
+- private trade_updates
+- simulated post-ack response loss
+- recovery by client_order_id without resubmission
+- cleanup to the baseline position
+- full runtime start, stop, rebuild, and restart
+
+## Backtest and strategy
+
+The 0.4 Strategy & Backtest Runtime remains part of the framework.
+
+PyTradeKit keeps:
 
 ~~~text
 Signal
@@ -78,101 +189,7 @@ Signal
 != Order
 ~~~
 
-- Signal expresses a market view.
-- TargetPosition expresses desired portfolio state.
-- OrderIntent expresses the trade needed to move toward that target.
-- Order remains the canonical OMS aggregate from milestone 0.2.
-
-Strategy code never talks directly to a broker or ExecutionPort.
-
-## Historical data and time
-
-Milestone 0.4 introduces:
-
-- Bar
-- MarketDataEvent
-- TimerEvent
-- HistoricalDataset
-- dataset identity, version, and SHA-256 checksum
-- deterministic event ordering
-- BacktestClock
-- HistoricalMarketDataAdapter
-
-The core temporal guarantee is:
-
-~~~text
-at time t
-strategy sees only information <= t
-~~~
-
-The historical adapter exposes an event stream rather than a full future-indexable DataFrame.
-
-BacktestClock advances only when the runtime processes a validated event. There is no implicit datetime.now() in strategy execution.
-
-## Portfolio construction
-
-TargetPosition can express:
-
-- fixed quantity
-- fixed notional
-- percent NAV
-
-RebalanceService computes:
-
-~~~text
-target position - current position = delta
-~~~
-
-and converts a non-zero delta into a canonical OrderIntent using ContractSpecification constraints.
-
-## Simulated execution
-
-SimulatedExecutionAdapter satisfies the same ExecutionPort used by OMS integrations.
-
-P0 execution behavior:
-
-~~~text
-MARKET decided at close t
--> evaluated on the next eligible bar
--> filled at that bar open
-
-BUY LIMIT
--> fill when future bar low <= limit
-
-SELL LIMIT
--> fill when future bar high >= limit
-~~~
-
-Cost, slippage, and latency are explicit models recorded in RunManifest.
-
-## Reproducibility
-
-RunManifest captures at least:
-
-- PyTradeKit version
-- strategy identity and version
-- strategy configuration hash
-- dataset identity, version, and checksum
-- risk-policy identity and version
-- execution model
-- cost model
-- slippage model
-- latency model
-- random seed
-- runtime profile
-- deterministic start timestamp
-
-The milestone qualifies the property:
-
-~~~text
-same code
-+ same manifest
-+ same dataset
-+ same seed
-= same semantic result
-~~~
-
-The Golden Backtest runs through Risk, OMS, simulated execution, Fill processing, and Portfolio accounting.
+Backtest uses the same Risk, OMS, Fill, and Portfolio semantics as other execution environments.
 
 ## Runnable examples
 
@@ -189,46 +206,37 @@ python examples/06_strategy_backtest.py
 
 ~~~text
 src/pytradekit/
-├── shared/
-├── reference/
-├── orders/
-├── execution/
-├── portfolio/
-├── risk/
-├── strategy/
-│   ├── domain/
-│   ├── application/
-│   ├── ports/
-│   ├── adapters/
-│   └── portfolio_construction/
-├── market_data/
-│   └── domain/
-├── backtesting/
-│   ├── domain/
-│   ├── application/
-│   ├── adapters/
-│   └── clock/
-├── brokers/
-├── runtime/
-└── testing/
+|-- shared/
+|-- reference/
+|-- orders/
+|-- execution/
+|-- portfolio/
+|-- risk/
+|-- strategy/
+|-- market_data/
+|-- backtesting/
+|-- persistence/
+|-- brokers/
+|   `-- adapters/alpaca/
+|-- runtime/
+`-- testing/
 ~~~
 
 ## Architecture protection
 
-CI protects all earlier milestone boundaries plus 0.4-specific boundaries.
-
 Important invariants include:
 
 ~~~text
+Domain does not depend on SQLAlchemy
+Domain does not depend on broker SDKs
+Alpaca SDK stays inside the adapter boundary
+provider IDs never replace canonical IDs
 Strategy domain does not depend on brokers
-Strategy domain does not depend on backtesting adapters
-Market-data domain does not depend on Strategy
-Market-data domain does not depend on brokers
 Backtest reuses canonical Risk
 Backtest reuses canonical OMS
 Backtest reuses canonical Fill
 Backtest reuses canonical Portfolio
-Package import graph remains acyclic
+package import graph remains acyclic
 ~~~
 
 ## Documentation
@@ -242,7 +250,9 @@ Package import graph remains acyclic
 - Portfolio guide: docs/guides/portfolio.md
 - Risk guide: docs/guides/risk.md
 - Testing guide: docs/guides/testing.md
-- 0.4.0 release notes: docs/releases/0.4.0.md
+- 0.5 release qualification runbook: docs/runbooks/PYTRADEKIT_0_5_RELEASE_QUALIFICATION.md
+- Alpaca PAPER incident runbook: docs/runbooks/ALPACA_PAPER_INCIDENT_RESPONSE.md
+- 0.5.0 release notes: docs/releases/0.5.0.md
 - ADRs: docs/adr/
 
 ## Quality commands
@@ -258,23 +268,24 @@ make release-check
 make check
 ~~~
 
-Release qualification validates version metadata, required 0.4 documentation, wheel and sdist builds, SHA-256 digests, clean wheel installation, installed-version identity, and every executable example.
+Release qualification validates version metadata, release notes, changelog state, README version state, wheel and sdist builds, SHA-256 digests, clean wheel installation, installed-version identity, and executable examples.
 
-## Explicit 0.4 scope boundaries
+## Explicit 0.5 scope boundaries
 
-PyTradeKit 0.4 intentionally does not include:
+PyTradeKit 0.5 intentionally does not include:
 
-- real broker connectivity
-- durable database persistence
-- restart recovery
-- broker reconciliation
-- corporate-action processing
-- multi-currency FX conversion
-- sophisticated exchange microstructure
-- partial-fill simulation beyond the current P0 model
-- HTTP API
+- LIVE trading
+- IBKR or cTrader implementation
+- a generic ReconciliationRun / Mismatch / Resolution domain
+- generic Missing Fill Recovery
+- external manual activity classification
 - distributed workers
-- production operations
+- leases or fencing
+- full RBAC
+- production kill switch
+- HTTP API stabilization
+- multi-account allocation
+- advanced derivatives
 
 These belong to later milestones.
 
@@ -285,7 +296,7 @@ These belong to later milestones.
 -> 0.2 OMS & Execution
 -> 0.3 Portfolio & Risk
 -> 0.4 Strategy & Backtest
--> 0.5 Persistence + Alpaca Paper
+-> 0.5 Persistence + Alpaca PAPER
 -> 0.6 Reconciliation & Recovery
 -> 0.7 Security & Operations
 -> 0.8 Broker Compliance + IBKR
