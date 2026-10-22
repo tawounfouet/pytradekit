@@ -10,6 +10,7 @@ from pytradekit.operations import (
     HealthSnapshot,
     HealthStatus,
     TraceContext,
+    TraceRecord,
 )
 from pytradekit.operations.adapters import (
     DefaultAlertRouter,
