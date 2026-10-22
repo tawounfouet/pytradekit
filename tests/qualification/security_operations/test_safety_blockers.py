@@ -261,11 +261,14 @@ def test_expired_override_cannot_bypass_risk_policy() -> None:
         override=override,
     )
 
-    with pytest.raises(OrderSafetyDeniedError):
-        submit.execute(
-            _command(account_id=account_id, instrument_id=instrument_id)
-        )
+    result = submit.execute(
+        _command(account_id=account_id, instrument_id=instrument_id)
+    )
 
+    assert result.submission_status is None
+    assert result.risk_decision == "reject"
+    assert result.risk_override_applied is False
+    assert "RISK_POLICY_DENIED" in result.safety_reason_codes
     assert execution.submit_calls == 0
     assert override.is_active(NOW - timedelta(seconds=1))
     assert not override.is_active(NOW)
