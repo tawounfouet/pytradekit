@@ -129,9 +129,12 @@ class RejectingRiskPort:
         )
 
 
-def _safe_evidence() -> SafetyEvidence:
+def _safe_evidence(
+    *,
+    consistency: ConsistencyStatus = ConsistencyStatus.CONSISTENT,
+) -> SafetyEvidence:
     return SafetyEvidence(
-        consistency_status=ConsistencyStatus.CONSISTENT,
+        consistency_status=consistency,
         state_confidence=StateConfidence.HIGH,
         recovery_state=RecoveryState.IDLE,
         runtime_lifecycle=RuntimeLifecycleState.READY,
@@ -314,6 +317,60 @@ def test_safe_override_can_bypass_risk_policy_only() -> None:
     assert result.risk_decision == "reject"
     assert result.risk_override_applied
     assert execution.submit_calls == 1
+
+
+@pytest.mark.parametrize(
+    "consistency",
+    [ConsistencyStatus.UNKNOWN, ConsistencyStatus.INCONSISTENT],
+)
+def test_override_cannot_bypass_untrusted_economic_truth(
+    consistency: ConsistencyStatus,
+) -> None:
+    account_id = AccountId.new()
+    instrument_id = InstrumentId.new()
+    actor_id = ActorId.new()
+    evidence = InMemorySafetyEvidenceProvider()
+    evidence.set(
+        account_id,
+        _safe_evidence(consistency=consistency),
+    )
+    overrides = InMemoryRiskOverrideRepository()
+    override = RiskOverride(
+        id=RiskOverrideId.new(),
+        scope=RiskOverrideScope(
+            account_id=str(account_id),
+            risk_rule="MAX_ORDER_SIZE_EXCEEDED",
+            instrument_id=str(instrument_id),
+        ),
+        reason="temporary",
+        requested_by=actor_id,
+        created_at=NOW,
+        valid_from=NOW,
+        valid_until=NOW + timedelta(minutes=5),
+        correlation_id=CorrelationId.new(),
+    ).approve(actor_id=actor_id, occurred_at=NOW)
+    overrides.save(override, expected_version=None)
+
+    execution = CountingExecutionPort()
+    submit = SubmitOrder(
+        repository=InMemoryOrderRepository(),
+        execution=execution,
+        clock=FakeClock.at(NOW),
+        risk=RejectingRiskPort(),
+        authorization_gate=ExplicitTestOrderAuthorizationGate(),
+        safety_gate=OrdersSafetyGate(
+            gate=SafetyGate(clock=FakeClock.at(NOW)),
+            evidence=evidence,
+            risk_overrides=overrides,
+        ),
+    )
+
+    with pytest.raises(OrderSafetyDeniedError):
+        submit.execute(
+            _command(account_id=account_id, instrument_id=instrument_id)
+        )
+
+    assert execution.submit_calls == 0
 
 
 def test_unauthorized_kill_switch_release_is_denied() -> None:
