@@ -6,6 +6,30 @@ The project is currently pre-1.0 and public APIs remain experimental unless expl
 
 ## [Unreleased]
 
+## [0.7.0rc2] - 2026-10-22
+
+### Added
+
+- LOT-08 Production Qualification & Release.
+- Dedicated 0.7 production qualification CI and Release gates.
+- Negative authorization qualification for permission, account, environment and expired-role failures.
+- Cross-cutting KillSwitch, RiskOverride and hard-safety release-blocker tests.
+- Real PostgreSQL restart and optimistic-concurrency qualification for governance state.
+- Release-blocker evidence manifest and final 0.7 qualification matrix.
+- Operational runbooks for authorization denial, KillSwitch, RiskOverride, critical mismatch and trading-readiness loss.
+
+### Qualification
+
+- Unauthorized sensitive actions cannot reach the execution provider.
+- Safety-denied actions cannot reach the execution provider.
+- KillSwitch dominates RiskOverride.
+- UNKNOWN and INCONSISTENT economic truth cannot be overridden.
+- Expired RiskOverride cannot bypass risk policy.
+- Persisted KillSwitch survives process restart.
+- Stale PostgreSQL governance writers are rejected.
+- Critical health, alerting, telemetry and secret-outage scenarios are replayed in the release gate.
+- LIVE remains unavailable.
+
 ## [0.7.0rc1] - 2026-10-22
 
 ### Added

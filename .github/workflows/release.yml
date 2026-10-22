@@ -132,6 +132,25 @@ jobs:
             tests/integration/test_alpaca_production_faults.py \
             tests/integration/test_alpaca_startup_restart_reconciliation.py
 
+      - name: 0.7 production qualification
+        if: steps.state.outputs.exists != 'true'
+        run: |
+          pytest \
+            tests/qualification/security_operations \
+            tests/e2e/test_security_authorization.py \
+            tests/e2e/test_safety_gate.py \
+            tests/e2e/test_safety_governance.py \
+            tests/e2e/test_operational_health.py \
+            tests/e2e/test_operations_observability.py \
+            tests/e2e/test_secret_provider_outage.py \
+            tests/property/security \
+            tests/property/safety \
+            tests/property/operations \
+            tests/integration/test_security_repositories.py \
+            tests/integration/test_safety_governance_repositories.py \
+            tests/integration/test_security_operations_production_qualification.py
+          python scripts/qualify_0_7.py
+
       - name: Unit, property, and integration tests
         if: steps.state.outputs.exists != 'true'
         run: pytest --cov=pytradekit --cov-report=term-missing

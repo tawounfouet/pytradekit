@@ -4,13 +4,13 @@ PyTradeKit is a domain-first, broker-agnostic trading framework designed around 
 
 ## Current milestone
 
-PyTradeKit 0.7.0rc1 - Secrets & Deployment Hardening
+PyTradeKit 0.7.0rc2 - Production Qualification & Release
 
 PyTradeKit 0.7 adds explicit identity, scoped RBAC, and authorization on top of the qualified reconciliation and recovery baseline.
 
 PyTradeKit 0.7.0rc1 adds LOT-07: externalized references, bounded lifecycle controls, PostgreSQL TLS expectations, endpoint validation, container health surfaces, and a hardened single-node PAPER profile.
 
-The Alpaca integration remains PAPER-only. LIVE trading is not available or qualified in 0.7.0rc1.
+The Alpaca integration remains PAPER-only. LIVE trading is not available or qualified in 0.7.0rc2.
 
 ## Requirements
 
@@ -48,7 +48,7 @@ pytradekit --version
 Current release version:
 
 ~~~text
-0.7.0rc1
+0.7.0rc2
 ~~~
 
 ## Milestone flow
