@@ -1,6 +1,7 @@
 """Fresh verification safety for reconciliation resolutions."""
 
 from datetime import UTC, datetime, timedelta
+from typing import cast
 
 from pytradekit.reconciliation import (
     Mismatch,
@@ -14,6 +15,7 @@ from pytradekit.reconciliation import (
     ResolutionType,
 )
 from pytradekit.reconciliation.application.reconcile_account import ReconcileAccount
+from pytradekit.reconciliation.ports import ReconciliationRepository
 from pytradekit.shared import CorrelationId
 from pytradekit.testing import FakeClock
 
@@ -63,7 +65,7 @@ def test_applied_resolution_requires_strictly_newer_verification_evidence() -> N
     mismatch, resolution = _applied_resolution()
     repository = ResolutionRepository()
     service = object.__new__(ReconcileAccount)
-    service._repository = repository
+    service._repository = cast(ReconciliationRepository, repository)
     service._clock = FakeClock(NOW + timedelta(seconds=1))
 
     service._verify_applied(
@@ -81,7 +83,7 @@ def test_newer_verification_can_mark_applied_resolution_verified() -> None:
     mismatch, resolution = _applied_resolution()
     repository = ResolutionRepository()
     service = object.__new__(ReconcileAccount)
-    service._repository = repository
+    service._repository = cast(ReconciliationRepository, repository)
     service._clock = FakeClock(NOW + timedelta(seconds=2))
 
     service._verify_applied(
