@@ -38,11 +38,11 @@ class AlpacaExternalActivityReader:
         *,
         client: AlpacaActivityClient,
         orders: OrderIdentityResolver,
-        currency: Currency = Currency("USD"),
+        currency: Currency | None = None,
     ) -> None:
         self._client = client
         self._orders = orders
-        self._currency = currency
+        self._currency = currency or Currency("USD")
 
     def list_fills(self) -> tuple[CanonicalFill, ...]:
         """Return provider executions identified by stable activity IDs."""

@@ -23,7 +23,7 @@ from .scoped import (
 )
 from .stale_runs import StaleRunRecovery
 from .verify_reconciliation import VerificationResult, VerifyReconciliation
-from .workflows import RecoveryWorkflowCoordinator, ReconciliationServicePort
+from .workflows import ReconciliationServicePort, RecoveryWorkflowCoordinator
 
 __all__ = [
     "ConsistencyAdmissionPolicy",

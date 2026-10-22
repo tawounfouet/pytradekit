@@ -19,7 +19,7 @@ from pytradekit.reconciliation import (
     SnapshotWatermark,
     StateConfidence,
 )
-from pytradekit.shared import CorrelationId, Currency
+from pytradekit.shared import CorrelationId, Currency, DomainValidationError
 
 
 def test_reconciliation_run_completed_does_not_imply_consistent() -> None:
@@ -85,5 +85,5 @@ def test_invalid_run_transition_is_rejected() -> None:
         correlation_id=CorrelationId.new(),
     )
 
-    with pytest.raises(Exception):
+    with pytest.raises(DomainValidationError):
         run.transition_to(ReconciliationRunStatus.COMPLETED)

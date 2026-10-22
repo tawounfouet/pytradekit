@@ -2,7 +2,7 @@
 
 from datetime import UTC, datetime
 
-from hypothesis import given, strategies as st
+from hypothesis import given\nfrom hypothesis import strategies as st
 
 from pytradekit.reconciliation import (
     Mismatch,
