@@ -32,6 +32,7 @@ from pytradekit.reconciliation.ports import (
     ResolutionExecutorPort,
 )
 from pytradekit.reconciliation.services import ConvergenceService, SnapshotComparator
+from pytradekit.runtime.faults import FaultInjector, FaultPoint, NullFaultInjector
 from pytradekit.runtime.ports import ClockPort
 from pytradekit.shared import CorrelationId
 
@@ -69,6 +70,7 @@ class ReconcileAccount:
         executor: ResolutionExecutorPort | None = None,
         notifier: RecoveryNotifierPort | None = None,
         evidence_sink: ConsistencyEvidenceSinkPort | None = None,
+        faults: FaultInjector | None = None,
     ) -> None:
         self._repository = repository
         self._internal_snapshots = internal_snapshots
@@ -80,6 +82,7 @@ class ReconcileAccount:
         self._executor = executor
         self._notifier = notifier
         self._evidence_sink = evidence_sink
+        self._faults = faults or NullFaultInjector()
         self._verifier = VerifyReconciliation(
             internal_snapshots=internal_snapshots,
             broker_snapshots=broker_snapshots,
@@ -109,6 +112,7 @@ class ReconcileAccount:
             run.transition_to(ReconciliationRunStatus.CAPTURING)
             self._repository.save_run(run)
             self._repository.checkpoint()
+            self._faults.hit(FaultPoint.BEFORE_RECONCILIATION_CAPTURE)
             internal = self._internal_snapshots.capture(
                 account_id=account_id,
                 scope=scope,
@@ -134,6 +138,7 @@ class ReconcileAccount:
                 self._repository.add_mismatch(item)
             if initial:
                 self._repository.checkpoint()
+            self._faults.hit(FaultPoint.AFTER_RECONCILIATION_COMPARE)
 
             critical_count = sum(
                 item.severity is MismatchSeverity.CRITICAL for item in initial
@@ -154,6 +159,7 @@ class ReconcileAccount:
                 run.transition_to(ReconciliationRunStatus.RESOLVING)
                 self._repository.save_run(run)
                 self._repository.checkpoint()
+                self._faults.hit(FaultPoint.BEFORE_RECONCILIATION_RESOLUTION)
                 self._apply_supported(
                     resolutions,
                     initial,
@@ -163,10 +169,12 @@ class ReconcileAccount:
                     original_watermark=internal.watermark,
                     run=run,
                 )
+                self._faults.hit(FaultPoint.AFTER_RECONCILIATION_RESOLUTION)
 
             run.transition_to(ReconciliationRunStatus.VERIFYING)
             self._repository.save_run(run)
             self._repository.checkpoint()
+            self._faults.hit(FaultPoint.BEFORE_RECONCILIATION_VERIFY)
             verification = self._verifier.execute(
                 run_id=run.id,
                 account_id=account_id,
@@ -207,6 +215,7 @@ class ReconcileAccount:
             )
             self._repository.save_run(run)
             self._repository.checkpoint()
+            self._faults.hit(FaultPoint.AFTER_RECONCILIATION_COMPLETE)
             if self._evidence_sink is not None:
                 self._evidence_sink.record(run)
             if self._notifier is not None and not result.blocking:

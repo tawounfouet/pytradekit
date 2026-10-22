@@ -7,7 +7,7 @@ from typing import Protocol
 
 
 class FaultPoint(StrEnum):
-    """Crash windows qualified by the PyTradeKit 0.5 runtime."""
+    """Deterministic crash windows qualified across runtime and reconciliation."""
 
     BEFORE_INBOX_CLAIM = "before_inbox_claim"
     AFTER_INBOX_CLAIM = "after_inbox_claim"
@@ -16,6 +16,12 @@ class FaultPoint(StrEnum):
     AFTER_OUTBOX_ADD = "after_outbox_add"
     BEFORE_COMMIT = "before_commit"
     AFTER_COMMIT = "after_commit"
+    BEFORE_RECONCILIATION_CAPTURE = "before_reconciliation_capture"
+    AFTER_RECONCILIATION_COMPARE = "after_reconciliation_compare"
+    BEFORE_RECONCILIATION_RESOLUTION = "before_reconciliation_resolution"
+    AFTER_RECONCILIATION_RESOLUTION = "after_reconciliation_resolution"
+    BEFORE_RECONCILIATION_VERIFY = "before_reconciliation_verify"
+    AFTER_RECONCILIATION_COMPLETE = "after_reconciliation_complete"
 
 
 class FaultInjector(Protocol):

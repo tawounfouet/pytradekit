@@ -43,7 +43,7 @@ class PositionComparator:
                 mismatch(
                     run_id=run_id,
                     mismatch_type=MismatchType.POSITION_MISSING_EXTERNAL,
-                    severity=MismatchSeverity.HIGH,
+                    severity=MismatchSeverity.CRITICAL,
                     entity_type="position",
                     entity_id=str(instrument_id),
                     internal_value=_evidence(local),
@@ -62,7 +62,7 @@ class PositionComparator:
                 mismatch(
                     run_id=run_id,
                     mismatch_type=MismatchType.POSITION_MISSING_INTERNAL,
-                    severity=MismatchSeverity.HIGH,
+                    severity=MismatchSeverity.CRITICAL,
                     entity_type="position",
                     entity_id=str(instrument_id),
                     internal_value=None,
@@ -81,7 +81,7 @@ class PositionComparator:
                     mismatch(
                         run_id=run_id,
                         mismatch_type=MismatchType.POSITION_QUANTITY_MISMATCH,
-                        severity=MismatchSeverity.HIGH,
+                        severity=MismatchSeverity.CRITICAL,
                         entity_type="position",
                         entity_id=str(instrument_id),
                         internal_value=_evidence(local),
