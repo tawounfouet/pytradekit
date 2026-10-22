@@ -52,7 +52,12 @@ class PostgresActorRepository:
         row = self._session.get(SecurityActorModel, actor_id.value)
         if row is None:
             return None
-        return Actor(ActorId(row.id), ActorType(row.actor_type), row.display_name, row.enabled)
+        return Actor(
+            ActorId(row.id),
+            ActorType(row.actor_type),
+            row.display_name,
+            row.enabled,
+        )
 
 
 class PostgresRoleRepository:
@@ -82,7 +87,11 @@ class PostgresRoleRepository:
         statement = select(SecurityRolePermissionModel.permission).where(
             SecurityRolePermissionModel.role_id == role_id.value
         ).order_by(SecurityRolePermissionModel.permission)
-        permissions = frozenset(Permission(value) for value in self._session.execute(statement).scalars().all())
+        permission_values = self._session.execute(statement).scalars().all()
+        permissions = frozenset(
+            Permission(value)
+            for value in permission_values
+        )
         return Role(RoleId(row.id), row.name, PermissionSet(permissions))
 
 
@@ -99,7 +108,11 @@ class PostgresRoleAssignmentRepository:
             account_scope=assignment.scope.account_scope.value,
             account_id=assignment.scope.account_id,
             operation_scope=assignment.scope.operation_scope.value,
-            operation=assignment.scope.operation.value if assignment.scope.operation is not None else None,
+            operation=(
+                assignment.scope.operation.value
+                if assignment.scope.operation is not None
+                else None
+            ),
             valid_from=assignment.valid_from,
             valid_until=assignment.valid_until,
             assigned_by=assignment.assigned_by.value,
@@ -110,8 +123,12 @@ class PostgresRoleAssignmentRepository:
     def list_for_actor(self, actor_id: ActorId) -> tuple[RoleAssignment, ...]:
         statement = select(SecurityRoleAssignmentModel).where(
             SecurityRoleAssignmentModel.actor_id == actor_id.value
-        ).order_by(SecurityRoleAssignmentModel.valid_from, SecurityRoleAssignmentModel.role_id)
-        return tuple(self._from_model(row) for row in self._session.execute(statement).scalars().all())
+        ).order_by(
+            SecurityRoleAssignmentModel.valid_from,
+            SecurityRoleAssignmentModel.role_id,
+        )
+        rows = self._session.execute(statement).scalars().all()
+        return tuple(self._from_model(row) for row in rows)
 
     def revoke(
         self,

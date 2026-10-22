@@ -4,7 +4,14 @@ from copy import deepcopy
 from dataclasses import replace
 from datetime import datetime
 
-from pytradekit.security.domain import Actor, ActorId, AuthorizationScope, Role, RoleAssignment, RoleId
+from pytradekit.security.domain import (
+    Actor,
+    ActorId,
+    AuthorizationScope,
+    Role,
+    RoleAssignment,
+    RoleId,
+)
 from pytradekit.shared import require_utc_datetime
 
 
@@ -40,7 +47,11 @@ class InMemoryRoleAssignmentRepository:
         self._assignments.append(deepcopy(assignment))
 
     def list_for_actor(self, actor_id: ActorId) -> tuple[RoleAssignment, ...]:
-        matches = [deepcopy(item) for item in self._assignments if item.actor_id == actor_id]
+        matches = [
+            deepcopy(item)
+            for item in self._assignments
+            if item.actor_id == actor_id
+        ]
         matches.sort(key=lambda item: (item.valid_from, str(item.role_id)))
         return tuple(matches)
 
@@ -52,7 +63,10 @@ class InMemoryRoleAssignmentRepository:
         scope: AuthorizationScope,
         revoked_at: datetime,
     ) -> int:
-        timestamp = require_utc_datetime(revoked_at, field_name="RoleAssignment revoked_at")
+        timestamp = require_utc_datetime(
+            revoked_at,
+            field_name="RoleAssignment revoked_at",
+        )
         count = 0
         updated: list[RoleAssignment] = []
         for assignment in self._assignments:
