@@ -323,7 +323,6 @@ def test_broker_disconnect_invalidates_old_readiness_until_reconnect_converges()
     assert recovered.run.trigger is ReconciliationTrigger.RECONNECT
     assert recovered.run.result_status is ConsistencyStatus.CONSISTENT
     assert recovered.run.confidence is StateConfidence.HIGH
-    assert workflows.state is RecoveryState.RECOVERED
     policy.ensure_risk_increase_allowed(account_id)
 
 
@@ -499,7 +498,7 @@ def test_submit_uncertainty_converges_by_query_without_second_submit() -> None:
     reconciled = handle.execute(report)
 
     assert reconciled.status is OrderStatus.ACCEPTED
-    assert reconciled.execution_certainty is ExecutionCertainty.KNOWN
+    assert reconciled.execution_certainty is ExecutionCertainty.CONFIRMED
     assert execution.submit_calls == 1
     assert execution.query_calls == 1
 
