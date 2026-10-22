@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import StrEnum
 
+from pytradekit.reconciliation.domain import ConsistencyStatus, StateConfidence
 from pytradekit.runtime.readiness import ReadinessCheck, ReadinessCheckStatus
 
 
@@ -24,15 +25,29 @@ class TradingReadinessReport:
     account: str
     checks: tuple[ReadinessCheck, ...]
     gaps: tuple[str, ...] = ()
+    consistency_status: ConsistencyStatus | None = None
+    state_confidence: StateConfidence | None = None
 
     @property
     def state(self) -> TradingReadinessState:
-        """Return TRADING_READY only when every gate passes and no gap remains."""
+        """Return TRADING_READY only when every configured gate passes."""
 
         checks_pass = all(
             check.status is ReadinessCheckStatus.PASS for check in self.checks
         )
-        if checks_pass and not self.gaps:
+        if not checks_pass or self.gaps:
+            return TradingReadinessState.NOT_READY
+
+        evidence_supplied = (
+            self.consistency_status is not None or self.state_confidence is not None
+        )
+        if not evidence_supplied:
+            return TradingReadinessState.TRADING_READY
+
+        if (
+            self.consistency_status is ConsistencyStatus.CONSISTENT
+            and self.state_confidence is StateConfidence.HIGH
+        ):
             return TradingReadinessState.TRADING_READY
         return TradingReadinessState.NOT_READY
 
@@ -53,4 +68,14 @@ class TradingReadinessReport:
             "trading_ready": self.trading_ready,
             "checks": [check.to_dict() for check in self.checks],
             "gaps": list(self.gaps),
+            "consistency_status": (
+                self.consistency_status.value
+                if self.consistency_status is not None
+                else None
+            ),
+            "state_confidence": (
+                self.state_confidence.value
+                if self.state_confidence is not None
+                else None
+            ),
         }

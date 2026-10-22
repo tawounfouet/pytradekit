@@ -10,16 +10,20 @@ from pytradekit.reconciliation.application.verify_reconciliation import VerifyRe
 from pytradekit.reconciliation.domain import (
     BrokerSnapshot,
     Mismatch,
+    MismatchId,
     MismatchSeverity,
+    MismatchType,
     ReconciliationRun,
     ReconciliationRunStatus,
     ReconciliationScope,
     ReconciliationTrigger,
     Resolution,
     ResolutionStatus,
+    SnapshotWatermark,
 )
 from pytradekit.reconciliation.ports import (
     BrokerSnapshotPort,
+    ConsistencyEvidenceSinkPort,
     InternalSnapshotPort,
     ReconciliationRepository,
     RecoveryNotifierPort,
@@ -32,6 +36,10 @@ from pytradekit.shared import CorrelationId
 
 class ReconciliationAlreadyRunningError(RuntimeError):
     """Raised when an account already has an active reconciliation run."""
+
+
+class StaleReconciliationError(RuntimeError):
+    """Raised before a correction can use superseded internal evidence."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -58,6 +66,7 @@ class ReconcileAccount:
         resolver: ResolveMismatch | None = None,
         executor: ResolutionExecutorPort | None = None,
         notifier: RecoveryNotifierPort | None = None,
+        evidence_sink: ConsistencyEvidenceSinkPort | None = None,
     ) -> None:
         self._repository = repository
         self._internal_snapshots = internal_snapshots
@@ -68,6 +77,7 @@ class ReconcileAccount:
         self._resolver = resolver or ResolveMismatch(clock=clock)
         self._executor = executor
         self._notifier = notifier
+        self._evidence_sink = evidence_sink
         self._verifier = VerifyReconciliation(
             internal_snapshots=internal_snapshots,
             broker_snapshots=broker_snapshots,
@@ -134,7 +144,15 @@ class ReconcileAccount:
             if resolutions:
                 run.transition_to(ReconciliationRunStatus.RESOLVING)
                 self._repository.save_run(run)
-                self._apply_supported(resolutions, initial, broker)
+                self._apply_supported(
+                    resolutions,
+                    initial,
+                    broker,
+                    account_id=account_id,
+                    scope=scope,
+                    original_watermark=internal.watermark,
+                    run=run,
+                )
 
             run.transition_to(ReconciliationRunStatus.VERIFYING)
             self._repository.save_run(run)
@@ -168,6 +186,8 @@ class ReconcileAccount:
                 critical_mismatch_count=final_critical,
             )
             self._repository.save_run(run)
+            if self._evidence_sink is not None:
+                self._evidence_sink.record(run)
             if self._notifier is not None and not result.blocking:
                 self._notifier.recovery_verified(run)
             return ReconciliationOutcome(
@@ -198,13 +218,45 @@ class ReconcileAccount:
         resolutions: tuple[Resolution, ...],
         mismatches: tuple[Mismatch, ...],
         broker_snapshot: BrokerSnapshot,
+        *,
+        account_id: AccountId,
+        scope: ReconciliationScope,
+        original_watermark: SnapshotWatermark,
+        run: ReconciliationRun,
     ) -> None:
         if self._executor is None:
             return
+        supported = tuple(
+            item for item in resolutions if self._executor.supports(item.type)
+        )
+        if not supported:
+            return
+
+        latest = self._internal_snapshots.capture(
+            account_id=account_id,
+            scope=scope,
+        )
+        if not _same_economic_cut(original_watermark, latest.watermark):
+            stale = Mismatch(
+                id=MismatchId.new(),
+                run_id=run.id,
+                type=MismatchType.STALE_RECONCILIATION,
+                severity=MismatchSeverity.CRITICAL,
+                entity_type="snapshot",
+                entity_id="internal",
+                internal_value=_watermark_evidence(original_watermark),
+                external_value=_watermark_evidence(latest.watermark),
+                detected_at=self._clock.now(),
+            )
+            self._repository.add_mismatch(stale)
+            if self._notifier is not None:
+                self._notifier.critical_mismatch(run, count=1)
+            raise StaleReconciliationError(
+                "Internal economic evidence changed before recovery mutation."
+            )
+
         by_id = {item.id: item for item in mismatches}
-        for resolution in resolutions:
-            if not self._executor.supports(resolution.type):
-                continue
+        for resolution in supported:
             mismatch = by_id[resolution.mismatch_id]
             resolution.mark_applying()
             self._repository.save_resolution(resolution)
@@ -246,3 +298,34 @@ class ReconcileAccount:
                     verification_status="fresh_evidence_converged"
                 )
             self._repository.save_resolution(resolution)
+
+
+def _same_economic_cut(
+    original: SnapshotWatermark,
+    latest: SnapshotWatermark,
+) -> bool:
+    if (
+        original.internal_version is not None
+        and latest.internal_version is not None
+    ):
+        return original.internal_version == latest.internal_version
+    if (
+        original.max_event_sequence is not None
+        and latest.max_event_sequence is not None
+    ):
+        return original.max_event_sequence == latest.max_event_sequence
+    return False
+
+
+def _watermark_evidence(watermark: SnapshotWatermark) -> dict[str, str | int | None]:
+    return {
+        "captured_at": watermark.captured_at.isoformat(),
+        "internal_version": watermark.internal_version,
+        "max_event_sequence": watermark.max_event_sequence,
+        "provider_as_of": (
+            watermark.provider_as_of.isoformat()
+            if watermark.provider_as_of is not None
+            else None
+        ),
+        "provider_cursor": watermark.provider_cursor,
+    }

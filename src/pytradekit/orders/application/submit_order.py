@@ -7,12 +7,17 @@ from pytradekit.orders.application.models import (
     SubmitOrderResult,
 )
 from pytradekit.orders.domain import InvalidOrderError, Order, OrderId, OrderType
-from pytradekit.orders.ports import ExecutionPort, OrderRepository, RiskEvaluationPort
+from pytradekit.orders.ports import (
+    ConsistencyGatePort,
+    ExecutionPort,
+    OrderRepository,
+    RiskEvaluationPort,
+)
 from pytradekit.runtime.ports import ClockPort
 
 
 class SubmitOrder:
-    """Create, risk-check, persist, submit, and apply the immediate result."""
+    """Create, safety-check, risk-check, persist, submit, and apply the result."""
 
     def __init__(
         self,
@@ -21,20 +26,25 @@ class SubmitOrder:
         execution: ExecutionPort,
         clock: ClockPort,
         risk: RiskEvaluationPort | None = None,
+        consistency_gate: ConsistencyGatePort | None = None,
     ) -> None:
         self._repository = repository
         self._execution = execution
         self._clock = clock
         self._risk = risk
+        self._consistency_gate = consistency_gate
 
     def execute(self, command: SubmitOrderCommand) -> SubmitOrderResult:
-        """Execute one order submission without blind retry or risk bypass."""
+        """Execute one order submission without blind retry or safety bypass."""
+
         order_id = command.order_id or OrderId.new()
         now = self._clock.now()
 
         if command.order_type is OrderType.MARKET:
             if command.limit_price is not None:
-                raise InvalidOrderError("MARKET order command must not define limit_price.")
+                raise InvalidOrderError(
+                    "MARKET order command must not define limit_price."
+                )
             order = Order.create_market(
                 order_id=order_id,
                 instrument_id=command.instrument_id,
@@ -61,8 +71,20 @@ class SubmitOrder:
             )
 
         order.validate(occurred_at=self._clock.now())
-        if self._risk is not None and command.account_id is None:
-            raise InvalidOrderError("Risk-gated submission requires account_id.")
+        if (
+            self._risk is not None or self._consistency_gate is not None
+        ) and command.account_id is None:
+            raise InvalidOrderError(
+                "Risk or consistency-gated submission requires account_id."
+            )
+
+        if self._consistency_gate is not None:
+            account_id = command.account_id
+            if account_id is None:
+                raise InvalidOrderError(
+                    "Consistency-gated submission requires account_id."
+                )
+            self._consistency_gate.ensure_risk_increase_allowed(account_id)
 
         self._repository.add(order)
         risk_decision: str | None = None
@@ -99,7 +121,9 @@ class SubmitOrder:
         if submission.status is SubmissionStatus.ACKNOWLEDGED:
             external_order_id = submission.external_order_id
             if external_order_id is None:
-                raise InvalidOrderError("Acknowledged submission requires external_order_id.")
+                raise InvalidOrderError(
+                    "Acknowledged submission requires external_order_id."
+                )
             order.accept(
                 external_order_id=external_order_id,
                 occurred_at=self._clock.now(),
