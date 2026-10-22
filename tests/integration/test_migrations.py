@@ -1,0 +1,20 @@
+"""Alembic migration qualification against PostgreSQL."""
+
+from sqlalchemy import Engine, inspect
+
+
+def test_fresh_database_contains_persistence_schemas(postgres_engine: Engine) -> None:
+    inspector = inspect(postgres_engine)
+
+    assert "orders" in inspector.get_schema_names()
+    assert "execution" in inspector.get_schema_names()
+    assert "portfolio" in inspector.get_schema_names()
+    assert "risk" in inspector.get_schema_names()
+    assert "runtime" in inspector.get_schema_names()
+
+    assert "orders" in inspector.get_table_names(schema="orders")
+    assert "fills" in inspector.get_table_names(schema="execution")
+    assert "positions" in inspector.get_table_names(schema="portfolio")
+    assert "balances" in inspector.get_table_names(schema="portfolio")
+    assert "policies" in inspector.get_table_names(schema="risk")
+    assert "metadata" in inspector.get_table_names(schema="runtime")
