@@ -6,6 +6,40 @@ The project is currently pre-1.0 and public APIs remain experimental unless expl
 
 ## [Unreleased]
 
+## [0.8.0a2] - 2026-10-23
+
+### Added
+
+- LOT-02 Compliance Test Kit & Evidence Model.
+- ComplianceRequirement, ComplianceScenario, ComplianceResult and explicit PASS/FAIL/BLOCKED/NOT_APPLICABLE semantics.
+- ComplianceEvidence linked to exact commit, provider, environment, adapter, SDK, contract and scenario.
+- EvidenceSanitizer with secret-key, authorization-marker and caller-supplied sensitive-value redaction.
+- ComplianceHarness using the same ProviderFixture surface for every provider.
+- ComplianceReport, ComplianceReportGenerator and deterministic ComplianceRun JSON artifacts.
+- CertifiedCapability and immutable generated CertificationRegistry.
+- StaleEvidencePolicy for adapter, SDK, contract, commit and age invalidation.
+- ProviderCapabilityManifest schema candidate version 1.0-rc1.
+- Broker certification guide.
+- FF-057 through FF-059.
+
+### Qualification
+
+- C3 requirements require PAPER evidence.
+- BLOCKED and FAIL remain distinct.
+- Cleanup failure blocks qualification.
+- Common fake ProviderFixture implementations pass through the same harness without provider branching.
+- Stale evidence cannot remain current after an adapter version change.
+- Complete qualification artifacts are secret-scanned.
+- Raw SDK objects are rejected from evidence payloads.
+
+### Compatibility
+
+- BrokerAdapterContract remains candidate version 1.0-rc1.
+- Alpaca provider certification is deferred to LOT-03.
+- IBKR implementation is not introduced.
+- LIVE remains unavailable.
+- Public APIs remain pre-1.0 and experimental unless explicitly documented otherwise.
+
 ## [0.8.0a1] - 2026-10-23
 
 ### Added

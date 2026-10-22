@@ -10,6 +10,8 @@ from pytradekit.runtime.configuration import RuntimeEnvironment
 
 from .capability import BrokerCapability, CapabilitySupport
 
+PROVIDER_CAPABILITY_MANIFEST_VERSION = "1.0-rc1"
+
 
 def _required_text(value: str, *, field_name: str) -> str:
     normalized = value.strip() if isinstance(value, str) else ""

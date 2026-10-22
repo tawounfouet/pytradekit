@@ -93,6 +93,15 @@ jobs:
             tests/contracts/brokers/compliance \
             tests/architecture/test_broker_compliance_boundaries.py
 
+      - name: 0.8 LOT-02 compliance evidence qualification
+        run: |
+          pytest \
+            tests/unit/brokers/compliance \
+            tests/contracts/brokers/compliance \
+            tests/architecture/test_broker_compliance_boundaries.py \
+            tests/architecture/test_broker_compliance_evidence.py \
+            tests/qualification/broker_compliance
+
       - name: Unit, property, and integration tests
         run: pytest --cov=pytradekit --cov-report=term-missing
 
