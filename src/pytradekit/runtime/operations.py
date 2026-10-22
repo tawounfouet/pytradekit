@@ -11,7 +11,7 @@ from queue import Empty, Queue
 from threading import Condition, Thread
 from time import monotonic
 from types import FrameType
-from typing import Protocol, TypeVar, cast
+from typing import Protocol, cast
 
 from pytradekit.execution import CancelResult, ExecutionReport, SubmissionResult
 from pytradekit.orders.domain import Order
@@ -349,10 +349,7 @@ class ProductionRuntimeSupervisor:
         signal.signal(signal.SIGINT, self.handle_signal)
 
 
-T = TypeVar("T")
-
-
-def _call_bounded(
+def _call_bounded[T](
     operation: Callable[[], T],
     *,
     timeout: float,
