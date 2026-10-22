@@ -156,8 +156,8 @@ def build_command() -> RunBacktestCommand:
 def main() -> None:
     """Run the deterministic release demonstration twice."""
     command = build_command()
-    first = RunBacktest().execute(command)
-    second = RunBacktest().execute(command)
+    first = RunBacktest(authorization_gate=ExplicitTestOrderAuthorizationGate()).execute(command)
+    second = RunBacktest(authorization_gate=ExplicitTestOrderAuthorizationGate()).execute(command)
 
     assert first == second
     assert first.final_nav.amount == Decimal("10020")
