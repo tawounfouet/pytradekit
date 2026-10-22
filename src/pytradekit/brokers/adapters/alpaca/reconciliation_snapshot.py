@@ -14,6 +14,7 @@ from pytradekit.portfolio.domain import AccountId
 from pytradekit.reconciliation.domain import (
     BrokerSnapshot,
     CanonicalBalance,
+    CanonicalFill,
     CanonicalOrder,
     CanonicalPosition,
     ReconciliationScope,
@@ -71,7 +72,7 @@ class AlpacaBrokerSnapshotPort(BrokerSnapshotPort):
         captured_at = self._clock.now()
         completeness = SnapshotCompleteness.COMPLETE
         orders: tuple[CanonicalOrder, ...] = ()
-        fills = ()
+        fills: tuple[CanonicalFill, ...] = ()
         positions: tuple[CanonicalPosition, ...] = ()
         balances: tuple[CanonicalBalance, ...] = ()
 
