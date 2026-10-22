@@ -5,13 +5,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from pytradekit.runtime.observability import RuntimeObserver
-from pytradekit.runtime.trading_readiness import TradingReadinessReport
 from pytradekit.runtime.operations import (
     AdmissionControlledExecutionPort,
     ProductionRuntimeSupervisor,
     RuntimeAdmissionGate,
     ShutdownReport,
 )
+from pytradekit.runtime.trading_readiness import TradingReadinessReport
 
 from .startup import AlpacaPaperRuntimeSystem
 

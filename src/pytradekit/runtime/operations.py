@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import signal
+from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import StrEnum
 from threading import Condition
 from time import monotonic
 from types import FrameType
-from typing import Iterator, Protocol
+from typing import Protocol
 
 from pytradekit.execution import CancelResult, ExecutionReport, SubmissionResult
 from pytradekit.orders.domain import Order
