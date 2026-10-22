@@ -17,7 +17,11 @@ from pytradekit.orders.application import (
 )
 from pytradekit.portfolio.domain import AccountId
 from pytradekit.shared import CorrelationId, Currency, InstrumentId, Price, Quantity
-from pytradekit.testing import ExplicitTestOrderAuthorizationGate, FakeClock
+from pytradekit.testing import (
+    ExplicitTestOrderAuthorizationGate,
+    ExplicitTestOrderSafetyGate,
+    FakeClock,
+)
 
 
 def main() -> None:
@@ -36,12 +40,14 @@ def main() -> None:
         execution=execution,
         clock=clock,
         authorization_gate=authorization,
+        safety_gate=ExplicitTestOrderSafetyGate(),
     )
     cancel = CancelOrder(
         repository=repository,
         execution=execution,
         clock=clock,
         authorization_gate=authorization,
+        safety_gate=ExplicitTestOrderSafetyGate(),
     )
     handle = HandleExecutionReport(repository=repository)
     get_order = GetOrder(repository=repository)

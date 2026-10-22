@@ -34,7 +34,11 @@ from pytradekit.orders.application import (
 )
 from pytradekit.portfolio.domain import AccountId
 from pytradekit.shared import CorrelationId, Currency, InstrumentId, Price, Quantity
-from pytradekit.testing import ExplicitTestOrderAuthorizationGate, FakeClock
+from pytradekit.testing import (
+    ExplicitTestOrderAuthorizationGate,
+    ExplicitTestOrderSafetyGate,
+    FakeClock,
+)
 
 NOW = datetime(2026, 10, 21, 20, 0, tzinfo=UTC)
 USD = Currency("USD")
@@ -66,6 +70,7 @@ def test_submit_timeout_converges_to_acceptance_by_query() -> None:
         execution=execution,
         clock=clock,
         authorization_gate=ExplicitTestOrderAuthorizationGate(),
+        safety_gate=ExplicitTestOrderSafetyGate(),
     )
     handle = HandleExecutionReport(repository=repository)
 
@@ -96,6 +101,7 @@ def test_submit_timeout_can_converge_to_rejection_by_query() -> None:
         execution=execution,
         clock=clock,
         authorization_gate=ExplicitTestOrderAuthorizationGate(),
+        safety_gate=ExplicitTestOrderSafetyGate(),
     )
     handle = HandleExecutionReport(repository=repository)
 
@@ -122,6 +128,7 @@ def test_duplicate_fill_has_exactly_one_economic_effect() -> None:
         execution=execution,
         clock=clock,
         authorization_gate=ExplicitTestOrderAuthorizationGate(),
+        safety_gate=ExplicitTestOrderSafetyGate(),
     )
     handle = HandleExecutionReport(repository=repository)
     get_order = GetOrder(repository=repository)
@@ -206,12 +213,14 @@ def test_cancel_timeout_stays_uncertain_and_blocks_blind_resubmission() -> None:
         execution=execution,
         clock=clock,
         authorization_gate=ExplicitTestOrderAuthorizationGate(),
+        safety_gate=ExplicitTestOrderSafetyGate(),
     )
     cancel = CancelOrder(
         repository=repository,
         execution=execution,
         clock=clock,
         authorization_gate=ExplicitTestOrderAuthorizationGate(),
+        safety_gate=ExplicitTestOrderSafetyGate(),
     )
 
     submitted = submit.execute(_command())
@@ -246,12 +255,14 @@ def test_full_fill_wins_over_late_cancel_confirmation() -> None:
         execution=execution,
         clock=clock,
         authorization_gate=ExplicitTestOrderAuthorizationGate(),
+        safety_gate=ExplicitTestOrderSafetyGate(),
     )
     cancel = CancelOrder(
         repository=repository,
         execution=execution,
         clock=clock,
         authorization_gate=ExplicitTestOrderAuthorizationGate(),
+        safety_gate=ExplicitTestOrderSafetyGate(),
     )
     handle = HandleExecutionReport(repository=repository)
     get_order = GetOrder(repository=repository)

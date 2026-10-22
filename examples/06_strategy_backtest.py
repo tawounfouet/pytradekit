@@ -29,7 +29,10 @@ from pytradekit.strategy import (
     StrategyVersion,
     TargetPosition,
 )
-from pytradekit.testing import ExplicitTestOrderAuthorizationGate
+from pytradekit.testing import (
+    ExplicitTestOrderAuthorizationGate,
+    ExplicitTestOrderSafetyGate,
+)
 
 
 class ThresholdStrategy:
@@ -158,10 +161,12 @@ def main() -> None:
     """Run the deterministic release demonstration twice."""
     command = build_command()
     first = RunBacktest(
-        authorization_gate=ExplicitTestOrderAuthorizationGate()
+        authorization_gate=ExplicitTestOrderAuthorizationGate(),
+        safety_gate=ExplicitTestOrderSafetyGate(),
     ).execute(command)
     second = RunBacktest(
-        authorization_gate=ExplicitTestOrderAuthorizationGate()
+        authorization_gate=ExplicitTestOrderAuthorizationGate(),
+        safety_gate=ExplicitTestOrderSafetyGate(),
     ).execute(command)
 
     assert first == second

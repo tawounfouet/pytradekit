@@ -47,7 +47,11 @@ from pytradekit.security.application import AuthorizeAction
 from pytradekit.security.domain.errors import AuthorizationDeniedError
 from pytradekit.security.services import AuthorizationService
 from pytradekit.shared import CorrelationId, InstrumentId, Quantity
-from pytradekit.testing import ExplicitTestOrderAuthorizationGate, FakeClock
+from pytradekit.testing import (
+    ExplicitTestOrderAuthorizationGate,
+    ExplicitTestOrderSafetyGate,
+    FakeClock,
+)
 
 NOW = datetime(2026, 10, 22, 20, 0, tzinfo=UTC)
 
@@ -151,6 +155,7 @@ def test_viewer_cannot_submit_and_provider_is_not_called() -> None:
         execution=execution,
         clock=FakeClock.at(NOW),
         authorization_gate=gate,
+        safety_gate=ExplicitTestOrderSafetyGate(),
     )
     with pytest.raises(AuthorizationDeniedError, match="PERMISSION_MISSING"):
         submit.execute(_command(account_id=account_id, order_id=order_id))
@@ -176,6 +181,7 @@ def test_account_scope_mismatch_cannot_reach_provider() -> None:
         execution=execution,
         clock=FakeClock.at(NOW),
         authorization_gate=gate,
+        safety_gate=ExplicitTestOrderSafetyGate(),
     )
     with pytest.raises(AuthorizationDeniedError, match="SCOPE_MISMATCH"):
         submit.execute(_command(account_id=requested_account, order_id=OrderId.new()))
@@ -199,6 +205,7 @@ def test_trader_can_submit_inside_scope() -> None:
         execution=execution,
         clock=FakeClock.at(NOW),
         authorization_gate=gate,
+        safety_gate=ExplicitTestOrderSafetyGate(),
     )
     result = submit.execute(_command(account_id=account_id, order_id=OrderId.new()))
     assert result.submission_status is SubmissionStatus.ACKNOWLEDGED
@@ -215,6 +222,7 @@ def test_viewer_cannot_cancel_and_provider_is_not_called() -> None:
         execution=execution,
         clock=FakeClock.at(NOW),
         authorization_gate=ExplicitTestOrderAuthorizationGate(),
+        safety_gate=ExplicitTestOrderSafetyGate(),
     )
     submitted = unrestricted.execute(_command(
         account_id=account_id,
@@ -232,6 +240,7 @@ def test_viewer_cannot_cancel_and_provider_is_not_called() -> None:
         execution=execution,
         clock=FakeClock.at(NOW),
         authorization_gate=gate,
+        safety_gate=ExplicitTestOrderSafetyGate(),
     )
     original_cancel_calls = execution.cancel_calls
     with pytest.raises(AuthorizationDeniedError, match="PERMISSION_MISSING"):

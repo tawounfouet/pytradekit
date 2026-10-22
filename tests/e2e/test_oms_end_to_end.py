@@ -16,7 +16,11 @@ from pytradekit.orders.application import (
 )
 from pytradekit.portfolio.domain import AccountId
 from pytradekit.shared import CorrelationId, Currency, InstrumentId, Price, Quantity
-from pytradekit.testing import ExplicitTestOrderAuthorizationGate, FakeClock
+from pytradekit.testing import (
+    ExplicitTestOrderAuthorizationGate,
+    ExplicitTestOrderSafetyGate,
+    FakeClock,
+)
 
 NOW = datetime(2026, 10, 21, 20, 0, tzinfo=UTC)
 USD = Currency("USD")
@@ -55,6 +59,7 @@ def test_market_order_partial_fill_then_full_fill() -> None:
         execution=execution,
         clock=clock,
         authorization_gate=ExplicitTestOrderAuthorizationGate(),
+        safety_gate=ExplicitTestOrderSafetyGate(),
     )
     handle = HandleExecutionReport(repository=repository)
     get_order = GetOrder(repository=repository)
@@ -84,6 +89,7 @@ def test_limit_order_can_be_cancelled_after_acceptance() -> None:
         execution=execution,
         clock=clock,
         authorization_gate=ExplicitTestOrderAuthorizationGate(),
+        safety_gate=ExplicitTestOrderSafetyGate(),
     )
     handle = HandleExecutionReport(repository=repository)
     cancel = CancelOrder(
@@ -91,6 +97,7 @@ def test_limit_order_can_be_cancelled_after_acceptance() -> None:
         execution=execution,
         clock=clock,
         authorization_gate=ExplicitTestOrderAuthorizationGate(),
+        safety_gate=ExplicitTestOrderSafetyGate(),
     )
     get_order = GetOrder(repository=repository)
 
