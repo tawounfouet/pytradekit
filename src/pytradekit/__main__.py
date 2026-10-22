@@ -116,7 +116,6 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 0
 
     parser.error(f"Unsupported command: {args.command}")
-    return 2
 
 
 if __name__ == "__main__":
