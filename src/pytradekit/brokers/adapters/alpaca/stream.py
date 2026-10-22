@@ -55,7 +55,7 @@ class AlpacaPaperTradeStream(TradingStream):
         self._pytradekit_ready = Event()
 
     async def _start_ws(self) -> None:
-        await super()._start_ws()
+        await super()._start_ws()  # type: ignore[no-untyped-call]
         self._pytradekit_ready.set()
 
     async def close(self) -> None:
