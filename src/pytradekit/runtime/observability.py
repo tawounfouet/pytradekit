@@ -3,12 +3,49 @@
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from threading import Lock
 from typing import Protocol
+
+_ALLOWED_METRIC_LABELS = frozenset(
+    {
+        "action",
+        "actor_type",
+        "alert_type",
+        "component",
+        "decision",
+        "environment",
+        "permission",
+        "severity",
+        "state",
+        "status",
+    }
+)
+_UUID_LIKE = re.compile(
+    r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-"
+    r"[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+)
+_FORBIDDEN_FIELD_FRAGMENTS = (
+    "secret",
+    "password",
+    "api_key",
+    "apikey",
+    "token",
+    "credential",
+)
+_FORBIDDEN_VALUE_MARKERS = (
+    "bearer ",
+    "password=",
+    "secret=",
+    "api_key=",
+    "apikey=",
+    "token=",
+    "credential=",
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -36,6 +73,17 @@ class RuntimeMetrics:
         with self._lock:
             self._counters[key] = self._counters.get(key, 0) + amount
 
+    def increment_labeled(
+        self,
+        name: str,
+        *,
+        labels: Mapping[str, str],
+        amount: int = 1,
+    ) -> None:
+        """Increment a metric with bounded low-cardinality labels."""
+
+        self.increment(_metric_key(name, labels), amount)
+
     def set_gauge(self, name: str, value: int) -> None:
         """Set one integer gauge."""
 
@@ -44,6 +92,17 @@ class RuntimeMetrics:
             raise ValueError("Metric gauge value must be an integer.")
         with self._lock:
             self._gauges[key] = value
+
+    def set_labeled_gauge(
+        self,
+        name: str,
+        *,
+        labels: Mapping[str, str],
+        value: int,
+    ) -> None:
+        """Set one gauge with bounded low-cardinality labels."""
+
+        self.set_gauge(_metric_key(name, labels), value)
 
     def snapshot(self) -> RuntimeMetricsSnapshot:
         """Return a detached metrics snapshot."""
@@ -134,17 +193,39 @@ class RuntimeObserver:
 
         self.metrics.increment(name, amount)
 
+    def increment_labeled(
+        self,
+        name: str,
+        *,
+        labels: Mapping[str, str],
+        amount: int = 1,
+    ) -> None:
+        """Increment a low-cardinality labeled metric."""
+
+        self.metrics.increment_labeled(name, labels=labels, amount=amount)
+
     def set_gauge(self, name: str, value: int) -> None:
         """Set one gauge."""
 
         self.metrics.set_gauge(name, value)
+
+    def set_labeled_gauge(
+        self,
+        name: str,
+        *,
+        labels: Mapping[str, str],
+        value: int,
+    ) -> None:
+        """Set one low-cardinality labeled gauge."""
+
+        self.metrics.set_labeled_gauge(name, labels=labels, value=value)
 
     def event(
         self,
         name: str,
         **fields: str | int | bool | None,
     ) -> None:
-        """Emit one structured event after rejecting secret-like field names."""
+        """Emit one structured event after telemetry sanitization."""
 
         _validate_safe_fields(fields)
         event = OperationalEvent(
@@ -162,18 +243,41 @@ def _metric_name(value: str) -> str:
     return normalized
 
 
+def _metric_key(name: str, labels: Mapping[str, str]) -> str:
+    metric = _metric_name(name)
+    _validate_safe_fields(labels)
+    encoded: list[str] = []
+    for label_name, raw_value in sorted(labels.items()):
+        if label_name not in _ALLOWED_METRIC_LABELS:
+            raise ValueError(
+                f"Metric label {label_name!r} is not in the low-cardinality allowlist."
+            )
+        value = raw_value.strip()
+        if not value:
+            raise ValueError("Metric label values must be non-empty.")
+        if len(value) > 64 or _UUID_LIKE.fullmatch(value):
+            raise ValueError(
+                "Metric labels must not contain high-cardinality identifiers."
+            )
+        _validate_safe_string(value)
+        encoded.append(f"{label_name}={value}")
+    if not encoded:
+        return metric
+    return f"{metric}{{{','.join(encoded)}}}"
+
+
 def _validate_safe_fields(fields: Mapping[str, object]) -> None:
-    forbidden_fragments = (
-        "secret",
-        "password",
-        "api_key",
-        "apikey",
-        "token",
-        "credential",
-    )
-    for name in fields:
+    for name, value in fields.items():
         lowered = name.lower()
-        if any(fragment in lowered for fragment in forbidden_fragments):
+        if any(fragment in lowered for fragment in _FORBIDDEN_FIELD_FRAGMENTS):
             raise ValueError(
                 f"Operational field {name!r} is forbidden because it may expose secrets."
             )
+        if isinstance(value, str):
+            _validate_safe_string(value)
+
+
+def _validate_safe_string(value: str) -> None:
+    lowered = value.lower()
+    if any(marker in lowered for marker in _FORBIDDEN_VALUE_MARKERS):
+        raise ValueError("Operational telemetry value may expose secret material.")
