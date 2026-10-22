@@ -1,4 +1,4 @@
-"""Alpaca broker adapter discovery and runtime surfaces."""
+"""Alpaca broker adapter discovery, runtime, and anti-corruption surfaces."""
 
 from .controlled_order_probe import (
     AlpacaPaperControlledOrderProbe,
@@ -8,6 +8,7 @@ from .controlled_order_probe import (
     AlpacaSingleAttemptTradingClient,
     build_alpaca_paper_order_probe,
 )
+from .errors import AlpacaOperation, translate_alpaca_error
 from .read_only_probe import (
     AlpacaPaperProbeConfig,
     AlpacaPaperProbeReport,
@@ -23,6 +24,7 @@ from .runtime import (
 )
 
 __all__ = [
+    "AlpacaOperation",
     "AlpacaPaperCommandClient",
     "AlpacaPaperControlledOrderProbe",
     "AlpacaPaperOrderProbeConfig",
@@ -38,4 +40,5 @@ __all__ = [
     "build_alpaca_paper_order_probe",
     "build_alpaca_paper_probe",
     "build_alpaca_paper_runtime",
+    "translate_alpaca_error",
 ]
