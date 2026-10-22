@@ -153,7 +153,12 @@ def test_cancel_flow_waits_for_execution_report() -> None:
     for report in adapter.drain_reports(result.order.order_id):
         handle.execute(report)
 
-    cancellation = cancel.execute(CancelOrderCommand(order_id=result.order.order_id, account_id=ACCOUNT_ID))
+    cancellation = cancel.execute(
+        CancelOrderCommand(
+            order_id=result.order.order_id,
+            account_id=ACCOUNT_ID,
+        )
+    )
     assert cancellation.order.status is OrderStatus.CANCEL_REQUESTED
 
     for report in adapter.drain_reports(result.order.order_id):
@@ -188,7 +193,12 @@ def test_cancel_fill_race_applies_real_fill_before_cancel_confirmation() -> None
     submitted = submit.execute(_submit_command())
     for report in adapter.drain_reports(submitted.order.order_id):
         handle.execute(report)
-    cancel.execute(CancelOrderCommand(order_id=submitted.order.order_id, account_id=ACCOUNT_ID))
+    cancel.execute(
+        CancelOrderCommand(
+            order_id=submitted.order.order_id,
+            account_id=ACCOUNT_ID,
+        )
+    )
 
     fill = Fill(
         id=FillId.new(),

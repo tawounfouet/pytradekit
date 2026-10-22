@@ -98,7 +98,12 @@ def test_limit_order_can_be_cancelled_after_acceptance() -> None:
     for report in execution.drain_reports(submitted.order.order_id):
         handle.execute(report)
 
-    cancellation = cancel.execute(CancelOrderCommand(order_id=submitted.order.order_id, account_id=ACCOUNT_ID))
+    cancellation = cancel.execute(
+        CancelOrderCommand(
+            order_id=submitted.order.order_id,
+            account_id=ACCOUNT_ID,
+        )
+    )
     assert cancellation.order.status is OrderStatus.CANCEL_REQUESTED
 
     for report in execution.drain_reports(submitted.order.order_id):

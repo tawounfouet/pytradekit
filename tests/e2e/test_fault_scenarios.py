@@ -215,13 +215,23 @@ def test_cancel_timeout_stays_uncertain_and_blocks_blind_resubmission() -> None:
     )
 
     submitted = submit.execute(_command())
-    cancellation = cancel.execute(CancelOrderCommand(order_id=submitted.order.order_id, account_id=ACCOUNT_ID))
+    cancellation = cancel.execute(
+        CancelOrderCommand(
+            order_id=submitted.order.order_id,
+            account_id=ACCOUNT_ID,
+        )
+    )
 
     assert cancellation.order.status is OrderStatus.CANCEL_REQUESTED
     assert cancellation.order.execution_certainty is ExecutionCertainty.UNCERTAIN
 
     with pytest.raises(OrderNotCancellableError):
-        cancel.execute(CancelOrderCommand(order_id=submitted.order.order_id, account_id=ACCOUNT_ID))
+        cancel.execute(
+        CancelOrderCommand(
+            order_id=submitted.order.order_id,
+            account_id=ACCOUNT_ID,
+        )
+    )
 
 
 def test_full_fill_wins_over_late_cancel_confirmation() -> None:
@@ -248,7 +258,12 @@ def test_full_fill_wins_over_late_cancel_confirmation() -> None:
 
     submitted = submit.execute(_command())
     execution.drain_reports(submitted.order.order_id)
-    cancel.execute(CancelOrderCommand(order_id=submitted.order.order_id, account_id=ACCOUNT_ID))
+    cancel.execute(
+        CancelOrderCommand(
+            order_id=submitted.order.order_id,
+            account_id=ACCOUNT_ID,
+        )
+    )
     cancel_reports = execution.drain_reports(submitted.order.order_id)
 
     fill = Fill(
