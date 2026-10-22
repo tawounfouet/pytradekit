@@ -42,6 +42,11 @@ RELEASE_DOCUMENTS = (
     Path("docs/runbooks/DATABASE_UNAVAILABLE.md"),
     Path("docs/runbooks/BROKER_DISCONNECTED.md"),
     Path("docs/runbooks/ALERT_DELIVERY_FAILURE.md"),
+    Path("docs/architecture/deployment-hardening.md"),
+    Path("docs/guides/secrets-and-deployment.md"),
+    Path("docs/runbooks/SECRET_PROVIDER_UNAVAILABLE.md"),
+    Path("docs/runbooks/SECRET_ROTATION.md"),
+    Path("docs/runbooks/STARTUP_TIMEOUT.md"),
 )
 
 
