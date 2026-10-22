@@ -10,6 +10,7 @@ from pytradekit.brokers.adapters.alpaca.contract import (
     ALPACA_ORDER_STATUS_RULES,
     ALPACA_PROVIDER_KEY,
     ALPACA_SDK_VERSION_TARGET,
+    ALPACA_SUPPORTED_ORDER_TYPES,
     ALPACA_TRADE_EVENT_RULES,
     AlpacaStateDisposition,
     order_status_rule,
@@ -129,16 +130,16 @@ def test_noncanonical_states_require_reconciliation_instead_of_domain_growth() -
 
 
 def test_order_contract_is_deliberately_small_for_0_5() -> None:
+    assert set(ALPACA_SUPPORTED_ORDER_TYPES) == {
+        OrderType.MARKET,
+        OrderType.LIMIT,
+    }
     assert supports_order_contract(
         order_type=OrderType.MARKET,
         time_in_force=TimeInForce.DAY,
     )
     assert supports_order_contract(
         order_type=OrderType.LIMIT,
-        time_in_force=TimeInForce.DAY,
-    )
-    assert not supports_order_contract(
-        order_type=OrderType.STOP,
         time_in_force=TimeInForce.DAY,
     )
     assert not supports_order_contract(
