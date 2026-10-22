@@ -21,9 +21,16 @@ from pytradekit.reconciliation import (
     CanonicalPosition,
     ConsistencyStatus,
     ExternalActivityOrigin,
+    Mismatch,
+    MismatchId,
+    MismatchSeverity,
+    MismatchType,
+    ReconciliationRunId,
     ReconciliationRunStatus,
     ReconciliationScope,
     ReconciliationTrigger,
+    Resolution,
+    ResolutionId,
     ResolutionStatus,
     ResolutionType,
     SnapshotCompleteness,
@@ -420,3 +427,86 @@ def test_process_kill_after_repair_is_closed_as_stale_and_not_replayed(
     assert recovered.resolutions == ()
     _assert_one_effect(factory, account_id=account_id, order=order)
     second_session.close()
+
+
+class FailingCommitUnitOfWork(PostgresUnitOfWork):
+    """Fail before commit so business state and Outbox rollback together."""
+
+    def commit(self) -> None:
+        raise RuntimeError("synthetic outbox transaction failure")
+
+
+def test_outbox_commit_failure_rolls_back_recovery_then_replay_applies_once(
+    reconciliation_session_factory: sessionmaker[Session],
+) -> None:
+    factory = reconciliation_session_factory
+    account_id, order = _seed(factory)
+    clock = StepClock(NOW + timedelta(seconds=10))
+    broker_snapshot = BrokerTruthPort(
+        account_id=account_id,
+        order=order,
+        clock=clock,
+    ).capture(
+        account_id=account_id,
+        scope=ReconciliationScope.FULL,
+    )
+    run_id = ReconciliationRunId.new()
+    mismatch = Mismatch(
+        id=MismatchId.new(),
+        run_id=run_id,
+        type=MismatchType.MISSING_INTERNAL_FILL,
+        severity=MismatchSeverity.CRITICAL,
+        entity_type="fill",
+        entity_id="lot08-provider-fill-1",
+        internal_value=None,
+        external_value={"external_fill_id": "lot08-provider-fill-1"},
+        detected_at=NOW,
+    )
+    resolution = Resolution(
+        id=ResolutionId.new(),
+        run_id=run_id,
+        mismatch_id=mismatch.id,
+        type=ResolutionType.IMPORT_MISSING_EXTERNAL_EVENT,
+        reason="Provider execution is proven.",
+        actor="system",
+        started_at=NOW,
+        correlation_id=CorrelationId.new(),
+    )
+
+    failing = PostgresResolutionExecutor(
+        lambda: FailingCommitUnitOfWork(factory)
+    )
+    with pytest.raises(RuntimeError, match="outbox transaction failure"):
+        failing.apply(
+            resolution=resolution,
+            mismatch=mismatch,
+            broker_snapshot=broker_snapshot,
+        )
+
+    with PostgresUnitOfWork(factory) as uow:
+        durable = uow.orders.get(order.id)
+        fills = uow.fills.list_for_order(order.id)
+        position = uow.positions.get(account_id, order.instrument_id)
+        balance = uow.balances.get(account_id, USD)
+        imported = tuple(
+            record
+            for record in uow.outbox.list_pending(limit=100)
+            if record.event_type == "ExternalFillImported"
+        )
+        uow.commit()
+
+    assert durable is not None
+    assert durable.status.value == "accepted"
+    assert fills == ()
+    assert position is None
+    assert balance is not None
+    assert balance.cash.amount == Decimal("1000")
+    assert imported == ()
+
+    PostgresResolutionExecutor(_uow_factory(factory)).apply(
+        resolution=resolution,
+        mismatch=mismatch,
+        broker_snapshot=broker_snapshot,
+    )
+
+    _assert_one_effect(factory, account_id=account_id, order=order)
