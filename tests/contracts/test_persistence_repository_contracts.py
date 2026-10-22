@@ -3,11 +3,13 @@
 from pytradekit.execution.adapters import InMemoryFillRepository
 from pytradekit.orders.adapters import InMemoryOrderRepository
 from pytradekit.portfolio.adapters import (
+    InMemoryAccountRepository,
     InMemoryBalanceRepository,
     InMemoryPositionRepository,
     InMemoryProcessedFillRegistry,
 )
 from tests.contracts.repository_contracts import (
+    accept_account_repository,
     accept_balance_repository,
     accept_fill_repository,
     accept_order_repository,
@@ -22,6 +24,10 @@ def test_in_memory_order_repository_contract() -> None:
 
 def test_in_memory_fill_repository_contract() -> None:
     accept_fill_repository(InMemoryFillRepository())
+
+
+def test_in_memory_account_repository_contract() -> None:
+    accept_account_repository(InMemoryAccountRepository())
 
 
 def test_in_memory_position_repository_contract() -> None:

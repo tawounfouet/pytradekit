@@ -8,12 +8,58 @@ from sqlalchemy.orm import Session
 
 from pytradekit.persistence import ConcurrentWriteError
 from pytradekit.portfolio.adapters.postgres.models import (
+    AccountModel,
     BalanceModel,
     PositionModel,
     ProcessedFillModel,
 )
-from pytradekit.portfolio.domain import AccountId, Balance, Position
+from pytradekit.portfolio.domain import Account, AccountId, Balance, Position
 from pytradekit.shared import Currency, InstrumentId, Money, Price
+
+
+class PostgresAccountRepository:
+    """Durable repository for canonical economic accounts."""
+
+    def __init__(self, session: Session) -> None:
+        self._session = session
+
+    def get(self, account_id: AccountId) -> Account | None:
+        row = self._session.get(AccountModel, account_id.value)
+        if row is None:
+            return None
+        return Account(
+            id=AccountId(row.id),
+            base_currency=Currency(row.base_currency),
+            name=row.name,
+        )
+
+    def save(self, account: Account) -> None:
+        row = self._session.get(AccountModel, account.id.value)
+        if row is None:
+            self._session.add(
+                AccountModel(
+                    id=account.id.value,
+                    base_currency=account.base_currency.code,
+                    name=account.name,
+                )
+            )
+        else:
+            row.base_currency = account.base_currency.code
+            row.name = account.name
+        self._session.flush()
+
+    def list_all(self) -> tuple[Account, ...]:
+        rows = self._session.execute(
+            select(AccountModel).order_by(AccountModel.id)
+        ).scalars().all()
+        return tuple(
+            Account(
+                id=AccountId(row.id),
+                base_currency=Currency(row.base_currency),
+                name=row.name,
+            )
+            for row in rows
+        )
 
 
 class PostgresPositionRepository:

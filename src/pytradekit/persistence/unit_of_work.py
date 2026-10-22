@@ -16,6 +16,7 @@ from pytradekit.persistence.message_repositories import (
     PostgresOutboxRepository,
 )
 from pytradekit.portfolio.adapters.postgres import (
+    PostgresAccountRepository,
     PostgresBalanceRepository,
     PostgresPositionRepository,
     PostgresProcessedFillRegistry,
@@ -35,6 +36,7 @@ class PostgresUnitOfWork:
 
     orders: PostgresOrderRepository
     fills: PostgresFillRepository
+    accounts: PostgresAccountRepository
     positions: PostgresPositionRepository
     balances: PostgresBalanceRepository
     processed_fills: PostgresProcessedFillRegistry
@@ -51,6 +53,7 @@ class PostgresUnitOfWork:
         self._session = session
         self.orders = PostgresOrderRepository(session)
         self.fills = PostgresFillRepository(session)
+        self.accounts = PostgresAccountRepository(session)
         self.positions = PostgresPositionRepository(session)
         self.balances = PostgresBalanceRepository(session)
         self.processed_fills = PostgresProcessedFillRegistry(session)
