@@ -402,7 +402,7 @@ class AlpacaPaperControlledOrderProbe:
                 "Inspect the account before another probe."
             )
 
-        safety = {
+        safety: ProbeRow = {
             "sdk_retry_attempts": self._command_client.sdk_retry_attempts,
             "market_submit_attempts": (
                 self._command_client.submit_attempts_for(market_id)
