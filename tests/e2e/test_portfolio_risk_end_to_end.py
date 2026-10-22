@@ -43,7 +43,7 @@ from pytradekit.shared import (
     Price,
     Quantity,
 )
-from pytradekit.testing import FakeClock
+from pytradekit.testing import ExplicitTestOrderAuthorizationGate, FakeClock
 
 NOW = datetime(2026, 10, 21, 20, 0, tzinfo=UTC)
 USD = Currency("USD")
@@ -125,6 +125,7 @@ def test_risk_rejection_prevents_execution_port_call() -> None:
         execution=execution,
         clock=FakeClock.at(NOW),
         risk=OrdersRiskEvaluationAdapter(risk_service),
+        authorization_gate=ExplicitTestOrderAuthorizationGate(),
     )
 
     result = submit.execute(
@@ -174,7 +175,12 @@ def test_fill_updates_order_position_and_cash_once() -> None:
         clock=clock,
     )
     repository = InMemoryOrderRepository()
-    submit = SubmitOrder(repository=repository, execution=execution, clock=clock)
+    submit = SubmitOrder(
+        repository=repository,
+        execution=execution,
+        clock=clock,
+        authorization_gate=ExplicitTestOrderAuthorizationGate(),
+    )
     handle = HandleExecutionReport(repository=repository, portfolio_effects=effects)
 
     result = submit.execute(
@@ -185,6 +191,7 @@ def test_fill_updates_order_position_and_cash_once() -> None:
             quantity=Quantity(Decimal("10")),
             time_in_force=TimeInForce.DAY,
             correlation_id=CorrelationId.new(),
+            account_id=account_id,
         )
     )
     reports = execution.drain_reports(result.order.order_id)

@@ -65,7 +65,7 @@ from pytradekit.shared import (
     InstrumentId,
     Quantity,
 )
-from pytradekit.testing import FakeClock
+from pytradekit.testing import ExplicitTestOrderAuthorizationGate, FakeClock
 
 NOW = datetime(2026, 10, 22, 18, tzinfo=UTC)
 USD = Currency("USD")
@@ -473,6 +473,7 @@ def test_submit_uncertainty_converges_by_query_without_second_submit() -> None:
         repository=orders,
         execution=execution,
         clock=clock,
+        authorization_gate=ExplicitTestOrderAuthorizationGate(),
     )
     handle = HandleExecutionReport(repository=orders)
 
@@ -484,6 +485,7 @@ def test_submit_uncertainty_converges_by_query_without_second_submit() -> None:
             quantity=Quantity(Decimal("1")),
             time_in_force=TimeInForce.DAY,
             correlation_id=CorrelationId.new(),
+            account_id=AccountId.new(),
         )
     )
 

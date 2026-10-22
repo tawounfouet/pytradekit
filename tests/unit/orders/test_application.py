@@ -15,12 +15,14 @@ from pytradekit.orders.application import (
     SubmitOrder,
     SubmitOrderCommand,
 )
+from pytradekit.portfolio.domain import AccountId
 from pytradekit.shared import CorrelationId, Currency, InstrumentId, Price, Quantity
-from pytradekit.testing import FakeClock
+from pytradekit.testing import ExplicitTestOrderAuthorizationGate, FakeClock
 
 NOW = datetime(2026, 10, 21, 20, 0, tzinfo=UTC)
 USD = Currency("USD")
 PRICE = Price(Decimal("100"), USD)
+ACCOUNT_ID = AccountId.new()
 
 
 def _submit_command(*, order_type: OrderType = OrderType.MARKET) -> SubmitOrderCommand:
@@ -31,6 +33,7 @@ def _submit_command(*, order_type: OrderType = OrderType.MARKET) -> SubmitOrderC
         quantity=Quantity(Decimal("10")),
         time_in_force=TimeInForce.DAY,
         correlation_id=CorrelationId.new(),
+        account_id=ACCOUNT_ID,
         limit_price=PRICE if order_type is OrderType.LIMIT else None,
     )
 
@@ -45,7 +48,12 @@ def test_market_order_partial_then_full_fill_end_to_end() -> None:
         ),
         clock=clock,
     )
-    submit = SubmitOrder(repository=repository, execution=adapter, clock=clock)
+    submit = SubmitOrder(
+        repository=repository,
+        execution=adapter,
+        clock=clock,
+        authorization_gate=ExplicitTestOrderAuthorizationGate(),
+    )
     handle = HandleExecutionReport(repository=repository)
 
     submitted = submit.execute(_submit_command())
@@ -77,7 +85,12 @@ def test_limit_order_remains_accepted_until_execution_report() -> None:
         scenario=FakeExecutionScenario.accept_immediately(),
         clock=clock,
     )
-    submit = SubmitOrder(repository=repository, execution=adapter, clock=clock)
+    submit = SubmitOrder(
+        repository=repository,
+        execution=adapter,
+        clock=clock,
+        authorization_gate=ExplicitTestOrderAuthorizationGate(),
+    )
 
     result = submit.execute(_submit_command(order_type=OrderType.LIMIT))
 
@@ -92,7 +105,12 @@ def test_submit_timeout_stays_uncertain_and_converges_by_query() -> None:
         scenario=FakeExecutionScenario.submit_timeout(),
         clock=clock,
     )
-    submit = SubmitOrder(repository=repository, execution=adapter, clock=clock)
+    submit = SubmitOrder(
+        repository=repository,
+        execution=adapter,
+        clock=clock,
+        authorization_gate=ExplicitTestOrderAuthorizationGate(),
+    )
     handle = HandleExecutionReport(repository=repository)
 
     result = submit.execute(_submit_command())
@@ -117,15 +135,25 @@ def test_cancel_flow_waits_for_execution_report() -> None:
         scenario=FakeExecutionScenario.accept_immediately(),
         clock=clock,
     )
-    submit = SubmitOrder(repository=repository, execution=adapter, clock=clock)
+    submit = SubmitOrder(
+        repository=repository,
+        execution=adapter,
+        clock=clock,
+        authorization_gate=ExplicitTestOrderAuthorizationGate(),
+    )
     handle = HandleExecutionReport(repository=repository)
-    cancel = CancelOrder(repository=repository, execution=adapter, clock=clock)
+    cancel = CancelOrder(
+        repository=repository,
+        execution=adapter,
+        clock=clock,
+        authorization_gate=ExplicitTestOrderAuthorizationGate(),
+    )
 
     result = submit.execute(_submit_command())
     for report in adapter.drain_reports(result.order.order_id):
         handle.execute(report)
 
-    cancellation = cancel.execute(CancelOrderCommand(order_id=result.order.order_id))
+    cancellation = cancel.execute(CancelOrderCommand(order_id=result.order.order_id, account_id=ACCOUNT_ID))
     assert cancellation.order.status is OrderStatus.CANCEL_REQUESTED
 
     for report in adapter.drain_reports(result.order.order_id):
@@ -143,14 +171,24 @@ def test_cancel_fill_race_applies_real_fill_before_cancel_confirmation() -> None
         scenario=FakeExecutionScenario.accept_immediately(),
         clock=clock,
     )
-    submit = SubmitOrder(repository=repository, execution=adapter, clock=clock)
+    submit = SubmitOrder(
+        repository=repository,
+        execution=adapter,
+        clock=clock,
+        authorization_gate=ExplicitTestOrderAuthorizationGate(),
+    )
     handle = HandleExecutionReport(repository=repository)
-    cancel = CancelOrder(repository=repository, execution=adapter, clock=clock)
+    cancel = CancelOrder(
+        repository=repository,
+        execution=adapter,
+        clock=clock,
+        authorization_gate=ExplicitTestOrderAuthorizationGate(),
+    )
 
     submitted = submit.execute(_submit_command())
     for report in adapter.drain_reports(submitted.order.order_id):
         handle.execute(report)
-    cancel.execute(CancelOrderCommand(order_id=submitted.order.order_id))
+    cancel.execute(CancelOrderCommand(order_id=submitted.order.order_id, account_id=ACCOUNT_ID))
 
     fill = Fill(
         id=FillId.new(),
@@ -166,6 +204,7 @@ def test_cancel_fill_race_applies_real_fill_before_cancel_confirmation() -> None
             status=ExecutionStatus.PARTIALLY_FILLED,
             occurred_at=clock.now(),
             correlation_id=CorrelationId.new(),
+        account_id=ACCOUNT_ID,
             external_order_id=submitted.order.external_order_id,
             fill=fill,
         )

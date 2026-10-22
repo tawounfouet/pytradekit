@@ -32,12 +32,14 @@ from pytradekit.orders.application import (
     SubmitOrder,
     SubmitOrderCommand,
 )
+from pytradekit.portfolio.domain import AccountId
 from pytradekit.shared import CorrelationId, Currency, InstrumentId, Price, Quantity
-from pytradekit.testing import FakeClock
+from pytradekit.testing import ExplicitTestOrderAuthorizationGate, FakeClock
 
 NOW = datetime(2026, 10, 21, 20, 0, tzinfo=UTC)
 USD = Currency("USD")
 PRICE = Price(Decimal("99.50"), USD)
+ACCOUNT_ID = AccountId.new()
 
 
 def _command() -> SubmitOrderCommand:
@@ -48,6 +50,7 @@ def _command() -> SubmitOrderCommand:
         quantity=Quantity(Decimal("10")),
         time_in_force=TimeInForce.DAY,
         correlation_id=CorrelationId.new(),
+        account_id=ACCOUNT_ID,
     )
 
 
@@ -58,7 +61,12 @@ def test_submit_timeout_converges_to_acceptance_by_query() -> None:
         scenario=FakeExecutionScenario.submit_timeout(resolve_as=ExecutionStatus.ACCEPTED),
         clock=clock,
     )
-    submit = SubmitOrder(repository=repository, execution=execution, clock=clock)
+    submit = SubmitOrder(
+        repository=repository,
+        execution=execution,
+        clock=clock,
+        authorization_gate=ExplicitTestOrderAuthorizationGate(),
+    )
     handle = HandleExecutionReport(repository=repository)
 
     submitted = submit.execute(_command())
@@ -83,7 +91,12 @@ def test_submit_timeout_can_converge_to_rejection_by_query() -> None:
         scenario=FakeExecutionScenario.submit_timeout(resolve_as=ExecutionStatus.REJECTED),
         clock=clock,
     )
-    submit = SubmitOrder(repository=repository, execution=execution, clock=clock)
+    submit = SubmitOrder(
+        repository=repository,
+        execution=execution,
+        clock=clock,
+        authorization_gate=ExplicitTestOrderAuthorizationGate(),
+    )
     handle = HandleExecutionReport(repository=repository)
 
     submitted = submit.execute(_command())
@@ -104,7 +117,12 @@ def test_duplicate_fill_has_exactly_one_economic_effect() -> None:
         scenario=FakeExecutionScenario.fill_immediately(price=PRICE),
         clock=clock,
     )
-    submit = SubmitOrder(repository=repository, execution=execution, clock=clock)
+    submit = SubmitOrder(
+        repository=repository,
+        execution=execution,
+        clock=clock,
+        authorization_gate=ExplicitTestOrderAuthorizationGate(),
+    )
     handle = HandleExecutionReport(repository=repository)
     get_order = GetOrder(repository=repository)
 
@@ -183,17 +201,27 @@ def test_cancel_timeout_stays_uncertain_and_blocks_blind_resubmission() -> None:
         scenario=FakeExecutionScenario.cancel_timeout(),
         clock=clock,
     )
-    submit = SubmitOrder(repository=repository, execution=execution, clock=clock)
-    cancel = CancelOrder(repository=repository, execution=execution, clock=clock)
+    submit = SubmitOrder(
+        repository=repository,
+        execution=execution,
+        clock=clock,
+        authorization_gate=ExplicitTestOrderAuthorizationGate(),
+    )
+    cancel = CancelOrder(
+        repository=repository,
+        execution=execution,
+        clock=clock,
+        authorization_gate=ExplicitTestOrderAuthorizationGate(),
+    )
 
     submitted = submit.execute(_command())
-    cancellation = cancel.execute(CancelOrderCommand(order_id=submitted.order.order_id))
+    cancellation = cancel.execute(CancelOrderCommand(order_id=submitted.order.order_id, account_id=ACCOUNT_ID))
 
     assert cancellation.order.status is OrderStatus.CANCEL_REQUESTED
     assert cancellation.order.execution_certainty is ExecutionCertainty.UNCERTAIN
 
     with pytest.raises(OrderNotCancellableError):
-        cancel.execute(CancelOrderCommand(order_id=submitted.order.order_id))
+        cancel.execute(CancelOrderCommand(order_id=submitted.order.order_id, account_id=ACCOUNT_ID))
 
 
 def test_full_fill_wins_over_late_cancel_confirmation() -> None:
@@ -203,14 +231,24 @@ def test_full_fill_wins_over_late_cancel_confirmation() -> None:
         scenario=FakeExecutionScenario.accept_immediately(),
         clock=clock,
     )
-    submit = SubmitOrder(repository=repository, execution=execution, clock=clock)
-    cancel = CancelOrder(repository=repository, execution=execution, clock=clock)
+    submit = SubmitOrder(
+        repository=repository,
+        execution=execution,
+        clock=clock,
+        authorization_gate=ExplicitTestOrderAuthorizationGate(),
+    )
+    cancel = CancelOrder(
+        repository=repository,
+        execution=execution,
+        clock=clock,
+        authorization_gate=ExplicitTestOrderAuthorizationGate(),
+    )
     handle = HandleExecutionReport(repository=repository)
     get_order = GetOrder(repository=repository)
 
     submitted = submit.execute(_command())
     execution.drain_reports(submitted.order.order_id)
-    cancel.execute(CancelOrderCommand(order_id=submitted.order.order_id))
+    cancel.execute(CancelOrderCommand(order_id=submitted.order.order_id, account_id=ACCOUNT_ID))
     cancel_reports = execution.drain_reports(submitted.order.order_id)
 
     fill = Fill(
@@ -227,6 +265,7 @@ def test_full_fill_wins_over_late_cancel_confirmation() -> None:
             status=ExecutionStatus.FILLED,
             occurred_at=NOW,
             correlation_id=CorrelationId.new(),
+        account_id=ACCOUNT_ID,
             external_order_id=submitted.order.external_order_id,
             fill=fill,
         )
