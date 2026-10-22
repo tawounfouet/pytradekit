@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable, Coroutine
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
-from typing import cast
+from typing import Any, cast
 from uuid import UUID
 
 import pytest
@@ -92,7 +92,7 @@ class _FakeDataClient:
 class _IdleStream:
     def subscribe_trade_updates(
         self,
-        handler: Callable[[TradeUpdate], Awaitable[None]],
+        handler: Callable[[TradeUpdate], Coroutine[Any, Any, None]],
     ) -> None:
         del handler
 
@@ -105,11 +105,11 @@ class _IdleStream:
 
 class _OneEventStream:
     def __init__(self) -> None:
-        self._handler: Callable[[TradeUpdate], Awaitable[None]] | None = None
+        self._handler: Callable[[TradeUpdate], Coroutine[Any, Any, None]] | None = None
 
     def subscribe_trade_updates(
         self,
-        handler: Callable[[TradeUpdate], Awaitable[None]],
+        handler: Callable[[TradeUpdate], Coroutine[Any, Any, None]],
     ) -> None:
         self._handler = handler
 
