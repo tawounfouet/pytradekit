@@ -1,5 +1,6 @@
 """Architecture fitness functions for LOT-08 Alpaca read-only snapshots."""
 
+import ast
 from pathlib import Path
 
 SNAPSHOTS_PATH = Path("src/pytradekit/brokers/adapters/alpaca/snapshots.py")
@@ -34,16 +35,19 @@ def test_snapshot_layer_is_hard_locked_to_iex_for_latest_equity_quote() -> None:
 
 def test_snapshot_layer_does_not_construct_clients_or_resolve_secrets() -> None:
     source = SNAPSHOTS_PATH.read_text(encoding="utf-8")
+    tree = ast.parse(source, filename=str(SNAPSHOTS_PATH))
+    constructed = {
+        node.func.id
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+    }
 
-    forbidden = (
-        "TradingClient(",
-        "StockHistoricalDataClient(",
-        "SecretsPort",
-        "EnvironmentSecrets",
-        "os.environ",
-        "os.getenv",
-    )
-    assert all(item not in source for item in forbidden)
+    assert "TradingClient" not in constructed
+    assert "StockHistoricalDataClient" not in constructed
+    assert "SecretsPort" not in source
+    assert "EnvironmentSecrets" not in source
+    assert "os.environ" not in source
+    assert "os.getenv" not in source
 
 
 def test_snapshot_layer_does_not_depend_on_execution_port() -> None:
