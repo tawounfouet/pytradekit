@@ -152,7 +152,7 @@ class ReconcileAccount:
             if resolutions:
                 run.transition_to(ReconciliationRunStatus.RESOLVING)
                 self._repository.save_run(run)
-            self._repository.checkpoint()
+                self._repository.checkpoint()
                 self._apply_supported(
                     resolutions,
                     initial,
@@ -214,7 +214,7 @@ class ReconcileAccount:
             }:
                 run.fail(completed_at=self._clock.now())
                 self._repository.save_run(run)
-            self._repository.checkpoint()
+                self._repository.checkpoint()
             if self._notifier is not None:
                 self._notifier.recovery_failed(run, reason=type(exc).__name__)
             raise
@@ -286,7 +286,7 @@ class ReconcileAccount:
                     verification_status="application_failed",
                 )
                 self._repository.save_resolution(resolution)
-            self._repository.checkpoint()
+                self._repository.checkpoint()
                 raise
             resolution.mark_applied(completed_at=self._clock.now())
             self._repository.save_resolution(resolution)

@@ -39,11 +39,11 @@ from pytradekit.shared import Currency
 
 from .contract import ALPACA_PROVIDER_KEY
 from .errors import AlpacaOperation, translate_alpaca_error
+from .execution import AlpacaExecutionAdapter
 from .generic_reconciliation import (
     AlpacaGenericReconciliationRuntime,
     build_alpaca_generic_reconciliation_runtime,
 )
-from .execution import AlpacaExecutionAdapter
 from .mappers import map_order_state_snapshot
 from .reference_resolver import StaticAlpacaReferenceResolver
 from .runtime import AlpacaPaperRuntimeComposition
