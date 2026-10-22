@@ -29,9 +29,10 @@ def test_ff_048_provider_sdk_imports_are_confined_to_provider_adapters() -> None
     offenders: list[str] = []
     for path in python_sources():
         for imported in imported_modules(path):
-            if imported == "alpaca" or imported.startswith("alpaca."):
-                if "/brokers/adapters/alpaca/" not in path.as_posix():
-                    offenders.append(f"{path}: {imported}")
+            if (
+                imported == "alpaca" or imported.startswith("alpaca.")
+            ) and "/brokers/adapters/alpaca/" not in path.as_posix():
+                offenders.append(f"{path}: {imported}")
     assert not offenders, "Provider SDK imports escaped adapter boundary:\n" + "\n".join(
         offenders
     )
