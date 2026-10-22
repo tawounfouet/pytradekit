@@ -48,6 +48,7 @@ from pytradekit.safety.adapters import (
     OrdersSafetyGate,
 )
 from pytradekit.safety.application import (
+    ActivateKillSwitch,
     ConfirmDangerousAction,
     CreateRiskOverride,
     ReleaseKillSwitch,
@@ -205,6 +206,38 @@ def _authorization(
         audit_sink=InMemoryAuthorizationAuditSink(),
     )
     return authorize, principal
+
+
+def test_kill_switch_activation_is_audited_without_execution_side_effect() -> None:
+    account_id = AccountId.new()
+    authorize, principal = _authorization(
+        account_id=account_id,
+        permissions=PermissionSet.of(Permission.ACTIVATE_KILL_SWITCH),
+    )
+    repository = InMemoryKillSwitchRepository()
+    audit = InMemorySafetyAuditSink()
+    execution = CountingExecutionPort()
+    activate = ActivateKillSwitch(
+        authorize=authorize,
+        principal_provider=principal,
+        repository=repository,
+        audit=audit,
+        clock=FakeClock.at(NOW),
+        environment=AuthorizationEnvironment.PAPER,
+    )
+
+    switch = activate.execute(
+        scope=KillSwitchScope.ACCOUNT,
+        scope_id=str(account_id),
+        reason="operator containment",
+    )
+
+    assert switch.active
+    assert repository.get(switch.id) == switch
+    assert execution.submit_calls == 0
+    assert [event.event_type for event in audit.events] == [
+        "KILL_SWITCH_ACTIVATED"
+    ]
 
 
 def test_kill_switch_blocks_provider_even_with_matching_override() -> None:
