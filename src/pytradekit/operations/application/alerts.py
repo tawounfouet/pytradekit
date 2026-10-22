@@ -227,7 +227,11 @@ class OperationalAlertEvaluator:
                 )
                 continue
             existing = self._repository.find_unresolved_by_deduplication_key(key)
-            if existing is not None and report is not None:
+            if (
+                existing is not None
+                and report is not None
+                and report.status is HealthStatus.HEALTHY
+            ):
                 self._resolve_alert.execute(
                     existing.id,
                     verified_clear=True,
