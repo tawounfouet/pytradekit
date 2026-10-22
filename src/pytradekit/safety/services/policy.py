@@ -45,6 +45,7 @@ class SafetyPolicy:
             or evidence.recovery_state is None
             or evidence.runtime_lifecycle is None
             or evidence.trading_ready is None
+            or evidence.critical_health_healthy is None
         ):
             return SafetyState.UNKNOWN, (SafetyReason.EVIDENCE_UNAVAILABLE,)
 
@@ -72,6 +73,11 @@ class SafetyPolicy:
         }:
             return SafetyState.RESTRICTED, (
                 SafetyReason.RUNTIME_LIFECYCLE_RESTRICTED,
+            )
+
+        if not evidence.critical_health_healthy:
+            return SafetyState.RESTRICTED, (
+                SafetyReason.CRITICAL_HEALTH_UNHEALTHY,
             )
 
         if not evidence.trading_ready:

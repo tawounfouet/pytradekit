@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pytradekit"
-version = "0.7.0a4"
+version = "0.7.0b2"
 description = "Domain-first, broker-agnostic trading framework."
 readme = "README.md"
 requires-python = ">=3.12"
@@ -127,3 +127,16 @@ name = "Safety domain is provider independent"
 type = "forbidden"
 source_modules = ["pytradekit.safety.domain"]
 forbidden_modules = ["pytradekit.brokers", "pytradekit.persistence"]
+
+
+[[tool.importlinter.contracts]]
+name = "Operations domain is trading aggregate independent"
+type = "forbidden"
+source_modules = ["pytradekit.operations.domain"]
+forbidden_modules = [
+  "pytradekit.orders",
+  "pytradekit.portfolio",
+  "pytradekit.risk",
+  "pytradekit.brokers",
+  "pytradekit.persistence",
+]

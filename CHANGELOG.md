@@ -6,6 +6,55 @@ The project is currently pre-1.0 and public APIs remain experimental unless expl
 
 ## [Unreleased]
 
+## [0.7.0b2] - 2026-10-22
+
+### Added
+
+- LOT-06 Metrics, Tracing & Alerting.
+- Low-cardinality labeled metrics on the existing RuntimeMetrics registry.
+- Authorization, safety, health, readiness, alert, and telemetry failure metrics.
+- TraceContext and TraceRecord preserving CorrelationId and CausationId.
+- TraceRecorder with exporter fault isolation.
+- OpenTelemetry-compatible trace adapter without a core OpenTelemetry dependency.
+- AlertId, AlertType, AlertSeverity, AlertState, and stateful Alert lifecycle.
+- AlertRepositoryPort, AlertRouterPort, AlertSinkPort, and TraceExporterPort.
+- Alert deduplication, acknowledgement, verified resolution, and health-condition evaluation.
+- In-memory alert state, runtime event sink, and deterministic failing sink for qualification.
+
+### Safety
+
+- Metric labels reject high-cardinality identifiers.
+- Secret-like telemetry field names and values are rejected.
+- Alert state is stored before sink delivery is attempted.
+- Alert sink failure retains the unresolved alert and records delivery failure metrics.
+- Telemetry exporter failure cannot alter application operation results.
+- OpenTelemetry remains an adapter, not a core dependency.
+- LIVE remains unavailable.
+
+
+## [0.7.0b1] - 2026-10-22
+
+### Added
+
+- LOT-05 Health, Liveness & Operational Readiness.
+- HealthStatus, HealthComponent, HealthReport, HealthSnapshot, and HealthRegistry.
+- Per-component freshness policies that expire stale HEALTHY evidence.
+- LivenessStatus independent from external dependency health.
+- OperationalReadinessReport preserving existing TradingReadinessReport authority.
+- Read-only dependency health checks for database, broker APIs, streams, market data, outbox, inbox, reconciliation, and runtime.
+- Health-aware SafetyEvidence projection for critical dependencies.
+- Application operations for health, liveness, readiness, monitoring, and admission reflection.
+
+### Safety
+
+- Liveness is distinct from operational readiness.
+- Operational readiness is distinct from trading readiness.
+- Critical database, broker command, or runtime health loss closes unsafe admission.
+- Health code does not mutate trading aggregates.
+- Stale HEALTHY evidence becomes UNKNOWN by policy.
+- LIVE remains unavailable.
+
+
 ## [0.7.0a4] - 2026-10-22
 
 ### Added

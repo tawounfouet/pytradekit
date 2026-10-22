@@ -37,6 +37,11 @@ RELEASE_DOCUMENTS = (
     Path("docs/runbooks/RECONCILIATION_EXTERNAL_ACTIVITY.md"),
     Path("docs/runbooks/RECONCILIATION_STALE_RUN.md"),
     Path("docs/runbooks/PYTRADEKIT_0_6_RELEASE_QUALIFICATION.md"),
+    Path("docs/architecture/operations-health.md"),
+    Path("docs/guides/operations.md"),
+    Path("docs/runbooks/DATABASE_UNAVAILABLE.md"),
+    Path("docs/runbooks/BROKER_DISCONNECTED.md"),
+    Path("docs/runbooks/ALERT_DELIVERY_FAILURE.md"),
 )
 
 

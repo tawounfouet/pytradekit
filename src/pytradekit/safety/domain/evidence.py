@@ -19,3 +19,4 @@ class SafetyEvidence:
     recovery_state: RecoveryState | None
     runtime_lifecycle: RuntimeLifecycleState | None
     trading_ready: bool | None
+    critical_health_healthy: bool | None = True

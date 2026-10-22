@@ -5,6 +5,7 @@ from pytradekit.orders.ports.safety_gate import (
     OrderSafetyGateResult,
 )
 from pytradekit.portfolio.domain import AccountId
+from pytradekit.runtime.observability import RuntimeObserver
 from pytradekit.safety.domain import SafetyAction
 from pytradekit.safety.ports import (
     KillSwitchRepository,
@@ -26,12 +27,14 @@ class OrdersSafetyGate(OrderSafetyGatePort):
         environment: str = "PAPER",
         kill_switches: KillSwitchRepository | None = None,
         risk_overrides: RiskOverrideRepository | None = None,
+        observer: RuntimeObserver | None = None,
     ) -> None:
         self._gate = gate
         self._evidence = evidence
         self._environment = environment
         self._kill_switches = kill_switches
         self._risk_overrides = risk_overrides
+        self._observer = observer
 
     def evaluate_submit(
         self,
@@ -86,6 +89,21 @@ class OrdersSafetyGate(OrderSafetyGatePort):
             kill_switch_active=kill_switch_active,
             risk_override_active=override_active,
         )
+        if self._observer is not None:
+            self._observer.increment_labeled(
+                "safety_decisions_total",
+                labels={
+                    "action": action.value,
+                    "decision": "ALLOW" if decision.allowed else "DENY",
+                    "state": decision.state.value,
+                },
+            )
+            if not decision.allowed:
+                self._observer.event(
+                    "SafetyActionDenied",
+                    action=action.value,
+                    state=decision.state.value,
+                )
         return OrderSafetyGateResult(
             allowed=decision.allowed,
             reason_codes=tuple(code.value for code in decision.reason_codes),

@@ -4,13 +4,13 @@ PyTradeKit is a domain-first, broker-agnostic trading framework designed around 
 
 ## Current milestone
 
-PyTradeKit 0.7.0a4 - Kill Switch & Risk Overrides
+PyTradeKit 0.7.0b2 - Metrics, Tracing & Alerting
 
 PyTradeKit 0.7 adds explicit identity, scoped RBAC, and authorization on top of the qualified reconciliation and recovery baseline.
 
-PyTradeKit 0.7.0a4 adds LOT-04: persistent KillSwitch, time-bound RiskOverride, dangerous-action confirmation, and governed safety operations.
+PyTradeKit 0.7.0b2 adds LOT-06: low-cardinality metrics, fail-safe tracing, stateful alerts, deduplication, acknowledgement, resolution, and sink fault isolation.
 
-The Alpaca integration remains PAPER-only. LIVE trading is not available or qualified in 0.7.0a4.
+The Alpaca integration remains PAPER-only. LIVE trading is not available or qualified in 0.7.0b2.
 
 ## Requirements
 
@@ -48,7 +48,7 @@ pytradekit --version
 Current release version:
 
 ~~~text
-0.7.0a4
+0.7.0b2
 ~~~
 
 ## Milestone flow
