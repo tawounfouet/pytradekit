@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pytradekit"
-version = "0.5.0"
+version = "0.6.0a1"
 description = "Domain-first, broker-agnostic trading framework."
 readme = "README.md"
 requires-python = ">=3.12"
@@ -127,4 +127,13 @@ source_modules = ["pytradekit.market_data.domain"]
 forbidden_modules = [
   "pytradekit.strategy",
   "pytradekit.brokers",
+]
+
+[[tool.importlinter.contracts]]
+name = "Reconciliation domain is provider independent"
+type = "forbidden"
+source_modules = ["pytradekit.reconciliation.domain"]
+forbidden_modules = [
+  "pytradekit.brokers.adapters",
+  "pytradekit.persistence",
 ]

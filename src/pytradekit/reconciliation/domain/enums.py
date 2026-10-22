@@ -1,0 +1,168 @@
+"""Reconciliation and recovery enumerations."""
+
+from enum import StrEnum
+
+
+class ReconciliationScope(StrEnum):
+    """Economic state covered by a reconciliation run."""
+
+    ACCOUNT = "ACCOUNT"
+    ORDERS = "ORDERS"
+    FILLS = "FILLS"
+    POSITIONS = "POSITIONS"
+    BALANCES = "BALANCES"
+    FULL = "FULL"
+
+
+class ReconciliationTrigger(StrEnum):
+    """Reason that started reconciliation."""
+
+    STARTUP = "STARTUP"
+    PERIODIC = "PERIODIC"
+    RECONNECT = "RECONNECT"
+    SUBMIT_UNCERTAINTY = "SUBMIT_UNCERTAINTY"
+    UNKNOWN_STATE = "UNKNOWN_STATE"
+    MANUAL = "MANUAL"
+    INCIDENT = "INCIDENT"
+    POST_DEPLOYMENT = "POST_DEPLOYMENT"
+
+
+class ReconciliationRunStatus(StrEnum):
+    """Lifecycle state of one reconciliation run."""
+
+    CREATED = "CREATED"
+    CAPTURING = "CAPTURING"
+    COMPARING = "COMPARING"
+    RESOLVING = "RESOLVING"
+    VERIFYING = "VERIFYING"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+    CANCELLED = "CANCELLED"
+
+
+class SnapshotCompleteness(StrEnum):
+    """Quality of one captured snapshot."""
+
+    COMPLETE = "COMPLETE"
+    PARTIAL = "PARTIAL"
+    UNKNOWN = "UNKNOWN"
+
+
+class MismatchType(StrEnum):
+    """Provider-neutral economic mismatch taxonomy."""
+
+    MISSING_INTERNAL_ORDER = "MISSING_INTERNAL_ORDER"
+    MISSING_EXTERNAL_ORDER = "MISSING_EXTERNAL_ORDER"
+    ORDER_STATUS_MISMATCH = "ORDER_STATUS_MISMATCH"
+    ORDER_FILLED_QUANTITY_MISMATCH = "ORDER_FILLED_QUANTITY_MISMATCH"
+    ORDER_IDENTITY_MISMATCH = "ORDER_IDENTITY_MISMATCH"
+    MISSING_INTERNAL_FILL = "MISSING_INTERNAL_FILL"
+    MISSING_EXTERNAL_FILL = "MISSING_EXTERNAL_FILL"
+    FILL_VALUE_MISMATCH = "FILL_VALUE_MISMATCH"
+    POSITION_QUANTITY_MISMATCH = "POSITION_QUANTITY_MISMATCH"
+    POSITION_MISSING_INTERNAL = "POSITION_MISSING_INTERNAL"
+    POSITION_MISSING_EXTERNAL = "POSITION_MISSING_EXTERNAL"
+    BALANCE_MISMATCH = "BALANCE_MISMATCH"
+    UNKNOWN_EXTERNAL_ORDER = "UNKNOWN_EXTERNAL_ORDER"
+    UNKNOWN_EXTERNAL_FILL = "UNKNOWN_EXTERNAL_FILL"
+    UNKNOWN_EXTERNAL_ACTIVITY = "UNKNOWN_EXTERNAL_ACTIVITY"
+    SNAPSHOT_INCOMPLETE = "SNAPSHOT_INCOMPLETE"
+    SNAPSHOT_UNAVAILABLE = "SNAPSHOT_UNAVAILABLE"
+    STALE_RECONCILIATION = "STALE_RECONCILIATION"
+
+
+class MismatchSeverity(StrEnum):
+    """Domain severity of a mismatch."""
+
+    INFO = "INFO"
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+    CRITICAL = "CRITICAL"
+
+
+class ResolutionType(StrEnum):
+    """Explicit recovery outcome selected for a mismatch."""
+
+    NO_ACTION = "NO_ACTION"
+    IMPORT_MISSING_EXTERNAL_EVENT = "IMPORT_MISSING_EXTERNAL_EVENT"
+    IMPORT_EXTERNAL_ACTIVITY = "IMPORT_EXTERNAL_ACTIVITY"
+    REBUILD_DERIVED_STATE = "REBUILD_DERIVED_STATE"
+    REFRESH_SNAPSHOT = "REFRESH_SNAPSHOT"
+    RETRY_LATER = "RETRY_LATER"
+    BLOCK_TRADING = "BLOCK_TRADING"
+    MANUAL_REVIEW = "MANUAL_REVIEW"
+    MARK_EXPECTED_DIFFERENCE = "MARK_EXPECTED_DIFFERENCE"
+
+
+class ResolutionStatus(StrEnum):
+    """Lifecycle of one persisted resolution."""
+
+    PLANNED = "PLANNED"
+    APPLYING = "APPLYING"
+    APPLIED = "APPLIED"
+    VERIFIED = "VERIFIED"
+    FAILED = "FAILED"
+    REJECTED = "REJECTED"
+
+
+class ConsistencyStatus(StrEnum):
+    """Known consistency of the requested economic scope."""
+
+    CONSISTENT = "CONSISTENT"
+    DEGRADED = "DEGRADED"
+    INCONSISTENT = "INCONSISTENT"
+    UNKNOWN = "UNKNOWN"
+
+
+class StateConfidence(StrEnum):
+    """Quality of evidence supporting a consistency decision."""
+
+    HIGH = "HIGH"
+    MEDIUM = "MEDIUM"
+    LOW = "LOW"
+    UNKNOWN = "UNKNOWN"
+
+
+class RecoveryState(StrEnum):
+    """Recovery lifecycle, separate from process lifecycle."""
+
+    IDLE = "IDLE"
+    CONTAINING = "CONTAINING"
+    OBSERVING = "OBSERVING"
+    RECONCILING = "RECONCILING"
+    RESOLVING = "RESOLVING"
+    VERIFYING = "VERIFYING"
+    RECOVERED = "RECOVERED"
+    BLOCKED = "BLOCKED"
+    FAILED = "FAILED"
+
+
+class RecoveryAction(StrEnum):
+    """Provider-neutral recovery actions."""
+
+    QUERY_ORDER = "QUERY_ORDER"
+    QUERY_FILLS = "QUERY_FILLS"
+    REFRESH_ACCOUNT = "REFRESH_ACCOUNT"
+    REFRESH_POSITIONS = "REFRESH_POSITIONS"
+    REFRESH_BALANCES = "REFRESH_BALANCES"
+    IMPORT_FILL = "IMPORT_FILL"
+    IMPORT_EXTERNAL_ORDER = "IMPORT_EXTERNAL_ORDER"
+    IMPORT_EXTERNAL_ACTIVITY = "IMPORT_EXTERNAL_ACTIVITY"
+    REBUILD_POSITION = "REBUILD_POSITION"
+    REBUILD_BALANCE = "REBUILD_BALANCE"
+    BLOCK_NEW_ORDERS = "BLOCK_NEW_ORDERS"
+    PAUSE_STRATEGY = "PAUSE_STRATEGY"
+    REQUIRE_MANUAL_REVIEW = "REQUIRE_MANUAL_REVIEW"
+    RETRY_SNAPSHOT = "RETRY_SNAPSHOT"
+
+
+class ExternalActivityOrigin(StrEnum):
+    """Origin classification for external economic activity."""
+
+    INTERNAL = "INTERNAL"
+    EXTERNAL_MANUAL = "EXTERNAL_MANUAL"
+    EXTERNAL_SYSTEM = "EXTERNAL_SYSTEM"
+    BROKER_ADJUSTMENT = "BROKER_ADJUSTMENT"
+    UNKNOWN_EXTERNAL = "UNKNOWN_EXTERNAL"
+    IMPORTED = "IMPORTED"
