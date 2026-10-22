@@ -136,6 +136,12 @@ jobs:
         if: steps.state.outputs.exists != 'true'
         run: pytest --cov=pytradekit --cov-report=term-missing
 
+      - name: Single-node deployment qualification
+        if: steps.state.outputs.exists != 'true'
+        run: |
+          python scripts/qualify_deployment.py
+          docker build --tag pytradekit:release .
+
       - name: Requalify release artifacts
         if: steps.state.outputs.exists != 'true'
         run: python scripts/qualify_release.py
