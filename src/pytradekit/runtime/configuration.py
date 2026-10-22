@@ -10,7 +10,6 @@ from enum import StrEnum
 
 from pytradekit.runtime.errors import RuntimeConfigurationError
 
-
 _SECRET_SCHEME = re.compile(r"^[a-z][a-z0-9+.-]*$")
 
 
