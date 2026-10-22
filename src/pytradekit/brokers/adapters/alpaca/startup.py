@@ -10,7 +10,8 @@ from uuid import UUID
 
 from alpaca.common.exceptions import APIError
 from alpaca.trading.enums import QueryOrderStatus
-from alpaca.trading.models import Order as AlpacaOrder, TradeUpdate
+from alpaca.trading.models import Order as AlpacaOrder
+from alpaca.trading.models import TradeUpdate
 from alpaca.trading.requests import GetOrdersRequest
 
 from pytradekit.brokers import (
@@ -654,19 +655,15 @@ class AlpacaStartupCoordinator:
             for remote in remote_orders:
                 if not remote.client_order_id.strip():
                     gaps.append(
-                        (
-                            "Alpaca PAPER account contains an open order without "
-                            f"client_order_id: {remote.external_order_id}"
-                        )
+                        "Alpaca PAPER account contains an open order without "
+                        f"client_order_id: {remote.external_order_id}"
                     )
                     continue
                 local = uow.orders.get_by_client_order_id(remote.client_order_id)
                 if local is None:
                     gaps.append(
-                        (
-                            "Alpaca PAPER account contains an open order with no "
-                            f"durable local match: {remote.external_order_id}"
-                        )
+                        "Alpaca PAPER account contains an open order with no "
+                        f"durable local match: {remote.external_order_id}"
                     )
                     continue
                 if local.is_terminal:

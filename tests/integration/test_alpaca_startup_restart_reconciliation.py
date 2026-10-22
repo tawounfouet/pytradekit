@@ -7,7 +7,8 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from uuid import uuid4
 
-from alpaca.trading.models import Order as AlpacaOrder, TradeUpdate
+from alpaca.trading.models import Order as AlpacaOrder
+from alpaca.trading.models import TradeUpdate
 from sqlalchemy.orm import Session, sessionmaker
 
 from pytradekit.brokers import (
