@@ -21,12 +21,22 @@ EXAMPLES = (
     Path("examples/05_portfolio_risk.py"),
     Path("examples/06_strategy_backtest.py"),
     Path("examples/07_alpaca_paper_runtime.py"),
+    Path("examples/manual_reconciliation.py"),
 )
 
 RELEASE_DOCUMENTS = (
     Path("docs/architecture/strategy-backtest.md"),
     Path("docs/guides/strategy.md"),
     Path("docs/guides/backtesting.md"),
+    Path("docs/architecture/reconciliation.md"),
+    Path("docs/architecture/recovery.md"),
+    Path("docs/guides/reconciliation.md"),
+    Path("docs/runbooks/RECONCILIATION_MISSING_FILL.md"),
+    Path("docs/runbooks/RECONCILIATION_BROKER_DISCONNECT.md"),
+    Path("docs/runbooks/RECONCILIATION_CRITICAL_MISMATCH.md"),
+    Path("docs/runbooks/RECONCILIATION_EXTERNAL_ACTIVITY.md"),
+    Path("docs/runbooks/RECONCILIATION_STALE_RUN.md"),
+    Path("docs/runbooks/PYTRADEKIT_0_6_RELEASE_QUALIFICATION.md"),
 )
 
 
