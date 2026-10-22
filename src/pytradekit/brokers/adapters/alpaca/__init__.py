@@ -1,4 +1,4 @@
-"""Alpaca broker adapter discovery, runtime, ACL, execution, and snapshot surfaces."""
+"""Alpaca broker adapter discovery, runtime, ACL, execution, snapshots, and recovery."""
 
 from .controlled_order_probe import (
     AlpacaPaperControlledOrderProbe,
@@ -35,13 +35,30 @@ from .snapshots import (
     AlpacaSnapshotTradingClient,
     AlpacaStockDataClient,
 )
+from .startup import (
+    AlpacaOpenOrderInventory,
+    AlpacaOrderStateReader,
+    AlpacaPaperRuntimeSystem,
+    AlpacaStartupCoordinator,
+    RemoteOpenOrder,
+    build_alpaca_paper_runtime_system,
+)
+from .stream import (
+    AlpacaPaperTradeStream,
+    AlpacaTradeUpdateProcessor,
+    AlpacaTradeUpdateStreamRunner,
+    TradeUpdateProcessingResult,
+)
 
 __all__ = [
     "AlpacaCommandClient",
     "AlpacaExecutionAdapter",
     "AlpacaInstrumentResolver",
     "AlpacaMarketDataSnapshots",
+    "AlpacaOpenOrderInventory",
     "AlpacaOperation",
+    "AlpacaOrderStateReader",
+    "AlpacaPaperRuntimeSystem",
     "AlpacaPaperCommandClient",
     "AlpacaPaperControlledOrderProbe",
     "AlpacaPaperOrderProbeConfig",
@@ -51,16 +68,23 @@ __all__ = [
     "AlpacaPaperReadOnlyProbe",
     "AlpacaPaperRuntimeComposition",
     "AlpacaPaperStartupReadiness",
+    "AlpacaPaperTradeStream",
     "AlpacaReadClient",
     "AlpacaSimulatedResponseLoss",
     "AlpacaSingleAttemptTradingClient",
     "AlpacaSnapshotReferenceResolver",
     "AlpacaSnapshotTradingClient",
+    "AlpacaStartupCoordinator",
     "AlpacaStockDataClient",
+    "AlpacaTradeUpdateProcessor",
+    "AlpacaTradeUpdateStreamRunner",
+    "RemoteOpenOrder",
     "StaticAlpacaReferenceResolver",
+    "TradeUpdateProcessingResult",
     "build_alpaca_paper_manifest",
     "build_alpaca_paper_order_probe",
     "build_alpaca_paper_probe",
     "build_alpaca_paper_runtime",
+    "build_alpaca_paper_runtime_system",
     "translate_alpaca_error",
 ]

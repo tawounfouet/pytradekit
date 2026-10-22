@@ -15,6 +15,7 @@ from pytradekit.brokers.adapters.alpaca.contract import (
     ALPACA_PROVIDER_KEY,
     ALPACA_SDK_VERSION_TARGET,
 )
+from pytradekit.brokers.adapters.alpaca.stream import AlpacaPaperTradeStream
 from pytradekit.persistence.database import (
     create_database_engine,
     create_session_factory,
@@ -149,7 +150,7 @@ class AlpacaPaperStartupReadiness:
     def _database_check(self) -> ReadinessCheck:
         try:
             healthy = self._database_probe()
-        except Exception as exc:  # pragma: no cover - infrastructure boundary
+        except Exception as exc:
             return ReadinessCheck(
                 name="database",
                 status=ReadinessCheckStatus.FAIL,
@@ -171,7 +172,7 @@ class AlpacaPaperStartupReadiness:
     def _account_identity_check(self) -> tuple[object | None, ReadinessCheck]:
         try:
             account = self._read_client.get_account()
-        except Exception as exc:  # pragma: no cover - provider boundary
+        except Exception as exc:
             return None, ReadinessCheck(
                 name="provider_account",
                 status=ReadinessCheckStatus.FAIL,
@@ -213,7 +214,7 @@ class AlpacaPaperStartupReadiness:
     def _market_clock_check(self) -> ReadinessCheck:
         try:
             clock = self._read_client.get_clock()
-        except Exception as exc:  # pragma: no cover - provider boundary
+        except Exception as exc:
             return ReadinessCheck(
                 name="market_clock",
                 status=ReadinessCheckStatus.FAIL,
@@ -245,6 +246,7 @@ class AlpacaPaperRuntimeComposition:
     read_client: TradingClient
     command_client: AlpacaPaperCommandClient
     market_data_client: StockHistoricalDataClient
+    trade_stream: AlpacaPaperTradeStream
     readiness: AlpacaPaperStartupReadiness
 
     def __repr__(self) -> str:
@@ -283,6 +285,7 @@ def build_alpaca_paper_runtime(
         api_key=api_key,
         secret_key=secret_key,
     )
+    trade_stream = AlpacaPaperTradeStream(api_key, secret_key)
     manifest = build_alpaca_paper_manifest(profile)
 
     readiness = AlpacaPaperStartupReadiness(
@@ -300,6 +303,7 @@ def build_alpaca_paper_runtime(
         read_client=read_client,
         command_client=command_client,
         market_data_client=market_data_client,
+        trade_stream=trade_stream,
         readiness=readiness,
     )
 

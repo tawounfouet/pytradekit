@@ -8,11 +8,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
 from pytradekit.persistence.errors import PersistenceError
-from pytradekit.persistence.events import (
-    InboxRecord,
-    InboxStatus,
-    OutboxRecord,
-)
+from pytradekit.persistence.events import InboxRecord, InboxStatus, OutboxRecord
 from pytradekit.persistence.message_models import InboxModel, OutboxModel
 
 
@@ -88,7 +84,8 @@ class PostgresInboxRepository:
     ) -> bool:
         normalized_provider = _normalize_identity(provider, field_name="Provider")
         normalized_event_id = _normalize_identity(
-            external_event_id, field_name="External event id"
+            external_event_id,
+            field_name="External event id",
         )
         statement = (
             insert(InboxModel)
@@ -109,9 +106,13 @@ class PostgresInboxRepository:
 
     def contains(self, *, provider: str, external_event_id: str) -> bool:
         statement = select(InboxModel.external_event_id).where(
-            InboxModel.provider == _normalize_identity(provider, field_name="Provider"),
+            InboxModel.provider
+            == _normalize_identity(provider, field_name="Provider"),
             InboxModel.external_event_id
-            == _normalize_identity(external_event_id, field_name="External event id"),
+            == _normalize_identity(
+                external_event_id,
+                field_name="External event id",
+            ),
         )
         return self._session.execute(statement).first() is not None
 
@@ -135,22 +136,41 @@ class PostgresInboxRepository:
         row.processed_at = processed_at
         self._session.flush()
 
-    def get(self, *, provider: str, external_event_id: str) -> InboxRecord | None:
+    def get(
+        self,
+        *,
+        provider: str,
+        external_event_id: str,
+    ) -> InboxRecord | None:
         key = (
             _normalize_identity(provider, field_name="Provider"),
             _normalize_identity(external_event_id, field_name="External event id"),
         )
         row = self._session.get(InboxModel, key)
-        if row is None:
-            return None
-        return InboxRecord(
-            provider=row.provider,
-            external_event_id=row.external_event_id,
-            received_at=row.received_at,
-            processed_at=row.processed_at,
-            payload_hash=row.payload_hash,
-            status=InboxStatus(row.status),
+        return _inbox_from_model(row) if row is not None else None
+
+    def list_unprocessed(
+        self,
+        *,
+        provider: str,
+        limit: int = 100,
+    ) -> tuple[InboxRecord, ...]:
+        """Return durable provider events that have not reached PROCESSED."""
+
+        if type(limit) is not int or limit <= 0:
+            raise ValueError("Inbox unprocessed limit must be a positive integer.")
+        normalized_provider = _normalize_identity(provider, field_name="Provider")
+        statement = (
+            select(InboxModel)
+            .where(
+                InboxModel.provider == normalized_provider,
+                InboxModel.status != InboxStatus.PROCESSED.value,
+            )
+            .order_by(InboxModel.received_at, InboxModel.external_event_id)
+            .limit(limit)
         )
+        rows = self._session.execute(statement).scalars().all()
+        return tuple(_inbox_from_model(row) for row in rows)
 
 
 def _outbox_from_model(row: OutboxModel) -> OutboxRecord:
@@ -168,6 +188,17 @@ def _outbox_from_model(row: OutboxModel) -> OutboxRecord:
         published_at=row.published_at,
         attempt_count=row.attempt_count,
         last_error=row.last_error,
+    )
+
+
+def _inbox_from_model(row: InboxModel) -> InboxRecord:
+    return InboxRecord(
+        provider=row.provider,
+        external_event_id=row.external_event_id,
+        received_at=row.received_at,
+        processed_at=row.processed_at,
+        payload_hash=row.payload_hash,
+        status=InboxStatus(row.status),
     )
 
 
