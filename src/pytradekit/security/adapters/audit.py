@@ -21,6 +21,21 @@ class RuntimeAuthorizationAuditSink:
         self._observer = observer
 
     def record(self, decision: AuthorizationDecision) -> None:
+        decision_label = "ALLOW" if decision.allowed else "DENY"
+        labels = {
+            "permission": decision.permission.value,
+            "decision": decision_label,
+            "environment": decision.scope.environment.value,
+        }
+        self._observer.increment_labeled(
+            "authorization_decisions_total",
+            labels=labels,
+        )
+        if not decision.allowed:
+            self._observer.increment_labeled(
+                "authorization_denied_total",
+                labels=labels,
+            )
         self._observer.event(
             "AuthorizationAllowed" if decision.allowed else "AuthorizationDenied",
             actor_id=str(decision.actor_id),
