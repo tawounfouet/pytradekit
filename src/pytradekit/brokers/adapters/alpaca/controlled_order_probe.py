@@ -69,7 +69,7 @@ class AlpacaPaperOrderProbeConfig:
     acknowledgement: str = field(repr=False)
     symbol: str = "AAPL"
     feed: DataFeed = DataFeed.IEX
-    market_qty: Decimal = Decimal("0.001")
+    market_qty: Decimal = Decimal("0.01")
     limit_qty: Decimal = Decimal("1")
     limit_discount_bps: Decimal = Decimal("5000")
     order_timeout_seconds: float = 30.0
@@ -140,7 +140,7 @@ class AlpacaPaperOrderProbeConfig:
             acknowledgement=source.get(_ACK_ENV, ""),
             symbol=source.get(_SYMBOL_ENV, "AAPL"),
             feed=feed,
-            market_qty=_decimal_env(source, _MARKET_QTY_ENV, "0.001"),
+            market_qty=_decimal_env(source, _MARKET_QTY_ENV, "0.01"),
             limit_qty=_decimal_env(source, _LIMIT_QTY_ENV, "1"),
             limit_discount_bps=_decimal_env(source, _LIMIT_DISCOUNT_BPS_ENV, "5000"),
             order_timeout_seconds=_float_env(source, _ORDER_TIMEOUT_ENV, "30"),
@@ -289,6 +289,7 @@ class AlpacaPaperControlledOrderProbe:
         asset = cast(Asset, self._read_client.get_asset(self._config.symbol))
         self._validate_asset(asset)
         quote = self._latest_quote()
+        self._validate_market_order_value(quote)
         baseline_qty = self._position_qty()
 
         updates: list[ProbeRow] = []
@@ -496,6 +497,19 @@ class AlpacaPaperControlledOrderProbe:
                 f"No latest quote returned for configured symbol {self._config.symbol}"
             ) from exc
 
+    def _validate_market_order_value(self, quote: Quote) -> None:
+        ask = Decimal(str(quote.ask_price))
+        if ask <= 0:
+            raise RuntimeError("Latest ask must be positive for controlled MARKET probe")
+
+        estimated_value = ask * self._config.market_qty
+        if estimated_value < Decimal("1"):
+            raise RuntimeError(
+                "Configured MARKET buy has estimated value below Alpaca's $1 minimum. "
+                f"qty={self._config.market_qty}, ask={ask}, "
+                f"estimated_value={estimated_value}"
+            )
+
     def _safe_limit_price(self, *, asset: Asset, quote: Quote) -> Decimal:
         bid = Decimal(str(quote.bid_price))
         if bid <= 0:
@@ -526,26 +540,37 @@ class AlpacaPaperControlledOrderProbe:
                 simulate_response_loss=simulate_response_loss,
             )
             return order, {}
+        except APIError as exc:
+            status_code = _api_status_code(exc)
+            if (
+                status_code is not None
+                and 400 <= status_code < 500
+                and status_code != 429
+            ):
+                raise
+            trigger: Exception = exc
         except Exception as exc:
-            recovered, queries = self._recover_by_client_id(client_order_id)
-            return (
-                recovered,
-                {
-                    "certainty_before_recovery": "UNCERTAIN",
-                    "trigger": type(exc).__name__,
-                    "simulated_post_ack_response_loss": isinstance(
-                        exc, AlpacaSimulatedResponseLoss
-                    ),
-                    "client_order_id": client_order_id,
-                    "recovery_queries": queries,
-                    "recovered_order_id": str(recovered.id),
-                    "recovered_status": _enum_text(recovered.status),
-                    "submit_attempts": self._command_client.submit_attempts_for(
-                        client_order_id
-                    ),
-                    "resubmitted": False,
-                },
-            )
+            trigger = exc
+
+        recovered, queries = self._recover_by_client_id(client_order_id)
+        return (
+            recovered,
+            {
+                "certainty_before_recovery": "UNCERTAIN",
+                "trigger": type(trigger).__name__,
+                "simulated_post_ack_response_loss": isinstance(
+                    trigger, AlpacaSimulatedResponseLoss
+                ),
+                "client_order_id": client_order_id,
+                "recovery_queries": queries,
+                "recovered_order_id": str(recovered.id),
+                "recovered_status": _enum_text(recovered.status),
+                "submit_attempts": self._command_client.submit_attempts_for(
+                    client_order_id
+                ),
+                "resubmitted": False,
+            },
+        )
 
     def _recover_by_client_id(self, client_order_id: str) -> tuple[Order, int]:
         deadline = monotonic() + self._config.order_timeout_seconds
@@ -714,6 +739,14 @@ def _float_env(source: Mapping[str, str], name: str, default: str) -> float:
 
 def _optional_decimal(value: object) -> Decimal | None:
     return None if value is None else Decimal(str(value))
+
+
+def _api_status_code(error: APIError) -> int | None:
+    try:
+        value: object = error.status_code
+    except Exception:
+        return None
+    return value if isinstance(value, int) else None
 
 
 def _aligned(value: Decimal, increment: Decimal) -> bool:

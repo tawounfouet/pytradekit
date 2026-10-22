@@ -31,7 +31,7 @@ def _config() -> AlpacaPaperOrderProbeConfig:
         secret_key="paper-secret",
         expected_account_id="11111111-1111-1111-1111-111111111111",
         acknowledgement="I_UNDERSTAND_PAPER_ORDERS_WILL_BE_CREATED",
-        market_qty=Decimal("0.001"),
+        market_qty=Decimal("0.01"),
         limit_qty=Decimal("1"),
         order_timeout_seconds=0.2,
         poll_interval_seconds=0.001,
@@ -254,6 +254,47 @@ def test_config_repr_redacts_credentials_and_acknowledgement() -> None:
     assert "paper-key" not in rendered
     assert "paper-secret" not in rendered
     assert "I_UNDERSTAND" not in rendered
+
+
+
+def test_default_market_quantity_has_safe_notional_for_fake_aapl_quote() -> None:
+    config = AlpacaPaperOrderProbeConfig(
+        api_key="paper-key",
+        secret_key="paper-secret",
+        expected_account_id="11111111-1111-1111-1111-111111111111",
+        acknowledgement="I_UNDERSTAND_PAPER_ORDERS_WILL_BE_CREATED",
+    )
+
+    assert config.market_qty == Decimal("0.01")
+
+
+def test_controlled_probe_rejects_sub_dollar_market_buy_before_submit() -> None:
+    state = _State()
+    command = _FakeCommandClient(state)
+    config = AlpacaPaperOrderProbeConfig(
+        api_key="paper-key",
+        secret_key="paper-secret",
+        expected_account_id="11111111-1111-1111-1111-111111111111",
+        acknowledgement="I_UNDERSTAND_PAPER_ORDERS_WILL_BE_CREATED",
+        market_qty=Decimal("0.001"),
+        limit_qty=Decimal("1"),
+        order_timeout_seconds=0.2,
+        poll_interval_seconds=0.001,
+        stream_warmup_seconds=0.0,
+        stream_tail_seconds=0.0,
+    )
+    probe = AlpacaPaperControlledOrderProbe(
+        config=config,
+        read_client=cast(TradingClient, _FakeReadClient(state)),
+        command_client=cast(AlpacaSingleAttemptTradingClient, command),
+        data_client=cast(StockHistoricalDataClient, _FakeDataClient()),
+        trading_stream=cast(TradingStream, _IdleStream()),
+    )
+
+    with pytest.raises(RuntimeError, match="below Alpaca's \\$1 minimum"):
+        probe.run()
+
+    assert state.submit_attempts == {}
 
 
 def test_single_attempt_client_disables_sdk_retries_and_never_resubmits(
