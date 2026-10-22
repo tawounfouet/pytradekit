@@ -28,6 +28,7 @@ from pytradekit.reconciliation.domain import (
 from pytradekit.runtime.operations import RuntimeLifecycleState
 from pytradekit.safety import (
     DangerousAction,
+    DangerousActionConfirmationId,
     KillSwitch,
     KillSwitchId,
     KillSwitchScope,
@@ -358,10 +359,7 @@ def test_unauthorized_kill_switch_release_is_denied() -> None:
             switch_id=switch.id,
             evidence_account_id=account_id,
             release_reason="recovered",
-            confirmation_id=__import__(
-                "pytradekit.safety.domain.ids",
-                fromlist=["DangerousActionConfirmationId"],
-            ).DangerousActionConfirmationId.new(),
+            confirmation_id=DangerousActionConfirmationId.new(),
         )
 
     assert repository.get(switch.id) == switch
