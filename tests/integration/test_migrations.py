@@ -11,6 +11,7 @@ def test_fresh_database_contains_persistence_schemas(postgres_engine: Engine) ->
     assert "portfolio" in inspector.get_schema_names()
     assert "risk" in inspector.get_schema_names()
     assert "runtime" in inspector.get_schema_names()
+    assert "reconciliation" in inspector.get_schema_names()
 
     assert "orders" in inspector.get_table_names(schema="orders")
     assert "fills" in inspector.get_table_names(schema="execution")
@@ -20,3 +21,6 @@ def test_fresh_database_contains_persistence_schemas(postgres_engine: Engine) ->
     assert "metadata" in inspector.get_table_names(schema="runtime")
     assert "outbox" in inspector.get_table_names(schema="runtime")
     assert "inbox" in inspector.get_table_names(schema="runtime")
+    assert "runs" in inspector.get_table_names(schema="reconciliation")
+    assert "mismatches" in inspector.get_table_names(schema="reconciliation")
+    assert "resolutions" in inspector.get_table_names(schema="reconciliation")

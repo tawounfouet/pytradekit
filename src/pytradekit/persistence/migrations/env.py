@@ -10,6 +10,7 @@ from pytradekit.orders.adapters.postgres import models as order_models
 from pytradekit.persistence import message_models, runtime_models
 from pytradekit.persistence.database import Base
 from pytradekit.portfolio.adapters.postgres import models as portfolio_models
+from pytradekit.reconciliation.adapters.postgres import models as reconciliation_models
 from pytradekit.risk.adapters.postgres import models as risk_models
 
 config = context.config
@@ -24,6 +25,7 @@ _registered_models = (
     risk_models,
     message_models,
     runtime_models,
+    reconciliation_models,
 )
 target_metadata = Base.metadata
 
