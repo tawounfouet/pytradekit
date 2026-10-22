@@ -18,7 +18,10 @@ from pytradekit.reconciliation import (
     SnapshotCompleteness,
     SnapshotWatermark,
 )
-from pytradekit.reconciliation.services import ConvergenceService, SnapshotComparator
+from pytradekit.reconciliation.services import (
+    ConvergenceService,
+    SnapshotComparator,
+)
 from pytradekit.shared import Currency, InstrumentId
 
 
@@ -50,7 +53,10 @@ def _snapshots() -> tuple[InternalSnapshot, BrokerSnapshot]:
         average_price=Decimal("10"),
         currency=Currency("USD"),
     )
-    balance = CanonicalBalance(currency=Currency("USD"), cash=Decimal("990"))
+    balance = CanonicalBalance(
+        currency=Currency("USD"),
+        cash=Decimal("990"),
+    )
     internal = InternalSnapshot(
         account_id=account_id,
         orders=(order,),
@@ -128,11 +134,13 @@ def test_missing_internal_fill_is_critical_and_deterministic() -> None:
     )
 
     assert first == second
-    assert any(item.type is MismatchType.MISSING_INTERNAL_FILL for item in first)
+    assert any(
+        item.type is MismatchType.MISSING_INTERNAL_FILL
+        for item in first
+    )
 
 
 def test_partial_snapshot_never_produces_high_confidence() -> None:
-    internal, broker = _snapshots()
     result = ConvergenceService().evaluate(
         internal_completeness=SnapshotCompleteness.COMPLETE,
         broker_completeness=SnapshotCompleteness.PARTIAL,

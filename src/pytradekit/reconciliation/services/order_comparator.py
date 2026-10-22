@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-from decimal import Decimal
 
 from pytradekit.reconciliation.domain import (
     CanonicalOrder,
@@ -92,8 +91,12 @@ class OrderComparator:
                         severity=MismatchSeverity.CRITICAL,
                         entity_type="order",
                         entity_id=entity_id,
-                        internal_value={"filled_quantity": str(local.filled_quantity)},
-                        external_value={"filled_quantity": str(remote.filled_quantity)},
+                        internal_value={
+                            "filled_quantity": str(local.filled_quantity)
+                        },
+                        external_value={
+                            "filled_quantity": str(remote.filled_quantity)
+                        },
                         detected_at=detected_at,
                     )
                 )

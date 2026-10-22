@@ -2,7 +2,8 @@
 
 from datetime import UTC, datetime
 
-from hypothesis import given\nfrom hypothesis import strategies as st
+from hypothesis import given
+from hypothesis import strategies as st
 
 from pytradekit.reconciliation import (
     Mismatch,
@@ -41,7 +42,14 @@ def test_unresolved_critical_mismatch_never_produces_consistent(
     assert result.status.value != "CONSISTENT"
 
 
-@given(st.sampled_from([SnapshotCompleteness.PARTIAL, SnapshotCompleteness.UNKNOWN]))
+@given(
+    st.sampled_from(
+        [
+            SnapshotCompleteness.PARTIAL,
+            SnapshotCompleteness.UNKNOWN,
+        ]
+    )
+)
 def test_incomplete_broker_evidence_never_produces_high_confidence(
     completeness: SnapshotCompleteness,
 ) -> None:

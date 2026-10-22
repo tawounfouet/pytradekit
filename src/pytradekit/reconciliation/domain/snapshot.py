@@ -79,10 +79,18 @@ class CanonicalOrder:
             "external_order_id",
             _optional_identity(self.external_order_id, field_name="external_order_id"),
         )
-        if self.order_id is None and self.client_order_id is None and self.external_order_id is None:
-            raise DomainValidationError("CanonicalOrder requires at least one stable identity.")
+        if (
+            self.order_id is None
+            and self.client_order_id is None
+            and self.external_order_id is None
+        ):
+            raise DomainValidationError(
+                "CanonicalOrder requires at least one stable identity."
+            )
         if not isinstance(self.status, str) or not self.status.strip():
-            raise DomainValidationError("CanonicalOrder status must be a non-empty string.")
+            raise DomainValidationError(
+                "CanonicalOrder status must be a non-empty string."
+            )
         _finite(self.filled_quantity, field_name="filled_quantity", non_negative=True)
 
 
@@ -102,7 +110,9 @@ class CanonicalFill:
     def __post_init__(self) -> None:
         external_fill_id = self.external_fill_id.strip()
         if not external_fill_id:
-            raise DomainValidationError("CanonicalFill external_fill_id must not be empty.")
+            raise DomainValidationError(
+                "CanonicalFill external_fill_id must not be empty."
+            )
         object.__setattr__(self, "external_fill_id", external_fill_id)
         object.__setattr__(
             self,
@@ -113,10 +123,14 @@ class CanonicalFill:
             raise DomainValidationError("CanonicalFill requires an order identity.")
         quantity = _finite(self.quantity, field_name="quantity")
         if quantity <= 0:
-            raise DomainValidationError("CanonicalFill quantity must be greater than zero.")
+            raise DomainValidationError(
+                "CanonicalFill quantity must be greater than zero."
+            )
         price = _finite(self.price, field_name="price")
         if price <= 0:
-            raise DomainValidationError("CanonicalFill price must be greater than zero.")
+            raise DomainValidationError(
+                "CanonicalFill price must be greater than zero."
+            )
         if not isinstance(self.currency, Currency):
             raise DomainValidationError("CanonicalFill currency must be a Currency.")
         require_utc_datetime(self.occurred_at, field_name="CanonicalFill occurred_at")
@@ -133,14 +147,18 @@ class CanonicalPosition:
 
     def __post_init__(self) -> None:
         if not isinstance(self.instrument_id, InstrumentId):
-            raise DomainValidationError("CanonicalPosition instrument_id must be an InstrumentId.")
+            raise DomainValidationError(
+                "CanonicalPosition instrument_id must be an InstrumentId."
+            )
         _finite(self.quantity, field_name="position quantity")
         if self.average_price is not None:
             average = _finite(self.average_price, field_name="average_price")
             if average <= 0:
                 raise DomainValidationError("average_price must be greater than zero.")
         if self.currency is not None and not isinstance(self.currency, Currency):
-            raise DomainValidationError("CanonicalPosition currency must be Currency or None.")
+            raise DomainValidationError(
+                "CanonicalPosition currency must be Currency or None."
+            )
 
 
 @dataclass(frozen=True, slots=True)
@@ -171,8 +189,13 @@ class InternalSnapshot:
 
     def __post_init__(self) -> None:
         if not isinstance(self.account_id, AccountId):
-            raise DomainValidationError("InternalSnapshot account_id must be an AccountId.")
-        require_utc_datetime(self.captured_at, field_name="InternalSnapshot captured_at")
+            raise DomainValidationError(
+                "InternalSnapshot account_id must be an AccountId."
+            )
+        require_utc_datetime(
+            self.captured_at,
+            field_name="InternalSnapshot captured_at",
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -191,9 +214,16 @@ class BrokerSnapshot:
 
     def __post_init__(self) -> None:
         if not isinstance(self.account_id, AccountId):
-            raise DomainValidationError("BrokerSnapshot account_id must be an AccountId.")
+            raise DomainValidationError(
+                "BrokerSnapshot account_id must be an AccountId."
+            )
         provider = self.provider.strip() if isinstance(self.provider, str) else ""
         if not provider:
-            raise DomainValidationError("BrokerSnapshot provider must be a non-empty string.")
+            raise DomainValidationError(
+                "BrokerSnapshot provider must be a non-empty string."
+            )
         object.__setattr__(self, "provider", provider)
-        require_utc_datetime(self.captured_at, field_name="BrokerSnapshot captured_at")
+        require_utc_datetime(
+            self.captured_at,
+            field_name="BrokerSnapshot captured_at",
+        )
