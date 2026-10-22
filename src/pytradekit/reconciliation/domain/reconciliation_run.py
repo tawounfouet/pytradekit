@@ -71,11 +71,16 @@ class ReconciliationRun:
     def __post_init__(self) -> None:
         require_utc_datetime(self.started_at, field_name="ReconciliationRun started_at")
         if self.completed_at is not None:
-            require_utc_datetime(self.completed_at, field_name="ReconciliationRun completed_at")
+            require_utc_datetime(
+                self.completed_at,
+                field_name="ReconciliationRun completed_at",
+            )
         if self.mismatch_count < 0 or self.critical_mismatch_count < 0:
             raise DomainValidationError("Mismatch counts must be non-negative.")
         if self.critical_mismatch_count > self.mismatch_count:
-            raise DomainValidationError("Critical mismatch count cannot exceed mismatch count.")
+            raise DomainValidationError(
+                "Critical mismatch count cannot exceed mismatch count."
+            )
 
     @classmethod
     def create(
@@ -87,8 +92,6 @@ class ReconciliationRun:
         started_at: datetime,
         correlation_id: CorrelationId,
     ) -> ReconciliationRun:
-        """Create a new reconciliation run."""
-
         return cls(
             id=ReconciliationRunId.new(),
             account_id=account_id,
@@ -107,13 +110,21 @@ class ReconciliationRun:
         )
 
     def transition_to(self, status: ReconciliationRunStatus) -> None:
-        """Apply one valid lifecycle transition."""
-
         if status not in _ALLOWED[self.status]:
             raise DomainValidationError(
                 f"Invalid reconciliation transition {self.status.value} -> {status.value}."
             )
         self.status = status
+        self.version += 1
+
+    def fail(self, *, completed_at: datetime) -> None:
+        """Close an active run as failed without inventing a consistency result."""
+
+        require_utc_datetime(completed_at, field_name="ReconciliationRun completed_at")
+        if ReconciliationRunStatus.FAILED not in _ALLOWED[self.status]:
+            raise DomainValidationError("Reconciliation run cannot fail from current status.")
+        self.status = ReconciliationRunStatus.FAILED
+        self.completed_at = completed_at
         self.version += 1
 
     def complete(
@@ -125,11 +136,11 @@ class ReconciliationRun:
         mismatch_count: int,
         critical_mismatch_count: int,
     ) -> None:
-        """Complete the run without implying CONSISTENT."""
-
         require_utc_datetime(completed_at, field_name="ReconciliationRun completed_at")
         if ReconciliationRunStatus.COMPLETED not in _ALLOWED[self.status]:
-            raise DomainValidationError("Reconciliation run cannot complete from current status.")
+            raise DomainValidationError(
+                "Reconciliation run cannot complete from current status."
+            )
         if mismatch_count < 0 or critical_mismatch_count < 0:
             raise DomainValidationError("Mismatch counts must be non-negative.")
         self.status = ReconciliationRunStatus.COMPLETED

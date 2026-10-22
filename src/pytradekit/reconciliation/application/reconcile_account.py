@@ -8,6 +8,7 @@ from pytradekit.portfolio.domain import AccountId
 from pytradekit.reconciliation.application.resolve_mismatch import ResolveMismatch
 from pytradekit.reconciliation.application.verify_reconciliation import VerifyReconciliation
 from pytradekit.reconciliation.domain import (
+    BrokerSnapshot,
     Mismatch,
     MismatchSeverity,
     ReconciliationRun,
@@ -27,6 +28,10 @@ from pytradekit.reconciliation.ports import (
 from pytradekit.reconciliation.services import ConvergenceService, SnapshotComparator
 from pytradekit.runtime.ports import ClockPort
 from pytradekit.shared import CorrelationId
+
+
+class ReconciliationAlreadyRunningError(RuntimeError):
+    """Raised when an account already has an active reconciliation run."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -78,6 +83,7 @@ class ReconcileAccount:
         correlation_id: CorrelationId,
         scope: ReconciliationScope = ReconciliationScope.FULL,
     ) -> ReconciliationOutcome:
+        self._ensure_account_available(account_id)
         run = ReconciliationRun.create(
             account_id=account_id,
             scope=scope,
@@ -175,24 +181,26 @@ class ReconcileAccount:
                 ReconciliationRunStatus.FAILED,
                 ReconciliationRunStatus.CANCELLED,
             }:
-                run.transition_to(ReconciliationRunStatus.FAILED)
+                run.fail(completed_at=self._clock.now())
                 self._repository.save_run(run)
             if self._notifier is not None:
                 self._notifier.recovery_failed(run, reason=type(exc).__name__)
             raise
 
+    def _ensure_account_available(self, account_id: AccountId) -> None:
+        if any(run.account_id == account_id for run in self._repository.list_active()):
+            raise ReconciliationAlreadyRunningError(
+                f"Account {account_id} already has an active reconciliation run."
+            )
+
     def _apply_supported(
         self,
         resolutions: tuple[Resolution, ...],
         mismatches: tuple[Mismatch, ...],
-        broker_snapshot: object,
+        broker_snapshot: BrokerSnapshot,
     ) -> None:
         if self._executor is None:
             return
-        from pytradekit.reconciliation.domain import BrokerSnapshot
-
-        if not isinstance(broker_snapshot, BrokerSnapshot):
-            raise TypeError("broker_snapshot must be BrokerSnapshot.")
         by_id = {item.id: item for item in mismatches}
         for resolution in resolutions:
             if not self._executor.supports(resolution.type):
@@ -234,5 +242,7 @@ class ReconcileAccount:
                     verification_status="mismatch_remains",
                 )
             else:
-                resolution.mark_verified(verification_status="fresh_evidence_converged")
+                resolution.mark_verified(
+                    verification_status="fresh_evidence_converged"
+                )
             self._repository.save_resolution(resolution)
