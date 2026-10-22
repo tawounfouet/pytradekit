@@ -16,6 +16,7 @@ class RiskGateResult:
     decision: str
     violation_codes: tuple[str, ...] = ()
     issues: tuple[str, ...] = ()
+    risk_increasing: bool = True
 
 
 class RiskEvaluationPort(Protocol):

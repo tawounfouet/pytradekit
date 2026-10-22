@@ -6,6 +6,11 @@ from pytradekit.orders.ports.execution_port import ExecutionPort
 from pytradekit.orders.ports.order_repository import OrderRepository
 from pytradekit.orders.ports.portfolio_effect_port import PortfolioEffectPort
 from pytradekit.orders.ports.risk_evaluation_port import RiskEvaluationPort, RiskGateResult
+from pytradekit.orders.ports.safety_gate import (
+    OrderSafetyDeniedError,
+    OrderSafetyGatePort,
+    OrderSafetyGateResult,
+)
 
 __all__ = [
     "ConsistencyGatePort",
@@ -15,4 +20,7 @@ __all__ = [
     "PortfolioEffectPort",
     "RiskEvaluationPort",
     "RiskGateResult",
+    "OrderSafetyDeniedError",
+    "OrderSafetyGatePort",
+    "OrderSafetyGateResult",
 ]
