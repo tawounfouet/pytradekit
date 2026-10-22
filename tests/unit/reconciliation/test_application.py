@@ -58,6 +58,9 @@ class MemoryRepository:
     def list_resolutions(self, run_id: ReconciliationRunId) -> tuple[Resolution, ...]:
         return tuple(item for item in self.resolutions if item.run_id == run_id)
 
+    def checkpoint(self) -> None:
+        return None
+
 
 class StaticSnapshots:
     def __init__(

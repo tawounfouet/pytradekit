@@ -103,9 +103,11 @@ class ReconcileAccount:
             correlation_id=correlation_id,
         )
         self._repository.add_run(run)
+        self._repository.checkpoint()
         try:
             run.transition_to(ReconciliationRunStatus.CAPTURING)
             self._repository.save_run(run)
+            self._repository.checkpoint()
             internal = self._internal_snapshots.capture(
                 account_id=account_id,
                 scope=scope,
@@ -118,6 +120,7 @@ class ReconcileAccount:
             run.broker_watermark = broker.watermark
             run.transition_to(ReconciliationRunStatus.COMPARING)
             self._repository.save_run(run)
+            self._repository.checkpoint()
 
             initial = self._comparator.compare(
                 run_id=run.id,
@@ -128,6 +131,8 @@ class ReconcileAccount:
             )
             for item in initial:
                 self._repository.add_mismatch(item)
+            if initial:
+                self._repository.checkpoint()
 
             critical_count = sum(
                 item.severity is MismatchSeverity.CRITICAL for item in initial
@@ -141,10 +146,13 @@ class ReconcileAccount:
             )
             for resolution in resolutions:
                 self._repository.add_resolution(resolution)
+            if resolutions:
+                self._repository.checkpoint()
 
             if resolutions:
                 run.transition_to(ReconciliationRunStatus.RESOLVING)
                 self._repository.save_run(run)
+            self._repository.checkpoint()
                 self._apply_supported(
                     resolutions,
                     initial,
@@ -157,6 +165,7 @@ class ReconcileAccount:
 
             run.transition_to(ReconciliationRunStatus.VERIFYING)
             self._repository.save_run(run)
+            self._repository.checkpoint()
             verification = self._verifier.execute(
                 run_id=run.id,
                 account_id=account_id,
@@ -187,6 +196,7 @@ class ReconcileAccount:
                 critical_mismatch_count=final_critical,
             )
             self._repository.save_run(run)
+            self._repository.checkpoint()
             if self._evidence_sink is not None:
                 self._evidence_sink.record(run)
             if self._notifier is not None and not result.blocking:
@@ -204,6 +214,7 @@ class ReconcileAccount:
             }:
                 run.fail(completed_at=self._clock.now())
                 self._repository.save_run(run)
+            self._repository.checkpoint()
             if self._notifier is not None:
                 self._notifier.recovery_failed(run, reason=type(exc).__name__)
             raise
@@ -250,6 +261,7 @@ class ReconcileAccount:
                 detected_at=self._clock.now(),
             )
             self._repository.add_mismatch(stale)
+            self._repository.checkpoint()
             if self._notifier is not None:
                 self._notifier.critical_mismatch(run, count=1)
             raise StaleReconciliationError(
@@ -261,6 +273,7 @@ class ReconcileAccount:
             mismatch = by_id[resolution.mismatch_id]
             resolution.mark_applying()
             self._repository.save_resolution(resolution)
+            self._repository.checkpoint()
             try:
                 self._executor.apply(
                     resolution=resolution,
@@ -273,9 +286,11 @@ class ReconcileAccount:
                     verification_status="application_failed",
                 )
                 self._repository.save_resolution(resolution)
+            self._repository.checkpoint()
                 raise
             resolution.mark_applied(completed_at=self._clock.now())
             self._repository.save_resolution(resolution)
+            self._repository.checkpoint()
 
     def _verify_applied(
         self,
@@ -299,6 +314,7 @@ class ReconcileAccount:
                     verification_status="fresh_evidence_converged"
                 )
             self._repository.save_resolution(resolution)
+            self._repository.checkpoint()
 
 
 def _same_economic_cut(

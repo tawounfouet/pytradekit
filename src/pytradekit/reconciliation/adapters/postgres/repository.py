@@ -172,6 +172,11 @@ class PostgresReconciliationRepository(ReconciliationRepository):
         ).scalars().all()
         return tuple(resolution_from_model(row) for row in rows)
 
+    def checkpoint(self) -> None:
+        """Durably commit reconciliation evidence accumulated so far."""
+
+        self._session.commit()
+
     def _remember(self, row: ReconciliationRunModel) -> ReconciliationRun:
         run = run_from_model(row)
         self._seen_versions[run.id] = run.version

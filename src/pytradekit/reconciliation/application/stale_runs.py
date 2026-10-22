@@ -32,5 +32,6 @@ class StaleRunRecovery:
         for run in stale:
             run.fail(completed_at=now)
             self._repository.save_run(run)
+            self._repository.checkpoint()
             closed.append(run.id)
         return tuple(closed)
