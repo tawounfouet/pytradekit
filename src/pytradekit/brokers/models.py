@@ -196,9 +196,17 @@ class ProviderPositionSnapshot:
             raise DomainValidationError("ProviderPositionSnapshot currency mismatch.")
         if self.market_value is not None and self.market_value.currency != self.cost_basis.currency:
             raise DomainValidationError("ProviderPositionSnapshot market_value currency mismatch.")
-        if self.unrealized_pnl is not None and self.unrealized_pnl.currency != self.cost_basis.currency:
-            raise DomainValidationError("ProviderPositionSnapshot unrealized_pnl currency mismatch.")
-        if self.current_price is not None and self.current_price.currency != self.cost_basis.currency:
+        if (
+            self.unrealized_pnl is not None
+            and self.unrealized_pnl.currency != self.cost_basis.currency
+        ):
+            raise DomainValidationError(
+                "ProviderPositionSnapshot unrealized_pnl currency mismatch."
+            )
+        if (
+            self.current_price is not None
+            and self.current_price.currency != self.cost_basis.currency
+        ):
             raise DomainValidationError("ProviderPositionSnapshot current_price currency mismatch.")
         if self.available_quantity is not None:
             if not self.available_quantity.is_finite() or self.available_quantity < 0:
