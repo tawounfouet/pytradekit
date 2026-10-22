@@ -20,7 +20,7 @@ def _api_error(status: int) -> APIError:
         response=SimpleNamespace(status_code=status),
         request=None,
     )
-    return APIError(
+    return APIError(  # type: ignore[no-untyped-call]
         '{"code": 50010000, "message": "synthetic provider fault"}',
         http_error=http_error,
     )
