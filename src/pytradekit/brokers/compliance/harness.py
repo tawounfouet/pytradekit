@@ -31,6 +31,10 @@ from .sanitization import EvidenceSanitizer
 from .scenario import ComplianceScenario
 
 
+def _environment_value(environment: object) -> str:
+    return str(getattr(environment, "value", environment))
+
+
 class ComplianceBlockedError(RuntimeError):
     """Scenario precondition or external dependency prevents execution."""
 
@@ -215,13 +219,13 @@ class ComplianceHarness:
                 raise ValueError("Compliance scenario IDs must be unique.")
             scenario_ids.add(scenario.scenario_id)
             for requirement_id in scenario.requirement_ids:
-                requirement = requirement_by_id.get(requirement_id)
-                if requirement is None:
+                linked_requirement = requirement_by_id.get(requirement_id)
+                if linked_requirement is None:
                     raise ValueError(
                         f"Scenario {scenario.scenario_id} references unknown requirement "
                         f"{requirement_id}."
                     )
-                if requirement.capability is not scenario.capability:
+                if linked_requirement.capability is not scenario.capability:
                     raise ValueError(
                         f"Scenario {scenario.scenario_id} capability does not match "
                         f"requirement {requirement_id}."
@@ -475,7 +479,8 @@ class ComplianceHarness:
                     break
                 if (
                     target is CertificationLevel.C3_PAPER_QUALIFIED
-                    and manifest.environment is not RuntimeEnvironment.PAPER
+                    and _environment_value(manifest.environment)
+                    != _environment_value(RuntimeEnvironment.PAPER)
                 ):
                     break
                 if target >= CertificationLevel.C4_LIVE_LIMITED:

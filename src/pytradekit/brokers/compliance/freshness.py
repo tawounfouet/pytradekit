@@ -13,6 +13,10 @@ from .manifest import ProviderCapabilityManifest
 from .version import ContractVersion
 
 
+def _environment_value(environment: object) -> str:
+    return str(getattr(environment, "value", environment))
+
+
 class EvidenceFreshnessReason(StrEnum):
     """Why retained compliance evidence is no longer current."""
 
@@ -70,7 +74,9 @@ class StaleEvidencePolicy:
 
         if evidence.provider != manifest.provider:
             reasons.append(EvidenceFreshnessReason.PROVIDER_MISMATCH)
-        if evidence.environment is not manifest.environment:
+        if _environment_value(evidence.environment) != _environment_value(
+            manifest.environment
+        ):
             reasons.append(EvidenceFreshnessReason.ENVIRONMENT_MISMATCH)
         if evidence.adapter_version != manifest.adapter_version:
             reasons.append(EvidenceFreshnessReason.ADAPTER_VERSION_MISMATCH)
