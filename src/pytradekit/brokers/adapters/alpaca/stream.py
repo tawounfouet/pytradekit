@@ -25,6 +25,8 @@ from pytradekit.persistence.unit_of_work import PostgresUnitOfWork
 from pytradekit.portfolio.adapters import OrdersPortfolioEffectAdapter
 from pytradekit.portfolio.application import ApplyFillToPortfolio
 from pytradekit.portfolio.domain import AccountId
+from pytradekit.runtime.faults import FaultInjector, FaultPoint, NullFaultInjector
+from pytradekit.runtime.observability import RuntimeObserver
 from pytradekit.runtime.ports import ClockPort
 from pytradekit.shared import Currency
 
@@ -134,18 +136,50 @@ class AlpacaTradeUpdateProcessor:
         uow_factory: UowFactory,
         account_id: AccountId,
         clock: ClockPort,
+        faults: FaultInjector | None = None,
+        observer: RuntimeObserver | None = None,
     ) -> None:
         self._uow_factory = uow_factory
         self._account_id = account_id
         self._clock = clock
+        self._faults = faults or NullFaultInjector()
+        self._observer = observer or RuntimeObserver()
 
     def process(self, update: TradeUpdate) -> TradeUpdateProcessingResult:
         """Process one provider event exactly once locally."""
 
+        self._observer.increment("trade_updates_received")
         external_event_id = _external_event_id(update)
+        try:
+            result = self._process(update, external_event_id=external_event_id)
+        except Exception as exc:
+            self._observer.increment("trade_updates_failed")
+            self._observer.event(
+                "trade_update_failed",
+                error_type=type(exc).__name__,
+            )
+            raise
+
+        if result.duplicate:
+            self._observer.increment("trade_updates_duplicates")
+        elif result.canonical_report_emitted:
+            self._observer.increment("trade_updates_applied")
+        else:
+            self._observer.increment("trade_updates_transient")
+
+        return result
+
+    def _process(
+        self,
+        update: TradeUpdate,
+        *,
+        external_event_id: str,
+    ) -> TradeUpdateProcessingResult:
         payload_hash = _payload_hash(update)
         received_at = self._clock.now()
         report: ExecutionReport | None = None
+
+        self._faults.hit(FaultPoint.BEFORE_INBOX_CLAIM)
 
         with self._uow_factory() as uow:
             claimed = uow.inbox.claim(
@@ -160,6 +194,8 @@ class AlpacaTradeUpdateProcessor:
                     duplicate=True,
                     canonical_report_emitted=False,
                 )
+
+            self._faults.hit(FaultPoint.AFTER_INBOX_CLAIM)
 
             order = _resolve_local_order(uow, update)
             if order is None:
@@ -193,6 +229,7 @@ class AlpacaTradeUpdateProcessor:
                         or not uow.fills.contains_external(external_fill_id)
                     ):
                         uow.fills.add(fill)
+                    self._faults.hit(FaultPoint.AFTER_FILL_PERSIST)
 
                 portfolio = OrdersPortfolioEffectAdapter(
                     ApplyFillToPortfolio(
@@ -208,6 +245,7 @@ class AlpacaTradeUpdateProcessor:
                     report,
                     account_id=self._account_id,
                 )
+                self._faults.hit(FaultPoint.AFTER_CANONICAL_APPLY)
 
                 uow.outbox.add(
                     _execution_outbox_record(
@@ -215,13 +253,16 @@ class AlpacaTradeUpdateProcessor:
                         occurred_at=report.occurred_at,
                     )
                 )
+                self._faults.hit(FaultPoint.AFTER_OUTBOX_ADD)
 
             uow.inbox.mark_processed(
                 provider=ALPACA_PROVIDER_KEY,
                 external_event_id=external_event_id,
                 processed_at=self._clock.now(),
             )
+            self._faults.hit(FaultPoint.BEFORE_COMMIT)
             uow.commit()
+            self._faults.hit(FaultPoint.AFTER_COMMIT)
 
         return TradeUpdateProcessingResult(
             external_event_id=external_event_id,

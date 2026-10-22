@@ -15,6 +15,10 @@ from .execution import (
     AlpacaInstrumentResolver,
     AlpacaReadClient,
 )
+from .production import (
+    QualifiedAlpacaPaperRuntime,
+    build_qualified_alpaca_paper_runtime,
+)
 from .read_only_probe import (
     AlpacaPaperProbeConfig,
     AlpacaPaperProbeReport,
@@ -78,6 +82,7 @@ __all__ = [
     "AlpacaStockDataClient",
     "AlpacaTradeUpdateProcessor",
     "AlpacaTradeUpdateStreamRunner",
+    "QualifiedAlpacaPaperRuntime",
     "RemoteOpenOrder",
     "StaticAlpacaReferenceResolver",
     "TradeUpdateProcessingResult",
@@ -86,5 +91,6 @@ __all__ = [
     "build_alpaca_paper_probe",
     "build_alpaca_paper_runtime",
     "build_alpaca_paper_runtime_system",
+    "build_qualified_alpaca_paper_runtime",
     "translate_alpaca_error",
 ]

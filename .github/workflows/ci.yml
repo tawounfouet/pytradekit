@@ -64,6 +64,10 @@ jobs:
       - name: Architecture and public import tests
         run: pytest tests/architecture tests/contracts
 
+      - name: Production fault qualification
+        run: |
+          pytest             tests/unit/runtime/test_operations.py             tests/unit/runtime/test_observability.py             tests/unit/runtime/test_qualification.py             tests/qualification             tests/integration/test_alpaca_production_faults.py             tests/integration/test_alpaca_startup_restart_reconciliation.py
+
       - name: Unit, property, and integration tests
         run: pytest --cov=pytradekit --cov-report=term-missing
 
