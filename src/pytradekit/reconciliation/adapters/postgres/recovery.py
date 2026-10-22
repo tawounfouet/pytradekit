@@ -90,6 +90,9 @@ class PostgresResolutionExecutor(ResolutionExecutorPort):
             if existing is None:
                 uow.fills.add(fill)
 
+            effect_already_applied = uow.processed_fills.contains(
+                fill.deduplication_key
+            )
             effects = OrdersPortfolioEffectAdapter(
                 ApplyFillToPortfolio(
                     positions=uow.positions,
@@ -105,21 +108,22 @@ class PostgresResolutionExecutor(ResolutionExecutorPort):
                 external_order_id=canonical.external_order_id,
                 account_id=broker_snapshot.account_id,
             )
-            uow.outbox.add(
-                OutboxRecord.create(
-                    event_type="ExternalFillImported",
-                    aggregate_type="Fill",
-                    aggregate_id=str(fill.id),
-                    payload={
-                        "fill_id": str(fill.id),
-                        "external_fill_id": canonical.external_fill_id,
-                        "order_id": str(order.id),
-                        "origin": canonical.origin.value,
-                    },
-                    occurred_at=canonical.occurred_at,
-                    correlation_id=str(resolution.correlation_id),
+            if not effect_already_applied:
+                uow.outbox.add(
+                    OutboxRecord.create(
+                        event_type="ExternalFillImported",
+                        aggregate_type="Fill",
+                        aggregate_id=str(fill.id),
+                        payload={
+                            "fill_id": str(fill.id),
+                            "external_fill_id": canonical.external_fill_id,
+                            "order_id": str(order.id),
+                            "origin": canonical.origin.value,
+                        },
+                        occurred_at=canonical.occurred_at,
+                        correlation_id=str(resolution.correlation_id),
+                    )
                 )
-            )
             uow.commit()
 
 
