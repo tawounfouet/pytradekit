@@ -273,14 +273,6 @@ class SafetyPolicy:
                 evaluated_at,
             )
 
-        return self._decision(
-            False,
-            state,
-            action,
-            state_reasons,
-            evaluated_at,
-        )
-
     @staticmethod
     def _decision(
         allowed: bool,
