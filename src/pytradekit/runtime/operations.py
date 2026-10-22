@@ -3,19 +3,25 @@
 from __future__ import annotations
 
 import signal
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import StrEnum
-from threading import Condition
+from queue import Empty, Queue
+from threading import Condition, Thread
 from time import monotonic
 from types import FrameType
-from typing import Protocol
+from typing import Protocol, cast
 
 from pytradekit.execution import CancelResult, ExecutionReport, SubmissionResult
 from pytradekit.orders.domain import Order
 from pytradekit.orders.ports import ExecutionPort
+from pytradekit.runtime.errors import (
+    RuntimeStartupTimeoutError,
+    RuntimeTelemetryFlushTimeoutError,
+)
 from pytradekit.runtime.observability import RuntimeObserver
+from pytradekit.runtime.ports import TelemetryFlushPort
 from pytradekit.runtime.trading_readiness import TradingReadinessReport
 
 
@@ -190,6 +196,7 @@ class ShutdownReport:
     forced: bool
     final_state: RuntimeLifecycleState
     active_submissions_at_timeout: int
+    telemetry_flushed: bool = True
 
 
 class ProductionRuntimeSupervisor:
@@ -201,10 +208,12 @@ class ProductionRuntimeSupervisor:
         runtime: StartStopRuntime,
         gate: RuntimeAdmissionGate | None = None,
         observer: RuntimeObserver | None = None,
+        telemetry_flusher: TelemetryFlushPort | None = None,
     ) -> None:
         self._runtime = runtime
         self.gate = gate or RuntimeAdmissionGate()
         self.observer = observer or RuntimeObserver()
+        self._telemetry_flusher = telemetry_flusher
         self._last_readiness: TradingReadinessReport | None = None
 
     @property
@@ -213,13 +222,32 @@ class ProductionRuntimeSupervisor:
 
         return self._last_readiness
 
-    def start(self) -> TradingReadinessReport:
-        """Start the runtime and open admission only on TRADING_READY."""
+    def start(
+        self,
+        *,
+        timeout: float | None = None,
+    ) -> TradingReadinessReport:
+        """Start the runtime with optional bounded startup admission."""
 
         self.observer.increment("runtime_start_attempts")
         self.observer.event("runtime_starting")
         try:
-            report = self._runtime.start()
+            if timeout is None:
+                report = self._runtime.start()
+            else:
+                report = _call_bounded(
+                    self._runtime.start,
+                    timeout=timeout,
+                    timeout_error=RuntimeStartupTimeoutError(
+                        "Runtime startup exceeded the configured timeout."
+                    ),
+                )
+        except RuntimeStartupTimeoutError:
+            self.gate.mark_degraded()
+            self.observer.increment("runtime_start_timeouts")
+            self.observer.set_gauge("trading_ready", 0)
+            self.observer.event("runtime_start_timeout")
+            raise
         except Exception as exc:
             self.gate.mark_degraded()
             self.observer.increment("runtime_start_failures")
@@ -246,8 +274,13 @@ class ProductionRuntimeSupervisor:
             )
         return report
 
-    def shutdown(self, *, timeout: float = 10.0) -> ShutdownReport:
-        """Stop new submissions, drain bounded in-flight work, then stop the runtime."""
+    def shutdown(
+        self,
+        *,
+        timeout: float = 10.0,
+        telemetry_flush_timeout: float = 5.0,
+    ) -> ShutdownReport:
+        """Stop admission, drain work, stop runtime, and flush telemetry boundedly."""
 
         self.observer.increment("runtime_shutdown_attempts")
         self.gate.begin_draining()
@@ -263,6 +296,25 @@ class ProductionRuntimeSupervisor:
 
         self._runtime.stop()
         self.gate.mark_stopped()
+
+        telemetry_flushed = True
+        if self._telemetry_flusher is not None:
+            try:
+                _call_bounded(
+                    self._telemetry_flusher.flush,
+                    timeout=telemetry_flush_timeout,
+                    timeout_error=RuntimeTelemetryFlushTimeoutError(
+                        "Telemetry flush exceeded the configured timeout."
+                    ),
+                )
+            except Exception as exc:
+                telemetry_flushed = False
+                self.observer.increment("telemetry_flush_failures_total")
+                self.observer.event(
+                    "telemetry_flush_failed",
+                    error_type=type(exc).__name__,
+                )
+
         self.observer.event(
             "runtime_stopped",
             drained=drained,
@@ -273,6 +325,7 @@ class ProductionRuntimeSupervisor:
             forced=not drained,
             final_state=RuntimeLifecycleState.STOPPED,
             active_submissions_at_timeout=active_at_timeout,
+            telemetry_flushed=telemetry_flushed,
         )
 
     def handle_signal(
@@ -294,6 +347,37 @@ class ProductionRuntimeSupervisor:
 
         signal.signal(signal.SIGTERM, self.handle_signal)
         signal.signal(signal.SIGINT, self.handle_signal)
+
+
+def _call_bounded[T](
+    operation: Callable[[], T],
+    *,
+    timeout: float,
+    timeout_error: Exception,
+) -> T:
+    """Execute one boundary call with a timeout and no late admission side effect."""
+
+    if timeout <= 0:
+        raise ValueError("Operation timeout must be positive.")
+
+    results: Queue[tuple[bool, object]] = Queue(maxsize=1)
+
+    def run() -> None:
+        try:
+            results.put((True, operation()))
+        except Exception as exc:
+            results.put((False, exc))
+
+    worker = Thread(target=run, daemon=True)
+    worker.start()
+    try:
+        succeeded, payload = results.get(timeout=timeout)
+    except Empty as exc:
+        raise timeout_error from exc
+
+    if succeeded:
+        return cast(T, payload)
+    raise cast(Exception, payload)
 
 
 def build_admission_controlled_execution(

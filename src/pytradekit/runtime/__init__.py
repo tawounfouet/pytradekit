@@ -1,12 +1,19 @@
 """Runtime composition and infrastructure-facing abstractions."""
 
-from pytradekit.runtime.adapters import EnvironmentSecrets, SystemClock
+from pytradekit.runtime.adapters import (
+    EnvironmentSecrets,
+    ExternalSecretsProvider,
+    FileSecrets,
+    RoutedSecrets,
+    SystemClock,
+)
 from pytradekit.runtime.configuration import (
     RuntimeEnvironment,
     RuntimeProfile,
     SecretRef,
     mask_account_id,
 )
+from pytradekit.runtime.deployment_security import RuntimeSecurityConfig
 from pytradekit.runtime.ports import ClockPort, SecretsPort
 from pytradekit.runtime.provider_manifest import ProviderManifest
 from pytradekit.runtime.readiness import (
@@ -23,11 +30,15 @@ from pytradekit.runtime.trading_readiness import (
 __all__ = [
     "ClockPort",
     "EnvironmentSecrets",
+    "ExternalSecretsProvider",
+    "FileSecrets",
     "ProviderManifest",
     "ReadinessCheck",
     "ReadinessCheckStatus",
+    "RoutedSecrets",
     "RuntimeEnvironment",
     "RuntimeProfile",
+    "RuntimeSecurityConfig",
     "SecretRef",
     "SecretsPort",
     "StartupReadinessReport",

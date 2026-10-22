@@ -8,11 +8,45 @@ class Base(DeclarativeBase):
     """Declarative base for PostgreSQL persistence models."""
 
 
-def create_database_engine(database_url: str, *, echo: bool = False) -> Engine:
-    """Create a PostgreSQL engine with connection pre-ping enabled."""
+def create_database_engine(
+    database_url: str,
+    *,
+    echo: bool = False,
+    require_tls: bool = False,
+    connect_timeout_seconds: int = 5,
+    statement_timeout_ms: int | None = None,
+    pool_size: int = 5,
+    max_overflow: int = 10,
+) -> Engine:
+    """Create a bounded PostgreSQL engine with explicit TLS expectations."""
+
     if not isinstance(database_url, str) or not database_url.strip():
         raise ValueError("Database URL must be a non-empty string.")
-    return create_engine(database_url.strip(), echo=echo, pool_pre_ping=True)
+    if connect_timeout_seconds <= 0:
+        raise ValueError("Database connect timeout must be positive.")
+    if statement_timeout_ms is not None and statement_timeout_ms <= 0:
+        raise ValueError("Database statement timeout must be positive.")
+    if pool_size <= 0:
+        raise ValueError("Database pool size must be positive.")
+    if max_overflow < 0:
+        raise ValueError("Database max overflow must be non-negative.")
+
+    connect_args: dict[str, str | int] = {
+        "connect_timeout": connect_timeout_seconds,
+    }
+    if require_tls:
+        connect_args["sslmode"] = "require"
+    if statement_timeout_ms is not None:
+        connect_args["options"] = f"-c statement_timeout={statement_timeout_ms}"
+
+    return create_engine(
+        database_url.strip(),
+        echo=echo,
+        pool_pre_ping=True,
+        pool_size=pool_size,
+        max_overflow=max_overflow,
+        connect_args=connect_args,
+    )
 
 
 def create_session_factory(engine: Engine) -> sessionmaker[Session]:

@@ -71,5 +71,10 @@ jobs:
       - name: Unit, property, and integration tests
         run: pytest --cov=pytradekit --cov-report=term-missing
 
+      - name: Single-node deployment qualification
+        run: |
+          python scripts/qualify_deployment.py
+          docker build --tag pytradekit:ci .
+
       - name: Release artifact qualification
         run: python scripts/qualify_release.py

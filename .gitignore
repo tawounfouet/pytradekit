@@ -35,3 +35,5 @@ coverage.xml
 .env
 .env.*
 !.env.example
+
+.secrets/

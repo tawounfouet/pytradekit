@@ -6,6 +6,29 @@ The project is currently pre-1.0 and public APIs remain experimental unless expl
 
 ## [Unreleased]
 
+## [0.7.0rc1] - 2026-10-22
+
+### Added
+
+- LOT-07 Secrets & Deployment Hardening.
+- FileSecrets, ExternalSecretsProvider, RoutedSecrets, and configurable SecretRef values.
+- RuntimeSecurityConfig for bounded lifecycle, PostgreSQL TLS, timeouts, and pool controls.
+- Explicit Alpaca PAPER endpoint validation.
+- Deployment preflight and read-only container health endpoints.
+- Migration-before-runtime container entrypoint with SecretRef-backed Alembic database URL.
+- Provider outage, rotation, and startup timeout runbooks.
+- Single-node deployment qualification and FF-047.
+
+### Safety
+
+- Missing required references fail closed before broker infrastructure construction.
+- Provider errors are sanitized.
+- Configuration stores references rather than credential values.
+- Startup timeout cannot create late admission.
+- Telemetry flush failure cannot prevent STOPPED state.
+- LIVE remains unavailable.
+
+
 ## [0.7.0b2] - 2026-10-22
 
 ### Added

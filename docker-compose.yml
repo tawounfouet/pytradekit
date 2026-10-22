@@ -4,9 +4,9 @@ services:
     environment:
       POSTGRES_DB: pytradekit
       POSTGRES_USER: pytradekit
-      POSTGRES_PASSWORD: pytradekit
-    ports:
-      - "5432:5432"
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    secrets:
+      - postgres_password
     volumes:
       - pytradekit_postgres:/var/lib/postgresql/data
     healthcheck:
@@ -14,6 +14,53 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+
+  pytradekit:
+    build:
+      context: .
+    command:
+      - serve-health
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8080"
+      - --local-development
+    environment:
+      PYTRADEKIT_RUNTIME_ENVIRONMENT: PAPER
+      PYTRADEKIT_RUNTIME_PROFILE: alpaca-paper-single-node
+      PYTRADEKIT_ALPACA_EXPECTED_ACCOUNT_ID: ${PYTRADEKIT_ALPACA_EXPECTED_ACCOUNT_ID:?required}
+      PYTRADEKIT_ALPACA_API_KEY_REF: file:///run/secrets/alpaca_api_key
+      PYTRADEKIT_ALPACA_SECRET_KEY_REF: file:///run/secrets/alpaca_secret_key
+      PYTRADEKIT_DATABASE_URL_REF: file:///run/secrets/database_url
+      PYTRADEKIT_SECRET_FILE_ROOT: /run/secrets
+      PYTRADEKIT_DATABASE_REQUIRE_TLS: "false"
+      PYTRADEKIT_RUN_MIGRATIONS: "1"
+    secrets:
+      - alpaca_api_key
+      - alpaca_secret_key
+      - database_url
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+secrets:
+  postgres_password:
+    file: ${PYTRADEKIT_POSTGRES_PASSWORD_FILE:?required}
+  alpaca_api_key:
+    file: ${PYTRADEKIT_ALPACA_API_KEY_FILE:?required}
+  alpaca_secret_key:
+    file: ${PYTRADEKIT_ALPACA_SECRET_KEY_FILE:?required}
+  database_url:
+    file: ${PYTRADEKIT_DATABASE_URL_FILE:?required}
 
 volumes:
   pytradekit_postgres:
