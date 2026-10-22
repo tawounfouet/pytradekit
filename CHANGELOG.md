@@ -6,6 +6,50 @@ The project is currently pre-1.0 and public APIs remain experimental unless expl
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-22
+
+### Added
+
+- PostgreSQL persistence with SQLAlchemy, Alembic migrations, context-owned repositories, and optimistic concurrency.
+- PostgresUnitOfWork with transactional Inbox, Outbox, and ProcessedFillRegistry semantics.
+- Provider discovery and comparative architecture across Alpaca, Binance Spot, IBKR, and Pepperstone with cTrader.
+- Alpaca PAPER RuntimeProfile, ProviderManifest, SecretsPort, environment-backed secret resolution, and explicit composition root.
+- Alpaca anti-corruption layer for provider identities, errors, order states, account snapshots, position snapshots, and instrument/reference data.
+- AlpacaExecutionAdapter implementing MARKET, LIMIT, CANCEL, and order-query operations through the canonical ExecutionPort.
+- IEX latest quotes and canonical asset, account, and position snapshot integration.
+- Authenticated Alpaca private trade_updates processing through transactional Inbox, OMS, Portfolio, ProcessedFillRegistry, and Outbox handling.
+- Startup and restart reconciliation with remote open-order inventory, account and position convergence checks, two-pass stream reconciliation, and TradingReadinessReport.
+- Runtime admission control, graceful shutdown, SIGTERM and SIGINT handling, deterministic fault injection, runtime metrics, and structured operational events.
+- Real Alpaca PAPER qualification harness and explicit v0.5.0 release gate.
+
+### Safety
+
+- Alpaca integration is PAPER-only with no LIVE fallback.
+- Economic provider writes use one explicit transport attempt with SDK automatic retries disabled.
+- Unknown write outcomes become UNCERTAIN and are reconciled instead of blindly retried.
+- client_order_id is used for uncertain submission recovery.
+- Provider IDs remain external evidence and never replace canonical PyTradeKit IDs.
+- Cumulative provider order fields never fabricate canonical Fill records.
+- Unknown remote orders or portfolio divergence block TRADING_READY.
+- Pre-commit crash windows roll back atomically and post-commit replay is idempotent.
+- New risk-increasing submissions require runtime readiness.
+
+### Qualification
+
+- Deterministic CI run 39789341350 passed on candidate a7768911b56bb25a7efd24aae12f3cb032a5c9ef.
+- Real Alpaca PAPER qualification run 39789766678 passed all required gates.
+- Controlled PAPER qualification executed MARKET, LIMIT, CANCEL, private trade_updates, uncertain recovery, cleanup, graceful stop, and fresh runtime restart.
+- The simulated post-ack response-loss scenario recovered by client_order_id with one submit attempt and no resubmission.
+- PAPER qualification observed nine private trade_updates and restored the AAPL position to its zero baseline.
+- Sanitized qualification artifact 12430172671 recorded release_ready=true.
+
+### Compatibility
+
+- Python 3.12+.
+- Alpaca integration contract pinned to alpaca-py==0.44.0.
+- Alpaca scope is US equities, MARKET and LIMIT orders, DAY time in force, IEX market data, and PAPER only.
+- Public APIs remain pre-1.0 and experimental unless explicitly documented otherwise.
+
 ## [0.4.0] - 2026-10-22
 
 ### Added

@@ -6,6 +6,7 @@ from pytradekit.market_data.domain import (
     DataQualityFinding,
     HistoricalDataset,
     MarketDataEvent,
+    Quote,
     TimerEvent,
 )
 
@@ -15,5 +16,6 @@ __all__ = [
     "DataQualityFinding",
     "HistoricalDataset",
     "MarketDataEvent",
+    "Quote",
     "TimerEvent",
 ]

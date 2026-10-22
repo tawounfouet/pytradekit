@@ -1,5 +1,8 @@
 """Portfolio in-memory and application adapters."""
 
+from pytradekit.portfolio.adapters.in_memory_account_repository import (
+    InMemoryAccountRepository,
+)
 from pytradekit.portfolio.adapters.in_memory_balance_repository import (
     InMemoryBalanceRepository,
 )
@@ -14,6 +17,7 @@ from pytradekit.portfolio.adapters.orders_portfolio_effect_adapter import (
 )
 
 __all__ = [
+    "InMemoryAccountRepository",
     "InMemoryBalanceRepository",
     "InMemoryPositionRepository",
     "InMemoryProcessedFillRegistry",
