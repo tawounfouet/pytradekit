@@ -20,7 +20,6 @@ from pytradekit.reference import ContractSpecification
 from pytradekit.risk.domain import RiskPolicy, RiskPolicyId, RiskScope
 from pytradekit.risk.domain.rules import MaxPositionSize
 from pytradekit.shared import Currency, InstrumentId, Money, Price
-from pytradekit.testing import ExplicitTestOrderAuthorizationGate
 from pytradekit.strategy import (
     Strategy,
     StrategyContext,
@@ -30,6 +29,7 @@ from pytradekit.strategy import (
     StrategyVersion,
     TargetPosition,
 )
+from pytradekit.testing import ExplicitTestOrderAuthorizationGate
 
 
 class ThresholdStrategy:
