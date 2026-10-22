@@ -4,7 +4,7 @@
 **Milestone :** `0.5.x - Persistence + Alpaca Paper`  
 **Lot :** `LOT-10 - Production Qualification`  
 **Date :** 2026-10-22  
-**Statut :** CI qualified - real PAPER evidence pending  
+**Statut :** QUALIFIED - deterministic CI PASS - real Alpaca PAPER PASS - v0.5.0 released  
 **Provider :** Alpaca PAPER  
 **SDK gele :** `alpaca-py==0.44.0`  
 **LIVE :** out of scope
@@ -1405,7 +1405,7 @@ rollback policy
 
 ---
 
-## 96. Release candidate notes
+## 96. Release notes
 
 LOT-10 adds:
 
@@ -1413,12 +1413,14 @@ LOT-10 adds:
 docs/releases/0.5.0.md
 ```
 
-Status:
+Final status:
 
 ```text
-Release candidate
-blocked pending complete real PAPER qualification
+Released after deterministic and real Alpaca PAPER qualification
+release_ready = true
 ```
+
+The earlier release-candidate state was intentionally blocked until the real provider gate passed.
 
 ---
 
@@ -1686,44 +1688,63 @@ explicit CI production gate
 
 ---
 
-## 117. What implementation completion does not mean
+## 117. Implementation completion versus final qualification
 
-It does not mean:
+Implementation completion alone did not mean:
 
 ```text
 real PAPER qualification has already been executed
 ```
 
-No Alpaca credentials are available to this implementation session.
+That distinction was preserved until the dedicated Alpaca PAPER qualification run was executed.
+
+Final state on 2026-10-22:
+
+```text
+implementation complete
++
+deterministic CI qualified
++
+real Alpaca PAPER qualified
++
+release gate PASS
+```
 
 ---
 
-## 118. Current evidence state
+## 118. Final evidence state
 
 Deterministic qualification is complete.
 
-GitHub Actions:
+Behavior candidate:
 
 ```text
-run_number = 159
-run_id     = 39724152573
-head       = f079e0ef9cad637b54398b9e2841fc666931a13d
+a7768911b56bb25a7efd24aae12f3cb032a5c9ef
 ```
 
-Qualified gates:
+Deterministic CI:
 
 ```text
-Typography                         PASS
-Ruff                               PASS
-mypy strict                        PASS - 360 source files
-Import architecture                PASS
-Architecture/public contracts      PASS - 77 tests
-Production fault qualification     PASS - 26 tests
-Full test suite                    PASS - 396 tests
-Release artifact qualification     PASS
+run_id = 39789341350
+status = PASS
 ```
 
-Release evidence therefore stands at:
+Real Alpaca PAPER qualification:
+
+```text
+run_id        = 39789766678
+artifact_id   = 12430172671
+release_ready = true
+```
+
+Release commit:
+
+```text
+7e844a0c3bfa564638530c43fe59df31d9d9bd1b
+PyTradeKit 0.5.0 - Persistence + Alpaca PAPER
+```
+
+Final required gates:
 
 ```text
 ci_quality_gate                    PASS
@@ -1732,39 +1753,88 @@ crash_window_faults               PASS
 graceful_shutdown                 PASS
 provider_429_5xx_semantics        PASS
 
-real_paper_runtime_start_restart  PENDING
-real_paper_market_limit_cancel    PENDING
-real_paper_trade_updates          PENDING
-real_paper_uncertain_recovery     PENDING
-real_paper_cleanup                PENDING
+real_paper_runtime_start_restart  PASS
+real_paper_market_limit_cancel    PASS
+real_paper_trade_updates          PASS
+real_paper_uncertain_recovery     PASS
+real_paper_cleanup                PASS
+
+incident_runbook                  PASS
 ```
 
----
-
-## 119. Release state at that point
+Controlled PAPER evidence:
 
 ```text
-release_ready = false
+MARKET BUY                         PASS
+post-ack response loss             PASS
+client_order_id recovery           PASS
+resubmitted                        false
+submit attempts                    1
+LIMIT BUY                          PASS
+CANCEL                             PASS
+private trade_updates              PASS
+cleanup MARKET SELL                PASS
+final position baseline            PASS
+runtime start                      TRADING_READY
+runtime restart                    TRADING_READY
+graceful shutdown                  PASS
 ```
 
-This is the correct result.
+Observed private stream evidence:
+
+```text
+trade_updates event_count = 9
+```
+
+This closes the real-provider qualification gap that was intentionally left PENDING at implementation time.
+---
+
+## 119. Final release state
+
+```text
+release_ready = true
+```
+
+All required deterministic, real PAPER, and operator gates passed.
+
+PyTradeKit 0.5.0 is therefore qualified for its declared scope:
+
+```text
+Alpaca PAPER
+US equities
+MARKET / LIMIT / CANCEL
+IEX market data
+durable PostgreSQL runtime
+startup/restart reconciliation
+no LIVE qualification
+```
 
 ---
 
-## 120. Command for final PAPER qualification
+## 120. Final PAPER qualification command
 
-When prerequisites are satisfied:
+The final provider qualification used the controlled PAPER harness:
 
 ```bash
 python scripts/alpaca_paper_v050_qualification.py   --with-orders   --ci-qualified   --runbook-reviewed   --output artifacts/qualification/v050-paper.json
 ```
 
+The retained sanitized artifact records the successful result.
+
 ---
 
-## 121. Command for final release decision
+## 121. Final release decision
+
+Release gate command:
 
 ```bash
 python scripts/check_v050_release_gate.py   artifacts/qualification/v050-paper.json
+```
+
+Final expected and achieved decision:
+
+```text
+PyTradeKit v0.5.0 production qualification gate: PASS
 ```
 
 ---
@@ -1795,9 +1865,9 @@ LOT-06 Alpaca Anti-Corruption Layer          DONE
 LOT-07 Alpaca Execution                      DONE
 LOT-08 Alpaca Market Data & Snapshots        DONE
 LOT-09 Startup, Restart & E2E Reconciliation DONE
-LOT-10 Production Qualification              CI QUALIFIED
+LOT-10 Production Qualification              QUALIFIED
 
-v0.5.0 final release                         REAL PAPER GATE PENDING
+v0.5.0 final release                         QUALIFIED / RELEASED
 ```
 
 ---
