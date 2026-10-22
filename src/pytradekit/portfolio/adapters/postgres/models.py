@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from decimal import Decimal
+from typing import ClassVar
 from uuid import UUID
 
 from sqlalchemy import DateTime, Integer, Numeric, String
@@ -17,7 +18,7 @@ class AccountModel(Base):
     """Relational account identity used by portfolio state."""
 
     __tablename__ = "accounts"
-    __table_args__ = {"schema": "portfolio"}
+    __table_args__: ClassVar[dict[str, str]] = {"schema": "portfolio"}
 
     id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True)
     base_currency: Mapped[str] = mapped_column(String(3), nullable=False)
@@ -28,7 +29,7 @@ class PositionModel(Base):
     """Relational representation of a portfolio Position."""
 
     __tablename__ = "positions"
-    __table_args__ = {"schema": "portfolio"}
+    __table_args__: ClassVar[dict[str, str]] = {"schema": "portfolio"}
 
     account_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True)
     instrument_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True)
@@ -45,7 +46,7 @@ class BalanceModel(Base):
     """Relational representation of a portfolio Balance."""
 
     __tablename__ = "balances"
-    __table_args__ = {"schema": "portfolio"}
+    __table_args__: ClassVar[dict[str, str]] = {"schema": "portfolio"}
 
     account_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True)
     currency: Mapped[str] = mapped_column(String(3), primary_key=True)
@@ -60,7 +61,7 @@ class ProcessedFillModel(Base):
     """Durable portfolio fill idempotency key."""
 
     __tablename__ = "processed_fills"
-    __table_args__ = {"schema": "portfolio"}
+    __table_args__: ClassVar[dict[str, str]] = {"schema": "portfolio"}
 
     fill_key: Mapped[str] = mapped_column(String(300), primary_key=True)
     processed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

@@ -7,7 +7,8 @@ from decimal import Decimal
 from uuid import UUID
 
 from sqlalchemy import Boolean, DateTime, Integer, Numeric, String, UniqueConstraint
-from sqlalchemy.dialects.postgresql import JSONB, UUID as PG_UUID
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from pytradekit.persistence.database import Base

@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from types import TracebackType
-from typing import Callable, Protocol
+from typing import Protocol
 
 from sqlalchemy.orm import Session, sessionmaker
 

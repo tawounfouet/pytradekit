@@ -7,13 +7,13 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
+from pytradekit.persistence.errors import PersistenceError
 from pytradekit.persistence.events import (
     InboxRecord,
     InboxStatus,
     OutboxRecord,
 )
 from pytradekit.persistence.message_models import InboxModel, OutboxModel
-from pytradekit.persistence.errors import PersistenceError
 
 
 class PostgresOutboxRepository:

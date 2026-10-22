@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import ClassVar
 from uuid import UUID
 
 from sqlalchemy import DateTime, String, UniqueConstraint
-from sqlalchemy.dialects.postgresql import JSONB, UUID as PG_UUID
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from pytradekit.persistence.database import Base
@@ -16,7 +18,7 @@ class RuntimeMetadataModel(Base):
     """Durable runtime metadata entry."""
 
     __tablename__ = "metadata"
-    __table_args__ = {"schema": "runtime"}
+    __table_args__: ClassVar[dict[str, str]] = {"schema": "runtime"}
 
     key: Mapped[str] = mapped_column(String(200), primary_key=True)
     value: Mapped[dict[str, object]] = mapped_column(JSONB, nullable=False)
