@@ -66,9 +66,8 @@ class ComplianceResult:
         )
         if self.status is ComplianceStatus.PASS and not self.evidence_refs:
             raise ValueError("PASS results must reference retained evidence.")
-        if self.status is not ComplianceStatus.PASS:
-            if self.reason is None:
-                raise ValueError("Non-PASS results require a reason.")
+        if self.status is not ComplianceStatus.PASS and self.reason is None:
+            raise ValueError("Non-PASS results require a reason.")
         if self.reason is not None:
             object.__setattr__(
                 self,

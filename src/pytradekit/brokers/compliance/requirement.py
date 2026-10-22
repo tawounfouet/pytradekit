@@ -63,9 +63,13 @@ class ComplianceRequirement:
             raise ValueError("applicable must be a bool.")
         if not isinstance(self.evidence_type, ComplianceEvidenceType):
             raise ValueError("evidence_type must be a ComplianceEvidenceType.")
-        if self.level is CertificationLevel.C3_PAPER_QUALIFIED:
-            if self.evidence_type is not ComplianceEvidenceType.PAPER:
-                raise ValueError("C3 requirements must require PAPER evidence.")
-        if self.level >= CertificationLevel.C4_LIVE_LIMITED:
-            if self.evidence_type is not ComplianceEvidenceType.LIVE:
-                raise ValueError("C4 and C5 requirements must require LIVE evidence.")
+        if (
+            self.level is CertificationLevel.C3_PAPER_QUALIFIED
+            and self.evidence_type is not ComplianceEvidenceType.PAPER
+        ):
+            raise ValueError("C3 requirements must require PAPER evidence.")
+        if (
+            self.level >= CertificationLevel.C4_LIVE_LIMITED
+            and self.evidence_type is not ComplianceEvidenceType.LIVE
+        ):
+            raise ValueError("C4 and C5 requirements must require LIVE evidence.")

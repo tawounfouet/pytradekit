@@ -2,6 +2,11 @@
 
 from datetime import UTC, datetime
 
+from tests.compliance_fakes import (
+    FakeProviderFixture,
+    compliance_manifest,
+    pass_executor,
+)
 from pytradekit.brokers.compliance import (
     BROKER_ADAPTER_CONTRACT_V1_CANDIDATE,
     PROVIDER_CAPABILITY_MANIFEST_VERSION,
@@ -16,11 +21,6 @@ from pytradekit.brokers.compliance import (
     EvidenceSanitizer,
 )
 from pytradekit.testing import FakeClock
-from tests.compliance_fakes import (
-    FakeProviderFixture,
-    compliance_manifest,
-    pass_executor,
-)
 
 
 def test_common_harness_generates_equivalent_c3_reports_for_two_fixtures() -> None:

@@ -473,9 +473,11 @@ class ComplianceHarness:
                     for requirement in cumulative
                 ):
                     break
-                if target is CertificationLevel.C3_PAPER_QUALIFIED:
-                    if manifest.environment is not RuntimeEnvironment.PAPER:
-                        break
+                if (
+                    target is CertificationLevel.C3_PAPER_QUALIFIED
+                    and manifest.environment is not RuntimeEnvironment.PAPER
+                ):
+                    break
                 if target >= CertificationLevel.C4_LIVE_LIMITED:
                     break
 
@@ -490,6 +492,7 @@ class ComplianceHarness:
                 level >= CertificationLevel.C3_PAPER_QUALIFIED
                 and self._has_critical_failure(
                     requirements,
+                    maximum_level=level,
                     result_by_scenario=result_by_scenario,
                     evidence_by_scenario=evidence_by_scenario,
                 )
@@ -520,11 +523,13 @@ class ComplianceHarness:
         self,
         requirements: tuple[ComplianceRequirement, ...],
         *,
+        maximum_level: CertificationLevel,
         result_by_scenario: Mapping[str, ComplianceResult],
         evidence_by_scenario: Mapping[str, ComplianceEvidence],
     ) -> bool:
         return any(
-            requirement.criticality is ComplianceCriticality.CRITICAL
+            requirement.level <= maximum_level
+            and requirement.criticality is ComplianceCriticality.CRITICAL
             and not self._requirement_passed(
                 requirement,
                 result_by_scenario=result_by_scenario,

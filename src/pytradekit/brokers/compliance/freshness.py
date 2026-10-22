@@ -81,11 +81,14 @@ class StaleEvidencePolicy:
             reasons.append(EvidenceFreshnessReason.SDK_MISMATCH)
         if evidence.contract_version != contract_version:
             reasons.append(EvidenceFreshnessReason.CONTRACT_VERSION_MISMATCH)
-        if self.require_same_commit:
-            if expected_commit is None or evidence.commit_sha != expected_commit:
-                reasons.append(EvidenceFreshnessReason.COMMIT_MISMATCH)
-        if self.max_age is not None:
-            if current_time - evidence.captured_at > self.max_age:
-                reasons.append(EvidenceFreshnessReason.EXPIRED)
+        if self.require_same_commit and (
+            expected_commit is None or evidence.commit_sha != expected_commit
+        ):
+            reasons.append(EvidenceFreshnessReason.COMMIT_MISMATCH)
+        if (
+            self.max_age is not None
+            and current_time - evidence.captured_at > self.max_age
+        ):
+            reasons.append(EvidenceFreshnessReason.EXPIRED)
 
         return EvidenceFreshness(reasons=tuple(dict.fromkeys(reasons)))

@@ -5,6 +5,11 @@ from __future__ import annotations
 from dataclasses import replace
 from datetime import UTC, datetime
 
+from tests.compliance_fakes import (
+    FakeProviderFixture,
+    compliance_manifest,
+    pass_executor,
+)
 from pytradekit.brokers.compliance import (
     BROKER_ADAPTER_CONTRACT_V1_CANDIDATE,
     PROVIDER_CAPABILITY_MANIFEST_VERSION,
@@ -25,11 +30,6 @@ from pytradekit.brokers.compliance import (
     StaleEvidencePolicy,
 )
 from pytradekit.testing import FakeClock
-from tests.compliance_fakes import (
-    FakeProviderFixture,
-    compliance_manifest,
-    pass_executor,
-)
 
 
 def _requirements() -> tuple[ComplianceRequirement, ...]:

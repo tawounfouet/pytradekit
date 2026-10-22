@@ -55,9 +55,11 @@ class CertifiedCapability:
             "evidence_refs",
             normalized_texts(self.evidence_refs, field_name="evidence_refs"),
         )
-        if self.certification_level > CertificationLevel.C0_DEFINED:
-            if not self.evidence_refs:
-                raise ValueError("Qualified capabilities above C0 require evidence_refs.")
+        if (
+            self.certification_level > CertificationLevel.C0_DEFINED
+            and not self.evidence_refs
+        ):
+            raise ValueError("Qualified capabilities above C0 require evidence_refs.")
         object.__setattr__(
             self,
             "known_limitations",
