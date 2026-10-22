@@ -55,6 +55,7 @@ RELEASE_DOCUMENTS = (
     Path("docs/runbooks/CRITICAL_MISMATCH.md"),
     Path("docs/runbooks/TRADING_READINESS_LOST.md"),
     Path("docs/runbooks/PYTRADEKIT_0_7_RELEASE_QUALIFICATION.md"),
+    Path("docs/architecture/broker-compliance.md"),
 )
 
 

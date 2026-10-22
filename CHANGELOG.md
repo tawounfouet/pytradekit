@@ -6,6 +6,37 @@ The project is currently pre-1.0 and public APIs remain experimental unless expl
 
 ## [Unreleased]
 
+## [0.8.0a1] - 2026-10-23
+
+### Added
+
+- LOT-01 Broker Adapter Contract Candidate.
+- BrokerCapability taxonomy with P0 and optional capabilities.
+- CapabilityConstraint and CapabilitySupport for capability-scoped applicability.
+- CertificationLevel from C0 DEFINED through C5 LIVE QUALIFIED.
+- ProviderCapabilityManifest as a declaration model distinct from certification evidence.
+- BrokerAdapterContract v1 candidate with version 1.0-rc1.
+- ProviderFixture protocol reusing canonical ExecutionPort and BrokerSnapshotPort.
+- Broker compliance architecture documentation.
+- FF-048 through FF-056 broker-neutrality architecture fitness functions.
+- Import Linter boundary protecting the compliance core from concrete provider adapters.
+
+### Architecture
+
+- Existing runtime ProviderManifest remains intact for the frozen Alpaca 0.5 contract.
+- ProviderCapabilityManifest does not certify a provider capability.
+- Domain, OMS, Risk, Portfolio, Reconciliation and Safety remain free of concrete provider branching.
+- Provider IDs remain external evidence rather than canonical identity.
+- No new provider-specific ExecutionPort or reconciliation core is introduced.
+
+### Compatibility
+
+- Python 3.12+.
+- Alpaca remains PAPER-only and pinned to alpaca-py==0.44.0.
+- IBKR implementation is deferred to later 0.8 LOTs.
+- LIVE remains unavailable.
+- Public APIs remain pre-1.0 and experimental unless explicitly documented otherwise.
+
 ## [0.7.0] - 2026-10-22
 
 ### Stable Qualified Release
