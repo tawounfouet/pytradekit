@@ -45,6 +45,21 @@ def test_orders_do_not_import_safety_bounded_context_directly() -> None:
     )
 
 
+
+def test_ff_039_admin_role_has_no_safety_bypass_path() -> None:
+    path = Path("src/pytradekit/orders/application/submit_order.py")
+    source = path.read_text(encoding="utf-8")
+
+    authorization_index = source.index(
+        "self._authorization_gate.ensure_submit_allowed"
+    )
+    safety_index = source.index("self._safety_gate.evaluate_submit")
+    provider_index = source.index("self._execution.submit")
+
+    assert "ADMIN" not in source
+    assert authorization_index < safety_index < provider_index
+
+
 def test_ff_040_kill_switch_code_cannot_submit_flatten_orders() -> None:
     offenders: list[str] = []
     for path in python_sources():
