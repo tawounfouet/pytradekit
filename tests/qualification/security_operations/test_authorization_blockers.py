@@ -1,5 +1,6 @@
 """Release-blocker qualification for authorization and scope isolation."""
 
+from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
@@ -175,14 +176,12 @@ def _command(account_id: AccountId) -> SubmitOrderCommand:
 )
 def test_authorization_release_blockers_never_reach_provider(
     permissions: PermissionSet,
-    assignment_scope_factory: object,
+    assignment_scope_factory: Callable[[AccountId], AuthorizationScope],
     valid_until: datetime | None,
     reason: AuthorizationReason,
 ) -> None:
     account_id = AccountId.new()
-    scope_factory = assignment_scope_factory
-    assert callable(scope_factory)
-    assignment_scope = scope_factory(account_id)
+    assignment_scope = assignment_scope_factory(account_id)
     gate, audit = _authorization_gate(
         account_id=account_id,
         permissions=permissions,
