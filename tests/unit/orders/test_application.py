@@ -214,7 +214,6 @@ def test_cancel_fill_race_applies_real_fill_before_cancel_confirmation() -> None
             status=ExecutionStatus.PARTIALLY_FILLED,
             occurred_at=clock.now(),
             correlation_id=CorrelationId.new(),
-        account_id=ACCOUNT_ID,
             external_order_id=submitted.order.external_order_id,
             fill=fill,
         )

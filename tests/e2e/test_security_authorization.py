@@ -47,7 +47,7 @@ from pytradekit.security.application import AuthorizeAction
 from pytradekit.security.domain.errors import AuthorizationDeniedError
 from pytradekit.security.services import AuthorizationService
 from pytradekit.shared import CorrelationId, InstrumentId, Quantity
-from pytradekit.testing import FakeClock
+from pytradekit.testing import ExplicitTestOrderAuthorizationGate, FakeClock
 
 NOW = datetime(2026, 10, 22, 20, 0, tzinfo=UTC)
 
@@ -214,6 +214,7 @@ def test_viewer_cannot_cancel_and_provider_is_not_called() -> None:
         repository=repository,
         execution=execution,
         clock=FakeClock.at(NOW),
+        authorization_gate=ExplicitTestOrderAuthorizationGate(),
     )
     submitted = unrestricted.execute(_command(
         account_id=account_id,

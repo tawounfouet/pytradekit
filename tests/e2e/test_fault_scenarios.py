@@ -280,7 +280,6 @@ def test_full_fill_wins_over_late_cancel_confirmation() -> None:
             status=ExecutionStatus.FILLED,
             occurred_at=NOW,
             correlation_id=CorrelationId.new(),
-        account_id=ACCOUNT_ID,
             external_order_id=submitted.order.external_order_id,
             fill=fill,
         )
