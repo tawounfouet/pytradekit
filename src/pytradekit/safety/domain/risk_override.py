@@ -59,9 +59,7 @@ class RiskOverrideScope:
             return False
         if self.risk_rule is not None and self.risk_rule not in risk_rule_codes:
             return False
-        if self.instrument_id is not None and self.instrument_id != instrument_id:
-            return False
-        return True
+        return self.instrument_id is None or self.instrument_id == instrument_id
 
 
 @dataclass(frozen=True, slots=True)

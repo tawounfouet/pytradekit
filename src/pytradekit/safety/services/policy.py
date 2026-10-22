@@ -1,6 +1,7 @@
 """Deterministic SafetyState derivation and action policy."""
 
 from datetime import datetime
+from typing import ClassVar
 
 from pytradekit.reconciliation.domain import (
     ConsistencyStatus,
@@ -20,7 +21,7 @@ from pytradekit.safety.domain import (
 class SafetyPolicy:
     """Derive SafetyState and decide whether one action is safe."""
 
-    _RECOVERY_ACTIVE = {
+    _RECOVERY_ACTIVE: ClassVar[set[RecoveryState]] = {
         RecoveryState.CONTAINING,
         RecoveryState.OBSERVING,
         RecoveryState.RECONCILING,
