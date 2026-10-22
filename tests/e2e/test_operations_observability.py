@@ -139,6 +139,20 @@ def test_broker_stream_loss_alert_resolves_when_health_is_verified_healthy() -> 
     assert stored.state is AlertState.RESOLVED
 
 
+def test_critical_mismatch_opens_one_critical_alert() -> None:
+    repository = InMemoryAlertRepository()
+    observer = RuntimeObserver()
+    evaluator = _evaluator(repository=repository, observer=observer)
+
+    first = evaluator.critical_mismatch(reason="position divergence")
+    second = evaluator.critical_mismatch(reason="position divergence repeated")
+
+    assert first.id == second.id
+    assert first.type is AlertType.CRITICAL_MISMATCH
+    assert first.state is AlertState.OPEN
+    assert len(repository.list_open()) == 1
+
+
 def test_telemetry_outage_does_not_change_core_operation_result() -> None:
     observer = RuntimeObserver()
     value = TraceRecorder(
