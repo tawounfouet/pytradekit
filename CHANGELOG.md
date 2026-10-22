@@ -6,6 +6,29 @@ The project is currently pre-1.0 and public APIs remain experimental unless expl
 
 ## [Unreleased]
 
+## [0.7.0b1] - 2026-10-22
+
+### Added
+
+- LOT-05 Health, Liveness & Operational Readiness.
+- HealthStatus, HealthComponent, HealthReport, HealthSnapshot, and HealthRegistry.
+- Per-component freshness policies that expire stale HEALTHY evidence.
+- LivenessStatus independent from external dependency health.
+- OperationalReadinessReport preserving existing TradingReadinessReport authority.
+- Read-only dependency health checks for database, broker APIs, streams, market data, outbox, inbox, reconciliation, and runtime.
+- Health-aware SafetyEvidence projection for critical dependencies.
+- Application operations for health, liveness, readiness, monitoring, and admission reflection.
+
+### Safety
+
+- Liveness is distinct from operational readiness.
+- Operational readiness is distinct from trading readiness.
+- Critical database, broker command, or runtime health loss closes unsafe admission.
+- Health code does not mutate trading aggregates.
+- Stale HEALTHY evidence becomes UNKNOWN by policy.
+- LIVE remains unavailable.
+
+
 ## [0.7.0a4] - 2026-10-22
 
 ### Added
