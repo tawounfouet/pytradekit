@@ -47,6 +47,14 @@ RELEASE_DOCUMENTS = (
     Path("docs/runbooks/SECRET_PROVIDER_UNAVAILABLE.md"),
     Path("docs/runbooks/SECRET_ROTATION.md"),
     Path("docs/runbooks/STARTUP_TIMEOUT.md"),
+    Path("docs/qualification/0.7-production-qualification.md"),
+    Path("docs/runbooks/AUTHORIZATION_DENIED.md"),
+    Path("docs/runbooks/KILL_SWITCH_ACTIVATION.md"),
+    Path("docs/runbooks/KILL_SWITCH_RELEASE.md"),
+    Path("docs/runbooks/RISK_OVERRIDE.md"),
+    Path("docs/runbooks/CRITICAL_MISMATCH.md"),
+    Path("docs/runbooks/TRADING_READINESS_LOST.md"),
+    Path("docs/runbooks/PYTRADEKIT_0_7_RELEASE_QUALIFICATION.md"),
 )
 
 
