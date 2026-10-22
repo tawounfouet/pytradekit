@@ -18,3 +18,5 @@ def test_fresh_database_contains_persistence_schemas(postgres_engine: Engine) ->
     assert "balances" in inspector.get_table_names(schema="portfolio")
     assert "policies" in inspector.get_table_names(schema="risk")
     assert "metadata" in inspector.get_table_names(schema="runtime")
+    assert "outbox" in inspector.get_table_names(schema="runtime")
+    assert "inbox" in inspector.get_table_names(schema="runtime")

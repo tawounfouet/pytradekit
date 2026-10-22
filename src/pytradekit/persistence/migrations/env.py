@@ -7,7 +7,7 @@ from sqlalchemy import engine_from_config, pool
 
 from pytradekit.execution.adapters.postgres import models as execution_models
 from pytradekit.orders.adapters.postgres import models as order_models
-from pytradekit.persistence import runtime_models
+from pytradekit.persistence import message_models, runtime_models
 from pytradekit.persistence.database import Base
 from pytradekit.portfolio.adapters.postgres import models as portfolio_models
 from pytradekit.risk.adapters.postgres import models as risk_models
@@ -22,6 +22,7 @@ _registered_models = (
     order_models,
     portfolio_models,
     risk_models,
+    message_models,
     runtime_models,
 )
 target_metadata = Base.metadata

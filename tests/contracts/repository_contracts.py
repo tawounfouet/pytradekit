@@ -53,6 +53,7 @@ def accept_order_repository(repository: OrderRepository) -> None:
     assert loaded is not order
 
     loaded.accept(external_order_id="paper-order-1", occurred_at=NOW)
+    loaded.pull_domain_events()
     repository.save(loaded)
 
     reloaded = repository.get(order.id)
