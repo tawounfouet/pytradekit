@@ -5,6 +5,7 @@ from datetime import UTC, datetime
 from hypothesis import given
 from hypothesis import strategies as st
 
+from pytradekit.portfolio.domain import AccountId
 from pytradekit.reconciliation import (
     BrokerSnapshot,
     InternalSnapshot,
@@ -17,7 +18,6 @@ from pytradekit.reconciliation import (
     SnapshotCompleteness,
     SnapshotWatermark,
 )
-from pytradekit.portfolio.domain import AccountId
 from pytradekit.reconciliation.services import ConvergenceService, SnapshotComparator
 
 
