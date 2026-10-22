@@ -28,10 +28,10 @@ class ExternalSecretsProvider:
             )
         try:
             raw = self._lookup(locator)
-        except Exception as exc:
+        except Exception:
             raise SecretResolutionError(
                 f"External secret provider could not resolve {reference}."
-            ) from exc
+            ) from None
 
         normalized = raw.strip() if isinstance(raw, str) else ""
         if not normalized:
