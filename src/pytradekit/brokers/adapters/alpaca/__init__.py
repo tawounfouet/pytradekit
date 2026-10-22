@@ -1,4 +1,4 @@
-"""Alpaca broker adapter discovery, runtime, ACL, and execution surfaces."""
+"""Alpaca broker adapter discovery, runtime, ACL, execution, and snapshot surfaces."""
 
 from .controlled_order_probe import (
     AlpacaPaperControlledOrderProbe,
@@ -21,6 +21,7 @@ from .read_only_probe import (
     AlpacaPaperReadOnlyProbe,
     build_alpaca_paper_probe,
 )
+from .reference_resolver import StaticAlpacaReferenceResolver
 from .runtime import (
     AlpacaPaperCommandClient,
     AlpacaPaperRuntimeComposition,
@@ -28,11 +29,18 @@ from .runtime import (
     build_alpaca_paper_manifest,
     build_alpaca_paper_runtime,
 )
+from .snapshots import (
+    AlpacaMarketDataSnapshots,
+    AlpacaSnapshotReferenceResolver,
+    AlpacaSnapshotTradingClient,
+    AlpacaStockDataClient,
+)
 
 __all__ = [
     "AlpacaCommandClient",
     "AlpacaExecutionAdapter",
     "AlpacaInstrumentResolver",
+    "AlpacaMarketDataSnapshots",
     "AlpacaOperation",
     "AlpacaPaperCommandClient",
     "AlpacaPaperControlledOrderProbe",
@@ -46,6 +54,10 @@ __all__ = [
     "AlpacaReadClient",
     "AlpacaSimulatedResponseLoss",
     "AlpacaSingleAttemptTradingClient",
+    "AlpacaSnapshotReferenceResolver",
+    "AlpacaSnapshotTradingClient",
+    "AlpacaStockDataClient",
+    "StaticAlpacaReferenceResolver",
     "build_alpaca_paper_manifest",
     "build_alpaca_paper_order_probe",
     "build_alpaca_paper_probe",

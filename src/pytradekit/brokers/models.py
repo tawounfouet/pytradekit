@@ -7,6 +7,7 @@ from datetime import datetime
 from decimal import Decimal
 
 from pytradekit.execution import ExecutionStatus
+from pytradekit.market_data import Quote
 from pytradekit.orders.domain import OrderId
 from pytradekit.portfolio.domain import Account, AccountId, Balance
 from pytradekit.reference.domain import ContractSpecification, Instrument, InstrumentMapping
@@ -254,6 +255,37 @@ class ProviderInstrumentSnapshot:
             self.observed_at,
             field_name="ProviderInstrumentSnapshot observed_at",
         )
+
+
+@dataclass(frozen=True, slots=True)
+class ProviderQuoteSnapshot:
+    """Provider metadata surrounding one canonical level-1 quote."""
+
+    provider: str
+    mapping: InstrumentMapping
+    quote: Quote
+    feed: str
+    bid_exchange: str | None
+    ask_exchange: str | None
+    observed_at: datetime
+
+    def __post_init__(self) -> None:
+        provider = _non_empty(self.provider, field_name="provider")
+        feed = _non_empty(self.feed, field_name="feed")
+        if self.mapping.instrument_id != self.quote.instrument_id:
+            raise DomainValidationError("ProviderQuoteSnapshot instrument mapping mismatch.")
+        if self.mapping.provider.strip().lower() != provider.lower():
+            raise DomainValidationError("ProviderQuoteSnapshot provider mapping mismatch.")
+        if self.bid_exchange is not None and not self.bid_exchange.strip():
+            raise DomainValidationError("ProviderQuoteSnapshot bid_exchange must not be empty.")
+        if self.ask_exchange is not None and not self.ask_exchange.strip():
+            raise DomainValidationError("ProviderQuoteSnapshot ask_exchange must not be empty.")
+        require_utc_datetime(
+            self.observed_at,
+            field_name="ProviderQuoteSnapshot observed_at",
+        )
+        object.__setattr__(self, "provider", provider)
+        object.__setattr__(self, "feed", feed)
 
 
 @dataclass(frozen=True, slots=True)

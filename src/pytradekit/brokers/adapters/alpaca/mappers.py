@@ -7,6 +7,7 @@ from decimal import Decimal, InvalidOperation
 from typing import Never
 from uuid import NAMESPACE_URL, uuid5
 
+from alpaca.data.models.quotes import Quote as AlpacaQuote
 from alpaca.trading.enums import AssetClass as AlpacaAssetClass
 from alpaca.trading.enums import PositionSide as AlpacaPositionSide
 from alpaca.trading.enums import TradeEvent as AlpacaTradeEvent
@@ -21,6 +22,7 @@ from pytradekit.brokers import (
     ProviderOrderStateSnapshot,
     ProviderPositionSnapshot,
     ProviderProtocolError,
+    ProviderQuoteSnapshot,
     ProviderStateReconciliationRequired,
     ProviderUnsupportedStateError,
 )
@@ -32,6 +34,7 @@ from pytradekit.execution import (
     SubmissionResult,
     SubmissionStatus,
 )
+from pytradekit.market_data import Quote as CanonicalQuote
 from pytradekit.portfolio.domain import Account, AccountId, Balance
 from pytradekit.reference.domain import (
     AssetClass,
@@ -109,6 +112,60 @@ def map_asset_snapshot(
         easy_to_borrow=asset.easy_to_borrow,
         fractionable=asset.fractionable,
         observed_at=timestamp,
+    )
+
+
+
+def map_latest_quote(
+    quote: AlpacaQuote,
+    *,
+    mapping: InstrumentMapping,
+    quote_currency: Currency,
+    feed: str,
+    observed_at: datetime,
+) -> ProviderQuoteSnapshot:
+    """Map one Alpaca latest quote into canonical level-1 market data."""
+
+    if quote.symbol != mapping.external_symbol:
+        raise _protocol_error(
+            "Alpaca quote symbol does not match configured instrument mapping.",
+            operation="map_quote",
+        )
+
+    canonical_quote = CanonicalQuote(
+        instrument_id=mapping.instrument_id,
+        bid_price=_quote_price(
+            quote.bid_price,
+            currency=quote_currency,
+            field_name="bid_price",
+        ),
+        bid_size=Quantity(
+            _required_non_negative_decimal(
+                quote.bid_size,
+                field_name="bid_size",
+            )
+        ),
+        ask_price=_quote_price(
+            quote.ask_price,
+            currency=quote_currency,
+            field_name="ask_price",
+        ),
+        ask_size=Quantity(
+            _required_non_negative_decimal(
+                quote.ask_size,
+                field_name="ask_size",
+            )
+        ),
+        occurred_at=_utc(quote.timestamp, field_name="quote timestamp"),
+    )
+    return ProviderQuoteSnapshot(
+        provider=ALPACA_PROVIDER_KEY,
+        mapping=mapping,
+        quote=canonical_quote,
+        feed=feed,
+        bid_exchange=_exchange_label(quote.bid_exchange),
+        ask_exchange=_exchange_label(quote.ask_exchange),
+        observed_at=_utc(observed_at, field_name="quote observed_at"),
     )
 
 
@@ -558,6 +615,27 @@ def _optional_price(
 ) -> Price | None:
     result = _optional_positive_decimal(value, field_name=field_name)
     return None if result is None else Price(result, currency)
+
+
+
+def _quote_price(
+    value: object,
+    *,
+    currency: Currency,
+    field_name: str,
+) -> Price | None:
+    result = _required_non_negative_decimal(value, field_name=field_name)
+    if result == 0:
+        return None
+    return Price(result, currency)
+
+
+def _exchange_label(value: object) -> str | None:
+    if value is None:
+        return None
+    raw = getattr(value, "value", value)
+    normalized = str(raw).strip()
+    return normalized or None
 
 
 def _raise_position_side(side: object) -> Never:

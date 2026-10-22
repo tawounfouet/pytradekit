@@ -22,6 +22,7 @@ from pytradekit.brokers.models import (
     ProviderOrderIdentity,
     ProviderOrderStateSnapshot,
     ProviderPositionSnapshot,
+    ProviderQuoteSnapshot,
 )
 
 __all__ = [
@@ -38,6 +39,7 @@ __all__ = [
     "ProviderOrderStateSnapshot",
     "ProviderPositionSnapshot",
     "ProviderProtocolError",
+    "ProviderQuoteSnapshot",
     "ProviderRateLimitError",
     "ProviderRejectedOperationError",
     "ProviderStateReconciliationRequired",
