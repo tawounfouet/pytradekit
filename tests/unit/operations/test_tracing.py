@@ -2,7 +2,7 @@
 
 from datetime import UTC, datetime
 
-from pytradekit.operations import TraceContext
+from pytradekit.operations import TraceContext, TraceRecord
 from pytradekit.operations.adapters import (
     InMemoryTraceExporter,
     OpenTelemetryTraceAdapter,
@@ -16,7 +16,7 @@ NOW = datetime(2026, 10, 22, 21, 10, tzinfo=UTC)
 
 
 class _FailingExporter:
-    def export(self, record) -> None:
+    def export(self, record: TraceRecord) -> None:
         _ = record
         raise RuntimeError("telemetry backend unavailable")
 
