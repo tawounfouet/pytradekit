@@ -41,13 +41,7 @@ from pytradekit.reference.domain import (
     Instrument,
     InstrumentMapping,
 )
-from pytradekit.shared import (
-    Currency,
-    InstrumentId,
-    Money,
-    Price,
-    Quantity,
-)
+from pytradekit.shared import Currency, InstrumentId, Money, Price, Quantity
 
 from .contract import (
     ALPACA_PROVIDER_KEY,
