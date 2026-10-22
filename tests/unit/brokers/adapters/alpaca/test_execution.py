@@ -132,22 +132,32 @@ def _order(
     limit_price: Decimal | None = None,
 ) -> Order:
     instrument_id = InstrumentId.new()
-    kwargs = dict(
-        order_id=OrderId.new(),
-        instrument_id=instrument_id,
-        side=OrderSide.BUY,
-        quantity=Quantity(Decimal("1.25")),
-        time_in_force=tif,
-        correlation_id=CorrelationId.new(),
-        occurred_at=NOW,
-        client_order_id="ptk-order-123",
-    )
+    order_id = OrderId.new()
+    correlation_id = CorrelationId.new()
+    quantity = Quantity(Decimal("1.25"))
+
     if order_type is OrderType.MARKET:
-        order = Order.create_market(**kwargs)
+        order = Order.create_market(
+            order_id=order_id,
+            instrument_id=instrument_id,
+            side=OrderSide.BUY,
+            quantity=quantity,
+            time_in_force=tif,
+            correlation_id=correlation_id,
+            occurred_at=NOW,
+            client_order_id="ptk-order-123",
+        )
     else:
         order = Order.create_limit(
-            **kwargs,
+            order_id=order_id,
+            instrument_id=instrument_id,
+            side=OrderSide.BUY,
+            quantity=quantity,
+            time_in_force=tif,
+            correlation_id=correlation_id,
+            occurred_at=NOW,
             limit_price=Price(limit_price or Decimal("191.25"), Currency("USD")),
+            client_order_id="ptk-order-123",
         )
     order.validate(occurred_at=NOW)
     order.mark_submitted(occurred_at=NOW)
@@ -221,6 +231,7 @@ def test_market_submit_maps_canonical_order_and_submits_once() -> None:
     assert isinstance(request, MarketOrderRequest)
     assert request.symbol == "AAPL"
     assert request.qty == 1.25
+    assert request.side is not None
     assert request.side.value == "buy"
     assert request.time_in_force.value == "day"
     assert request.client_order_id == "ptk-order-123"
