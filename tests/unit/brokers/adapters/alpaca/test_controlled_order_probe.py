@@ -10,9 +10,11 @@ from uuid import UUID, uuid4
 
 import pytest
 from alpaca.data.historical.stock import StockHistoricalDataClient
+from alpaca.data.requests import StockLatestQuoteRequest
 from alpaca.trading.client import TradingClient
 from alpaca.trading.enums import OrderSide, OrderStatus, OrderType, TimeInForce
 from alpaca.trading.models import Order
+from alpaca.trading.requests import OrderRequest
 from alpaca.trading.stream import TradingStream
 
 from pytradekit.brokers.adapters.alpaca.controlled_order_probe import (
@@ -142,17 +144,17 @@ class _FakeCommandClient:
 
     def submit_once(
         self,
-        request: object,
+        request: OrderRequest,
         *,
         simulate_response_loss: bool = False,
     ) -> object:
-        client_order_id = cast(str, getattr(request, "client_order_id"))
+        client_order_id = cast(str, request.client_order_id)
         self._state.submit_attempts[client_order_id] = (
             self._state.submit_attempts.get(client_order_id, 0) + 1
         )
-        side = cast(OrderSide, getattr(request, "side"))
-        qty = Decimal(str(getattr(request, "qty")))
-        order_type = cast(OrderType, getattr(request, "type"))
+        side = cast(OrderSide, request.side)
+        qty = Decimal(str(request.qty))
+        order_type = cast(OrderType, request.type)
 
         if order_type is OrderType.MARKET:
             status = OrderStatus.FILLED
@@ -162,7 +164,7 @@ class _FakeCommandClient:
         else:
             status = OrderStatus.NEW
             filled_qty = "0"
-            limit_price = str(getattr(request, "limit_price"))
+            limit_price = str(request.limit_price)
 
         order = _order(
             client_order_id=client_order_id,
@@ -182,24 +184,24 @@ class _FakeCommandClient:
     def cancel_once(self, order_id: str) -> None:
         self._state.cancel_attempts += 1
         for client_order_id, current in list(self._state.orders.items()):
-            if str(getattr(current, "id")) != order_id:
+            current_order = cast(SimpleNamespace, current)
+            if str(current_order.id) != order_id:
                 continue
             self._state.orders[client_order_id] = _order(
                 client_order_id=client_order_id,
-                side=cast(OrderSide, getattr(current, "side")),
-                order_type=cast(OrderType, getattr(current, "type")),
+                side=cast(OrderSide, current_order.side),
+                order_type=cast(OrderType, current_order.type),
                 status=OrderStatus.CANCELED,
-                qty=str(getattr(current, "qty")),
-                filled_qty=str(getattr(current, "filled_qty")),
-                limit_price=cast(str | None, getattr(current, "limit_price")),
+                qty=str(current_order.qty),
+                filled_qty=str(current_order.filled_qty),
+                limit_price=cast(str | None, current_order.limit_price),
             )
             return
 
 
 class _FakeDataClient:
-    def get_stock_latest_quote(self, request: object) -> object:
-        symbol_or_symbols = getattr(request, "symbol_or_symbols")
-        symbol = cast(str, symbol_or_symbols)
+    def get_stock_latest_quote(self, request: StockLatestQuoteRequest) -> object:
+        symbol = cast(str, request.symbol_or_symbols)
         return {
             symbol: SimpleNamespace(
                 symbol=symbol,
