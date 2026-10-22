@@ -1,16 +1,16 @@
 """Persistence transaction contracts."""
 
-from __future__ import annotations
-
 from typing import Protocol
 
 from pytradekit.execution.ports import FillRepository
 from pytradekit.orders.ports import OrderRepository
+from pytradekit.persistence.events import InboxRepository, OutboxRepository
 from pytradekit.portfolio.ports import (
     BalanceRepository,
     PositionRepository,
     ProcessedFillRegistry,
 )
+from pytradekit.risk.ports import RiskPolicyRepository
 
 
 class TransactionBoundary(Protocol):
@@ -33,3 +33,6 @@ class UnitOfWork(TransactionBoundary, Protocol):
     positions: PositionRepository
     balances: BalanceRepository
     processed_fills: ProcessedFillRegistry
+    risk_policies: RiskPolicyRepository
+    outbox: OutboxRepository
+    inbox: InboxRepository

@@ -9,9 +9,9 @@ import pytest
 from alembic import command
 from alembic.config import Config
 from sqlalchemy import Engine
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, sessionmaker
 
-from pytradekit.persistence.database import create_database_engine
+from pytradekit.persistence.database import create_database_engine, create_session_factory
 
 
 @pytest.fixture(scope="session")
@@ -35,9 +35,17 @@ def postgres_engine(database_url: str) -> Iterator[Engine]:
     command.downgrade(config, "base")
 
 
+@pytest.fixture(scope="session")
+def postgres_session_factory(
+    postgres_engine: Engine,
+) -> sessionmaker[Session]:
+    """Return the canonical factory for committed integration transactions."""
+    return create_session_factory(postgres_engine)
+
+
 @pytest.fixture
 def postgres_session(postgres_engine: Engine) -> Iterator[Session]:
-    """Run one integration test inside an outer rollback transaction."""
+    """Run one repository integration test inside an outer rollback transaction."""
     connection = postgres_engine.connect()
     transaction = connection.begin()
     session = Session(bind=connection, expire_on_commit=False)

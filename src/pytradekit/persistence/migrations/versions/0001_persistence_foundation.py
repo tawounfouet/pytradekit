@@ -120,6 +120,40 @@ def upgrade() -> None:
     op.create_index("ix_risk_policies_scope_id", "policies", ["scope_id"], schema="risk")
 
     op.create_table(
+        "outbox",
+        sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
+        sa.Column("event_type", sa.String(200), nullable=False),
+        sa.Column("event_version", sa.Integer(), nullable=False),
+        sa.Column("aggregate_type", sa.String(100), nullable=False),
+        sa.Column("aggregate_id", sa.String(200), nullable=False),
+        sa.Column("payload", postgresql.JSONB(), nullable=False),
+        sa.Column("correlation_id", sa.String(100)),
+        sa.Column("causation_id", sa.String(100)),
+        sa.Column("occurred_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("published_at", sa.DateTime(timezone=True)),
+        sa.Column("attempt_count", sa.Integer(), nullable=False),
+        sa.Column("last_error", sa.String(2000)),
+        schema="runtime",
+    )
+    op.create_index(
+        "ix_runtime_outbox_pending",
+        "outbox",
+        ["published_at", "created_at"],
+        schema="runtime",
+    )
+    op.create_table(
+        "inbox",
+        sa.Column("provider", sa.String(100), primary_key=True),
+        sa.Column("external_event_id", sa.String(300), primary_key=True),
+        sa.Column("received_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("processed_at", sa.DateTime(timezone=True)),
+        sa.Column("payload_hash", sa.String(128)),
+        sa.Column("status", sa.String(32), nullable=False),
+        schema="runtime",
+    )
+
+    op.create_table(
         "metadata",
         sa.Column("key", sa.String(200), primary_key=True),
         sa.Column("value", postgresql.JSONB(), nullable=False),
@@ -148,6 +182,9 @@ def downgrade() -> None:
     """Drop milestone 0.5 persistence foundation."""
     op.drop_table("broker_mappings", schema="runtime")
     op.drop_table("metadata", schema="runtime")
+    op.drop_table("inbox", schema="runtime")
+    op.drop_index("ix_runtime_outbox_pending", table_name="outbox", schema="runtime")
+    op.drop_table("outbox", schema="runtime")
     op.drop_index("ix_risk_policies_scope_id", table_name="policies", schema="risk")
     op.drop_index("ix_risk_policies_scope", table_name="policies", schema="risk")
     op.drop_table("policies", schema="risk")
