@@ -1,8 +1,10 @@
 """PostgreSQL repositories for Safety governance."""
 
 from datetime import datetime
+from typing import Any, cast
 
 from sqlalchemy import select, update
+from sqlalchemy.engine import CursorResult
 from sqlalchemy.orm import Session
 
 from pytradekit.safety.adapters.postgres.models import (
@@ -72,7 +74,7 @@ class PostgresKillSwitchRepository:
             )
             .values(**{key: value for key, value in values.items() if key != "id"})
         )
-        result = self._session.execute(statement)
+        result = cast(CursorResult[Any], self._session.execute(statement))
         if result.rowcount != 1:
             raise SafetyConcurrencyError("Stale KillSwitch version.")
         self._session.flush()
@@ -164,7 +166,7 @@ class PostgresRiskOverrideRepository:
             )
             .values(**{key: value for key, value in values.items() if key != "id"})
         )
-        result = self._session.execute(statement)
+        result = cast(CursorResult[Any], self._session.execute(statement))
         if result.rowcount != 1:
             raise SafetyConcurrencyError("Stale RiskOverride version.")
         self._session.flush()
