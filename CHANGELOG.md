@@ -6,6 +6,49 @@ The project is currently pre-1.0 and public APIs remain experimental unless expl
 
 ## [Unreleased]
 
+## [0.7.0a4] - 2026-10-22
+
+### Added
+
+- LOT-04 Kill Switch & Risk Overrides.
+- Persistent KillSwitch with GLOBAL, ENVIRONMENT, ACCOUNT, and STRATEGY scopes.
+- Governed activation and stricter release flow.
+- Time-bound RiskOverride request, approval, creation, and revocation semantics.
+- DangerousActionConfirmation with bounded expiry and process-bound restart behavior.
+- PostgreSQL safety governance persistence with optimistic concurrency.
+- Runtime safety audit adapter reusing the existing observer surface.
+- Order and strategy KillSwitch integration.
+
+### Safety
+
+- KillSwitch blocks risk-increasing submits and strategy targets.
+- KillSwitch never performs an implicit flatten.
+- RiskOverride expires deterministically.
+- RiskOverride cannot bypass KillSwitch, UNKNOWN, INCONSISTENT, low confidence, or authorization.
+- KillSwitch release requires authorization, explicit confirmation, and safe underlying evidence.
+- Dangerous actions emit audit evidence.
+- LIVE remains unavailable.
+
+## [0.7.0a3] - 2026-10-22
+
+### Added
+
+- LOT-03 SafetyState & SafetyDecision.
+- Explicit SafetyState, SafetyAction, SafetyReason, SafetyDecision, SafetyPolicy, and SafetyGate.
+- ConsistencyStatus, StateConfidence, RecoveryState, RuntimeLifecycleState, trading readiness, and risk integration.
+- Orders-owned safety port for submit and cancel.
+- Strategy admission adapter backed by SafetyGate.
+- Explicit safety reason codes and order result evidence.
+
+### Safety
+
+- Authorization allow does not imply safety allow.
+- UNKNOWN and INCONSISTENT economic truth block risk increase.
+- Risk reduction is based on projected portfolio semantics, never BUY/SELL heuristics.
+- Cancel and reconciliation policies remain explicit in restricted states.
+- LIVE remains unavailable.
+
+
 ## [0.7.0a2] - 2026-10-22
 
 ### Added

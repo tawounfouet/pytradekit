@@ -48,7 +48,7 @@ pytradekit --version
 Current release version:
 
 ~~~text
-0.7.0a2
+0.7.0a4
 ~~~
 
 ## Milestone flow
