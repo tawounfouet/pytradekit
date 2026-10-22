@@ -8,6 +8,8 @@ from pytradekit.security.domain import (
     AuthorizationScope,
     OperationScopeKind,
     Permission,
+    Role,
+    RoleId,
 )
 from pytradekit.security.ports import (
     ActorRepository,
@@ -65,7 +67,7 @@ class AuthorizationService:
             )
 
         actor_assignments = self._assignments.list_for_actor(actor_id)
-        roles = {}
+        roles: dict[RoleId, Role] = {}
         for assignment in actor_assignments:
             role = self._roles.get(assignment.role_id)
             if role is not None:

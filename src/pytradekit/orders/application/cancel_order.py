@@ -7,7 +7,11 @@ from pytradekit.orders.application.models import (
     OrderSnapshot,
 )
 from pytradekit.orders.domain import InvalidOrderError, OrderNotFoundError
-from pytradekit.orders.ports import ExecutionPort, OrderRepository
+from pytradekit.orders.ports import (
+    ExecutionPort,
+    OrderAuthorizationGatePort,
+    OrderRepository,
+)
 from pytradekit.runtime.ports import ClockPort
 
 
@@ -20,13 +24,23 @@ class CancelOrder:
         repository: OrderRepository,
         execution: ExecutionPort,
         clock: ClockPort,
+        authorization_gate: OrderAuthorizationGatePort | None = None,
     ) -> None:
         self._repository = repository
         self._execution = execution
         self._clock = clock
+        self._authorization_gate = authorization_gate
 
     def execute(self, command: CancelOrderCommand) -> CancelOrderResult:
         """Execute one cancellation request without blind retry."""
+        if self._authorization_gate is not None:
+            account_id = command.account_id
+            if account_id is None:
+                raise InvalidOrderError(
+                    "Authorization-gated cancellation requires account_id."
+                )
+            self._authorization_gate.ensure_cancel_allowed(account_id)
+
         order = self._repository.get(command.order_id)
         if order is None:
             raise OrderNotFoundError(f"Order {command.order_id} was not found.")
