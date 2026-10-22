@@ -1,7 +1,7 @@
 """Bootstrap tests for the root package."""
 
-from pathlib import Path
 import tomllib
+from pathlib import Path
 
 from pytradekit import __version__
 from pytradekit.__main__ import main
