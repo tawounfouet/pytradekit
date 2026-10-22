@@ -200,7 +200,31 @@ python examples/03_uncertain_submission_reconciliation.py
 python examples/04_cancel_fill_race.py
 python examples/05_portfolio_risk.py
 python examples/06_strategy_backtest.py
+python examples/07_alpaca_paper_runtime.py
 ~~~
+
+The 0.5 example is safe by default. It performs no provider call, database
+connection, or economic order unless explicitly opted in.
+
+To exercise the real Alpaca PAPER startup, reconciliation, private stream, and
+graceful shutdown path:
+
+~~~bash
+python examples/07_alpaca_paper_runtime.py --run-real-paper
+~~~
+
+The real path requires the `alpaca` and `postgres` extras plus the environment
+documented in `docs/runbooks/PYTRADEKIT_0_5_RELEASE_QUALIFICATION.md`. It does
+not submit or cancel broker orders.
+
+The frozen 0.5 provider behavior can also be requalified manually through:
+
+~~~text
+.github/workflows/v050-real-paper.yml
+~~~
+
+That workflow intentionally uses `workflow_dispatch` only and checks out the
+behavior candidate that originally passed the real Alpaca PAPER gate.
 
 ## Package topology
 
