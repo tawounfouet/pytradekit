@@ -99,7 +99,6 @@ class SubmitOrder:
                 )
             self._consistency_gate.ensure_risk_increase_allowed(account_id)
 
-        self._repository.add(order)
         risk_decision: str | None = None
         risk_violation_codes: tuple[str, ...] = ()
         risk_issues: tuple[str, ...] = ()
@@ -131,6 +130,7 @@ class SubmitOrder:
         )
         if not safety.allowed:
             if not risk_allowed and "RISK_POLICY_DENIED" in safety.reason_codes:
+                self._repository.add(order)
                 return SubmitOrderResult(
                     order=OrderSnapshot.from_order(order),
                     submission_status=None,
@@ -141,6 +141,7 @@ class SubmitOrder:
                 )
             raise OrderSafetyDeniedError(safety.reason_codes)
 
+        self._repository.add(order)
         order.mark_submitted(occurred_at=self._clock.now())
         self._repository.save(order)
 
