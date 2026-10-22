@@ -6,6 +6,53 @@ The project is currently pre-1.0 and public APIs remain experimental unless expl
 
 ## [Unreleased]
 
+## [0.6.0rc1] - 2026-10-22
+
+### Added
+
+- First-class reconciliation domain with typed run, mismatch, resolution, scope, trigger, recovery, consistency, confidence, completeness, and watermark semantics.
+- Deterministic canonical order, fill, position, and balance snapshot comparators.
+- PostgreSQL reconciliation evidence schema with durable runs, mismatches, resolutions, optimistic concurrency, stale-run queries, and explicit checkpoints.
+- Generic account, order, fill, position, and balance reconciliation use cases with mandatory fresh verification.
+- Alpaca account activity reader for stable FILL execution facts without synthesizing fills from cumulative order quantities.
+- Missing Fill recovery through the canonical Fill, OMS, Portfolio, ProcessedFillRegistry, and Outbox path.
+- External activity classification that preserves unknown provider origin instead of silently internalizing it.
+- Recovery workflows for STARTUP, PERIODIC, RECONNECT, SUBMIT_UNCERTAINTY, INCIDENT, and MANUAL triggers.
+- Concrete PostgreSQL internal snapshot and Alpaca broker snapshot adapters.
+- Generic 0.6 reconciliation gate integrated after the qualified 0.5 Alpaca PAPER startup baseline.
+- Consistency and confidence admission gates for TradingReadinessReport, SubmitOrder, and StrategyRuntime target emission.
+
+### Safety
+
+- Reconciliation domain remains provider-independent and persistence-independent.
+- Snapshot comparison is deterministic and uses exact Decimal semantics for P0 economic facts.
+- Unknown or incomplete evidence cannot produce HIGH-confidence consistency.
+- Missing external fills are imported only from stable provider execution identities.
+- The same external fill is qualified to produce one canonical economic effect and one import Outbox event.
+- External orders with unproven origin remain explicit and require review.
+- Recovery evidence is checkpointed durably during the run instead of only at final completion.
+- Economic correction is blocked when the internal watermark changes before mutation.
+- Resolution verification requires evidence strictly newer than the applied recovery effect.
+- New risk is fail-closed unless reconciliation proves CONSISTENT + HIGH.
+- Strategy target emission is suppressed when consistency admission is unsafe.
+- Alpaca remains PAPER-only with no LIVE fallback.
+
+### Qualification
+
+- Ruff, strict mypy, Import Linter, architecture contracts, public import checks, and production fault qualification pass.
+- 434 unit, property, integration, architecture, contract, E2E, and qualification tests pass against PostgreSQL 16.
+- Missing Fill recovery idempotence is qualified against real PostgreSQL transactions.
+- Generic Alpaca startup reconciliation is mechanically required after the 0.5 startup baseline.
+- Typography policy remains enforced repository-wide.
+
+### Compatibility
+
+- Python 3.12+.
+- Alpaca integration contract remains pinned to alpaca-py==0.44.0.
+- 0.6.0rc1 is a release candidate and does not declare the 0.6 stable API complete.
+- Existing Risk, OMS, Fill, Portfolio, Strategy, Backtest, Persistence, and Alpaca PAPER semantics remain in place.
+
+
 ## [0.5.0] - 2026-10-22
 
 ### Added

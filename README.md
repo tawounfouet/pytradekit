@@ -4,11 +4,13 @@ PyTradeKit is a domain-first, broker-agnostic trading framework designed around 
 
 ## Current milestone
 
-PyTradeKit 0.5.0 - Persistence + Alpaca PAPER
+PyTradeKit 0.6.0rc1 - Reconciliation & Recovery
 
-PyTradeKit 0.5 adds the first durable provider-connected PAPER runtime while preserving the Risk, OMS, Fill, Portfolio, Strategy, and Backtest core delivered by earlier milestones.
+PyTradeKit 0.6 formalizes reconciliation as a first-class domain and recovery capability on top of the durable Alpaca PAPER runtime delivered in 0.5.
 
-The Alpaca integration is PAPER-only. LIVE trading is not available or qualified in 0.5.
+The 0.6.0rc1 candidate covers reconciliation domain foundations, canonical snapshots and comparators, durable reconciliation evidence, generic reconciliation use cases, missing-fill recovery, recovery workflows, and consistency/confidence safety gates.
+
+The Alpaca integration remains PAPER-only. LIVE trading is not available or qualified in 0.6.0rc1.
 
 ## Requirements
 
@@ -46,7 +48,7 @@ pytradekit --version
 Current release version:
 
 ~~~text
-0.5.0
+0.6.0rc1
 ~~~
 
 ## Milestone flow
@@ -67,6 +69,9 @@ Canonical Order
 -> Outbox
 -> PostgreSQL commit
 -> restart reconciliation
+-> generic ReconciliationRun / Mismatch / Resolution
+-> fresh verification
+-> ConsistencyStatus + StateConfidence
 -> TRADING_READY
 ~~~
 
@@ -112,9 +117,9 @@ no synthetic Fill
 unknown divergence blocks TRADING_READY
 ~~~
 
-## Startup and restart
+## Startup, restart, and recovery
 
-Runtime startup uses durable local state plus provider observations.
+Runtime startup still executes the qualified 0.5 provider checks, then delegates final trading admission to the generic 0.6 reconciliation pipeline.
 
 ~~~text
 load configuration
@@ -123,13 +128,17 @@ load configuration
 -> verify PAPER account
 -> load local durable state
 -> load provider snapshots
--> reconcile
+-> 0.5 startup convergence
 -> start authenticated trade_updates
--> reconcile again
+-> second 0.5 convergence
+-> generic 0.6 reconciliation
+-> persist mismatches and resolutions
+-> verify with fresh evidence
+-> require CONSISTENT + HIGH
 -> TRADING_READY
 ~~~
 
-`READY_FOR_STARTUP` and `TRADING_READY` are intentionally different states.
+`READY_FOR_STARTUP` and `TRADING_READY` remain intentionally different states. New risk is blocked when reconciliation evidence is missing, degraded, inconsistent, unknown, or below HIGH confidence.
 
 ## Runtime lifecycle
 
@@ -240,6 +249,7 @@ src/pytradekit/
 |-- market_data/
 |-- backtesting/
 |-- persistence/
+|-- reconciliation/
 |-- brokers/
 |   `-- adapters/alpaca/
 |-- runtime/
@@ -277,6 +287,7 @@ package import graph remains acyclic
 - 0.5 release qualification runbook: docs/runbooks/PYTRADEKIT_0_5_RELEASE_QUALIFICATION.md
 - Alpaca PAPER incident runbook: docs/runbooks/ALPACA_PAPER_INCIDENT_RESPONSE.md
 - 0.5.0 release notes: docs/releases/0.5.0.md
+- 0.6.0rc1 release notes: docs/releases/0.6.0rc1.md
 - ADRs: docs/adr/
 
 ## Quality commands
@@ -294,15 +305,12 @@ make check
 
 Release qualification validates version metadata, release notes, changelog state, README version state, wheel and sdist builds, SHA-256 digests, clean wheel installation, installed-version identity, and executable examples.
 
-## Explicit 0.5 scope boundaries
+## Explicit 0.6.0rc1 scope boundaries
 
-PyTradeKit 0.5 intentionally does not include:
+PyTradeKit 0.6.0rc1 intentionally does not include:
 
 - LIVE trading
 - IBKR or cTrader implementation
-- a generic ReconciliationRun / Mismatch / Resolution domain
-- generic Missing Fill Recovery
-- external manual activity classification
 - distributed workers
 - leases or fencing
 - full RBAC
