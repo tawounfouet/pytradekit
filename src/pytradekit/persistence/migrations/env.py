@@ -59,6 +59,8 @@ def _database_url() -> str:
 
 
 def _configure_database_url() -> None:
+    if config.get_main_option("sqlalchemy.url").strip():
+        return
     config.set_main_option(
         "sqlalchemy.url",
         _database_url().replace("%", "%%"),
