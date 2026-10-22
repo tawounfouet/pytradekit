@@ -71,6 +71,7 @@ def lot09_session_factory(
     factory = sessionmaker(
         bind=connection,
         expire_on_commit=False,
+        join_transaction_mode="create_savepoint",
     )
     try:
         yield factory
