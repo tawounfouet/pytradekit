@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from typing import ClassVar
 from uuid import UUID
 
 from sqlalchemy import Boolean, Integer, String
@@ -17,7 +16,7 @@ class RiskPolicyModel(Base):
     """Relational representation of a versioned RiskPolicy."""
 
     __tablename__ = "policies"
-    __table_args__: ClassVar[dict[str, str]] = {"schema": "risk"}
+    __table_args__ = ({"schema": "risk"},)
 
     id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True)
     name: Mapped[str] = mapped_column(String(200), nullable=False)

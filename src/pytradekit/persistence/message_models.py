@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import ClassVar
 from uuid import UUID
 
 from sqlalchemy import DateTime, Index, Integer, String
@@ -42,7 +41,7 @@ class InboxModel(Base):
     """Relational Inbox identity."""
 
     __tablename__ = "inbox"
-    __table_args__: ClassVar[dict[str, str]] = {"schema": "runtime"}
+    __table_args__ = ({"schema": "runtime"},)
 
     provider: Mapped[str] = mapped_column(String(100), primary_key=True)
     external_event_id: Mapped[str] = mapped_column(String(300), primary_key=True)

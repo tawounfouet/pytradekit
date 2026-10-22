@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import ClassVar
 from uuid import UUID
 
 from sqlalchemy import DateTime, String, UniqueConstraint
@@ -18,7 +17,7 @@ class RuntimeMetadataModel(Base):
     """Durable runtime metadata entry."""
 
     __tablename__ = "metadata"
-    __table_args__: ClassVar[dict[str, str]] = {"schema": "runtime"}
+    __table_args__ = ({"schema": "runtime"},)
 
     key: Mapped[str] = mapped_column(String(200), primary_key=True)
     value: Mapped[dict[str, object]] = mapped_column(JSONB, nullable=False)
