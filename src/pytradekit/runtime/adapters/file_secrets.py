@@ -24,7 +24,11 @@ class FileSecrets:
             raise SecretResolutionError("File secret reference has an empty locator.")
 
         candidate = Path(locator).expanduser()
-        path = candidate.resolve() if candidate.is_absolute() else (self._root / candidate).resolve()
+        path = (
+            candidate.resolve()
+            if candidate.is_absolute()
+            else (self._root / candidate).resolve()
+        )
         if not path.is_relative_to(self._root):
             raise SecretResolutionError(
                 "File secret reference escapes the configured secret root."
