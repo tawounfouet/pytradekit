@@ -4,13 +4,13 @@ PyTradeKit is a domain-first, broker-agnostic trading framework designed around 
 
 ## Current milestone
 
-PyTradeKit 0.6.0rc1 - Reconciliation & Recovery
+PyTradeKit 0.6.0rc2 - Reconciliation & Recovery
 
 PyTradeKit 0.6 formalizes reconciliation as a first-class domain and recovery capability on top of the durable Alpaca PAPER runtime delivered in 0.5.
 
-The 0.6.0rc1 candidate covers reconciliation domain foundations, canonical snapshots and comparators, durable reconciliation evidence, generic reconciliation use cases, missing-fill recovery, recovery workflows, and consistency/confidence safety gates.
+The 0.6.0rc2 candidate completes LOT-08 qualification. It proves the reconciliation and recovery failure matrix end to end, including stale repair rejection, missing Fill recovery, process-kill restart, broker disconnect, durable-state outage, partial snapshots, external activity blocking, submit uncertainty, duplicate recovery, and transactional Outbox failure.
 
-The Alpaca integration remains PAPER-only. LIVE trading is not available or qualified in 0.6.0rc1.
+The Alpaca integration remains PAPER-only. LIVE trading is not available or qualified in 0.6.0rc2.
 
 ## Requirements
 
@@ -48,7 +48,7 @@ pytradekit --version
 Current release version:
 
 ~~~text
-0.6.0rc1
+0.6.0rc2
 ~~~
 
 ## Milestone flow
@@ -174,7 +174,22 @@ Deterministic qualification covers:
 - architecture and typing gates
 - package artifact qualification
 
-Real Alpaca PAPER qualification additionally proved:
+PyTradeKit 0.6 LOT-08 deterministic qualification additionally proves:
+
+- clean startup reaches CONSISTENT/HIGH
+- missing Fill recovery produces one canonical economic effect
+- stale repair is rejected before side effects
+- reconnect invalidates prior safe admission evidence
+- partial snapshots cannot restore HIGH confidence
+- durable-state outage fails closed before broker observation
+- critical position divergence remains blocked
+- uncertain submit converges by read-side evidence without resubmission
+- process kill leaves a stale run that is closed on restart
+- Outbox/commit failure rolls back the full recovery transaction
+- FF-027 through FF-035 pass as architecture fitness functions
+- 455 tests pass against PostgreSQL 16
+
+Real Alpaca PAPER qualification from 0.5 additionally proved:
 
 - MARKET execution
 - LIMIT submission
@@ -210,6 +225,7 @@ python examples/04_cancel_fill_race.py
 python examples/05_portfolio_risk.py
 python examples/06_strategy_backtest.py
 python examples/07_alpaca_paper_runtime.py
+python examples/manual_reconciliation.py
 ~~~
 
 The 0.5 example is safe by default. It performs no provider call, database
@@ -287,7 +303,12 @@ package import graph remains acyclic
 - 0.5 release qualification runbook: docs/runbooks/PYTRADEKIT_0_5_RELEASE_QUALIFICATION.md
 - Alpaca PAPER incident runbook: docs/runbooks/ALPACA_PAPER_INCIDENT_RESPONSE.md
 - 0.5.0 release notes: docs/releases/0.5.0.md
+- Reconciliation architecture: docs/architecture/reconciliation.md
+- Recovery architecture: docs/architecture/recovery.md
+- Reconciliation guide: docs/guides/reconciliation.md
+- 0.6 release qualification runbook: docs/runbooks/PYTRADEKIT_0_6_RELEASE_QUALIFICATION.md
 - 0.6.0rc1 release notes: docs/releases/0.6.0rc1.md
+- 0.6.0rc2 release notes: docs/releases/0.6.0rc2.md
 - ADRs: docs/adr/
 
 ## Quality commands
@@ -305,9 +326,9 @@ make check
 
 Release qualification validates version metadata, release notes, changelog state, README version state, wheel and sdist builds, SHA-256 digests, clean wheel installation, installed-version identity, and executable examples.
 
-## Explicit 0.6.0rc1 scope boundaries
+## Explicit 0.6.0rc2 scope boundaries
 
-PyTradeKit 0.6.0rc1 intentionally does not include:
+PyTradeKit 0.6.0rc2 intentionally does not include:
 
 - LIVE trading
 - IBKR or cTrader implementation

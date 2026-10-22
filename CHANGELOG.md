@@ -6,6 +6,48 @@ The project is currently pre-1.0 and public APIs remain experimental unless expl
 
 ## [Unreleased]
 
+## [0.6.0rc2] - 2026-10-22
+
+### Added
+
+- LOT-08 end-to-end reconciliation and recovery qualification matrix.
+- Deterministic reconciliation fault windows for capture, comparison, resolution, verification, and completion.
+- Recovery containment that invalidates prior safe admission evidence before reconnect, incident, periodic, or submit-uncertainty reconciliation.
+- Explicit process-kill recovery qualification with stale-run closure and no duplicate economic repair.
+- Transactional Outbox failure qualification proving full rollback before safe replay.
+- Stale watermark qualification proving that an old correction is rejected before any recovery side effect.
+- Reconciliation and Recovery architecture documentation, operational guide, five incident runbooks, release qualification runbook, and executable manual reconciliation example.
+- Complete FF-027 through FF-035 architecture fitness-function coverage.
+
+### Safety
+
+- Position quantity divergence is CRITICAL and cannot restore unrestricted trading.
+- Planned symptom resolutions that disappear after a causal repair are closed as REJECTED by fresh convergence evidence instead of remaining unresolved.
+- Any recovery workflow clears old CONSISTENT/HIGH admission evidence before observing new state.
+- A broker reconnect does not restore readiness without fresh reconciliation.
+- A durable-state outage fails before provider observation and leaves risk admission closed.
+- Partial snapshots cannot produce HIGH confidence.
+- Unknown external orders remain explicit and require manual review.
+- Missing Fill recovery remains exactly-once at the canonical economic-effect level.
+- Process death after a durable repair but before verification cannot cause duplicate repair on restart.
+- Outbox/commit failure rolls back Fill, OMS, Portfolio, ProcessedFillRegistry, and Outbox changes atomically.
+
+### Qualification
+
+- 455 tests pass against PostgreSQL 16.
+- 87 architecture and public-import tests pass.
+- 34 production-fault qualification tests pass.
+- Ruff, strict mypy, Import Linter, typography, architecture, property, integration, E2E, qualification, and release-artifact gates pass.
+- The release artifact qualifier requires Reconciliation/Recovery architecture docs, operational runbooks, and the manual reconciliation example.
+- Behavior candidate before rc2 metadata: e2bb8e24854f775731742c40a7408439debaa2a1.
+
+### Compatibility
+
+- Python 3.12+.
+- Alpaca remains PAPER-only and pinned to alpaca-py==0.44.0.
+- 0.6.0rc2 is the final qualification candidate before the 0.6.0 Qualified Release.
+- Distributed leases/fencing, full RBAC, production kill switch, advanced alerts, and LIVE qualification remain outside 0.6.
+
 ## [0.6.0rc1] - 2026-10-22
 
 ### Added
