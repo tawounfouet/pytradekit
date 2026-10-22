@@ -6,6 +6,7 @@ from pytradekit.execution.ports import FillRepository
 from pytradekit.orders.ports import OrderRepository
 from pytradekit.persistence.events import InboxRepository, OutboxRepository
 from pytradekit.portfolio.ports import (
+    AccountRepository,
     BalanceRepository,
     PositionRepository,
     ProcessedFillRegistry,
@@ -30,6 +31,7 @@ class UnitOfWork(TransactionBoundary, Protocol):
 
     orders: OrderRepository
     fills: FillRepository
+    accounts: AccountRepository
     positions: PositionRepository
     balances: BalanceRepository
     processed_fills: ProcessedFillRegistry

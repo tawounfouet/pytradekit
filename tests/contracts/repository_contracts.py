@@ -7,8 +7,9 @@ from pytradekit.execution.domain import Fill, FillId
 from pytradekit.execution.ports import FillRepository
 from pytradekit.orders import Order, OrderId, OrderSide, TimeInForce
 from pytradekit.orders.ports import OrderRepository
-from pytradekit.portfolio.domain import AccountId, Balance, Position
+from pytradekit.portfolio.domain import Account, AccountId, Balance, Position
 from pytradekit.portfolio.ports import (
+    AccountRepository,
     BalanceRepository,
     PositionRepository,
     ProcessedFillRegistry,
@@ -61,9 +62,28 @@ def accept_order_repository(repository: OrderRepository) -> None:
     assert reloaded is not loaded
 
 
-def accept_fill_repository(repository: FillRepository) -> None:
+def accept_account_repository(repository: AccountRepository) -> None:
+    """Qualify lossless canonical account persistence."""
+    account = Account(
+        id=AccountId.new(),
+        base_currency=USD,
+        name="paper-account",
+    )
+    repository.save(account)
+
+    loaded = repository.get(account.id)
+    assert loaded == account
+    assert loaded is not account
+    assert repository.list_all() == (account,)
+
+
+def accept_fill_repository(
+    repository: FillRepository,
+    *,
+    order_id: OrderId | None = None,
+) -> None:
     """Qualify immutable fill identity and order lookup semantics."""
-    order_id = OrderId.new()
+    order_id = order_id or OrderId.new()
     fill = Fill(
         id=FillId.new(),
         order_id=order_id,
@@ -80,9 +100,13 @@ def accept_fill_repository(repository: FillRepository) -> None:
     assert repository.contains_external("paper-fill-1")
 
 
-def accept_position_repository(repository: PositionRepository) -> None:
+def accept_position_repository(
+    repository: PositionRepository,
+    *,
+    account_id: AccountId | None = None,
+) -> None:
     """Qualify lossless position persistence."""
-    account_id = AccountId.new()
+    account_id = account_id or AccountId.new()
     instrument_id = InstrumentId.new()
     position = Position(
         account_id=account_id,
@@ -99,9 +123,13 @@ def accept_position_repository(repository: PositionRepository) -> None:
     assert repository.list_for_account(account_id) == (position,)
 
 
-def accept_balance_repository(repository: BalanceRepository) -> None:
+def accept_balance_repository(
+    repository: BalanceRepository,
+    *,
+    account_id: AccountId | None = None,
+) -> None:
     """Qualify lossless balance persistence."""
-    account_id = AccountId.new()
+    account_id = account_id or AccountId.new()
     balance = Balance(
         account_id=account_id,
         currency=USD,

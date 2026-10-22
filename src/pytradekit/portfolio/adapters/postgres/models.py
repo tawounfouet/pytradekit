@@ -6,7 +6,7 @@ from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
 
-from sqlalchemy import DateTime, Integer, Numeric, String
+from sqlalchemy import DateTime, ForeignKey, Integer, Numeric, String
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -30,7 +30,11 @@ class PositionModel(Base):
     __tablename__ = "positions"
     __table_args__ = ({"schema": "portfolio"},)
 
-    account_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True)
+    account_id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("portfolio.accounts.id", name="fk_portfolio_positions_account_id"),
+        primary_key=True,
+    )
     instrument_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True)
     quantity: Mapped[Decimal] = mapped_column(Numeric(38, 18), nullable=False)
     average_price: Mapped[Decimal | None] = mapped_column(Numeric(38, 18))
@@ -47,7 +51,11 @@ class BalanceModel(Base):
     __tablename__ = "balances"
     __table_args__ = ({"schema": "portfolio"},)
 
-    account_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True)
+    account_id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("portfolio.accounts.id", name="fk_portfolio_balances_account_id"),
+        primary_key=True,
+    )
     currency: Mapped[str] = mapped_column(String(3), primary_key=True)
     cash: Mapped[Decimal] = mapped_column(Numeric(38, 18), nullable=False)
     available: Mapped[Decimal | None] = mapped_column(Numeric(38, 18))

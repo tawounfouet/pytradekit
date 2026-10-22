@@ -48,7 +48,15 @@ def upgrade() -> None:
     op.create_table(
         "fills",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
-        sa.Column("order_id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column(
+            "order_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey(
+                "orders.orders.id",
+                name="fk_execution_fills_order_id_orders",
+            ),
+            nullable=False,
+        ),
         sa.Column("quantity", sa.Numeric(38, 18), nullable=False),
         sa.Column("price_value", sa.Numeric(38, 18), nullable=False),
         sa.Column("price_currency", sa.String(3), nullable=False),
@@ -75,7 +83,15 @@ def upgrade() -> None:
     )
     op.create_table(
         "positions",
-        sa.Column("account_id", postgresql.UUID(as_uuid=True), primary_key=True),
+        sa.Column(
+            "account_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey(
+                "portfolio.accounts.id",
+                name="fk_portfolio_positions_account_id",
+            ),
+            primary_key=True,
+        ),
         sa.Column("instrument_id", postgresql.UUID(as_uuid=True), primary_key=True),
         sa.Column("quantity", sa.Numeric(38, 18), nullable=False),
         sa.Column("average_price", sa.Numeric(38, 18)),
@@ -88,7 +104,15 @@ def upgrade() -> None:
     )
     op.create_table(
         "balances",
-        sa.Column("account_id", postgresql.UUID(as_uuid=True), primary_key=True),
+        sa.Column(
+            "account_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey(
+                "portfolio.accounts.id",
+                name="fk_portfolio_balances_account_id",
+            ),
+            primary_key=True,
+        ),
         sa.Column("currency", sa.String(3), primary_key=True),
         sa.Column("cash", sa.Numeric(38, 18), nullable=False),
         sa.Column("available", sa.Numeric(38, 18)),
