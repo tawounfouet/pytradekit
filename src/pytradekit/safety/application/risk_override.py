@@ -151,7 +151,7 @@ class ApproveRiskOverride:
             scope_reference=scope_reference,
         )
 
-        account_id = AccountId.parse(override.scope.account_id)
+        account_id = AccountId.from_string(override.scope.account_id)
         evidence = self._evidence.get(account_id)
         if evidence is None:
             raise SafetyGovernanceError(
@@ -195,16 +195,32 @@ class ApproveRiskOverride:
 
 
 class CreateRiskOverride:
-    """Single-operator convenience flow preserving request and approval semantics."""
+    """Single-operator creation with authorization, confirmation, and hard safety."""
 
     def __init__(
         self,
         *,
-        request: RequestRiskOverride,
-        approve: ApproveRiskOverride,
+        authorize: AuthorizeAction,
+        principal_provider: PrincipalProvider,
+        confirmations: ValidateDangerousActionConfirmation,
+        repository: RiskOverrideRepository,
+        kill_switches: KillSwitchRepository,
+        evidence: SafetyEvidenceProvider,
+        gate: SafetyGate,
+        audit: SafetyAuditSink,
+        clock: ClockPort,
+        environment: AuthorizationEnvironment,
     ) -> None:
-        self._request = request
-        self._approve = approve
+        self._authorize = authorize
+        self._principal_provider = principal_provider
+        self._confirmations = confirmations
+        self._repository = repository
+        self._kill_switches = kill_switches
+        self._evidence = evidence
+        self._gate = gate
+        self._audit = audit
+        self._clock = clock
+        self._environment = environment
 
     def execute(
         self,
@@ -216,17 +232,76 @@ class CreateRiskOverride:
         correlation_id: CorrelationId,
         confirmation_id: DangerousActionConfirmationId,
     ) -> RiskOverride:
-        requested = self._request.execute(
+        auth_scope = risk_override_authorization_scope(
+            environment=self._environment,
+            permission=Permission.CREATE_RISK_OVERRIDE,
+            override_scope=scope,
+        )
+        self._authorize.ensure_allowed(
+            permission=Permission.CREATE_RISK_OVERRIDE,
+            scope=auth_scope,
+        )
+        principal = self._principal_provider.current_principal()
+        scope_reference = f"risk-override-create:{scope.account_id}"
+        self._confirmations.consume(
+            confirmation_id=confirmation_id,
+            actor_id=principal.actor_id,
+            action=DangerousAction.CREATE_RISK_OVERRIDE,
+            scope_reference=scope_reference,
+        )
+
+        account_id = AccountId.from_string(scope.account_id)
+        evidence = self._evidence.get(account_id)
+        if evidence is None:
+            raise SafetyGovernanceError(
+                "RiskOverride creation requires current safety evidence."
+            )
+        kill_switch_active = any(
+            switch.matches(
+                environment=self._environment.value,
+                account_id=scope.account_id,
+                strategy_id=scope.strategy_id,
+            )
+            for switch in self._kill_switches.list_active()
+        )
+        decision = self._gate.evaluate(
+            action=SafetyAction.CREATE_RISK_OVERRIDE,
+            evidence=evidence,
+            kill_switch_active=kill_switch_active,
+        )
+        if not decision.allowed:
+            raise SafetyGovernanceError(
+                "RiskOverride cannot bypass current hard safety."
+            )
+
+        now = self._clock.now()
+        pending = RiskOverride(
+            id=RiskOverrideId.new(),
             scope=scope,
             reason=reason,
+            requested_by=principal.actor_id,
+            created_at=now,
             valid_from=valid_from,
             valid_until=valid_until,
             correlation_id=correlation_id,
         )
-        return self._approve.execute(
-            override_id=requested.id,
-            confirmation_id=confirmation_id,
+        active = pending.approve(
+            actor_id=principal.actor_id,
+            occurred_at=now,
         )
+        self._repository.save(active, expected_version=None)
+        self._audit.record(
+            SafetyAuditEvent(
+                event_type="RISK_OVERRIDE_CREATED",
+                actor_id=principal.actor_id,
+                action=SafetyAction.CREATE_RISK_OVERRIDE.value,
+                scope_reference=f"risk-override:{active.id}",
+                reason=reason,
+                occurred_at=now,
+                correlation_id=correlation_id,
+            )
+        )
+        return active
 
 
 class RevokeRiskOverride:

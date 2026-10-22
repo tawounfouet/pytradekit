@@ -14,6 +14,7 @@ from pytradekit.safety.ports import (
     DangerousActionConfirmationRepository,
     SafetyAuditSink,
 )
+from pytradekit.security.domain import ActorId
 from pytradekit.security.ports import PrincipalProvider
 from pytradekit.shared import CorrelationId
 
@@ -92,7 +93,7 @@ class ValidateDangerousActionConfirmation:
         self,
         *,
         confirmation_id: DangerousActionConfirmationId,
-        actor_id,
+        actor_id: ActorId,
         action: DangerousAction,
         scope_reference: str,
     ) -> DangerousActionConfirmation:

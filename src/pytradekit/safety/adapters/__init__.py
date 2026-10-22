@@ -1,5 +1,6 @@
 """Safety infrastructure adapters."""
 
+from pytradekit.safety.adapters.audit import RuntimeSafetyAuditSink
 from pytradekit.safety.adapters.in_memory_evidence import InMemorySafetyEvidenceProvider
 from pytradekit.safety.adapters.in_memory_governance import (
     InMemoryDangerousActionConfirmationRepository,
@@ -17,5 +18,6 @@ __all__ = [
     "InMemorySafetyAuditSink",
     "InMemorySafetyEvidenceProvider",
     "OrdersSafetyGate",
+    "RuntimeSafetyAuditSink",
     "SafetyStrategyAdmissionAdapter",
 ]
