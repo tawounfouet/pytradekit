@@ -9,3 +9,11 @@ class RuntimeConfigurationError(PyTradeKitError):
 
 class SecretResolutionError(PyTradeKitError):
     """Raised when a secret reference cannot be resolved safely."""
+
+
+class RuntimeStartupTimeoutError(PyTradeKitError):
+    """Raised when bounded runtime startup exceeds its configured timeout."""
+
+
+class RuntimeTelemetryFlushTimeoutError(PyTradeKitError):
+    """Raised internally when telemetry flush exceeds its shutdown budget."""

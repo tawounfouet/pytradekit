@@ -2,5 +2,6 @@
 
 from pytradekit.runtime.ports.clock import ClockPort
 from pytradekit.runtime.ports.secrets import SecretsPort
+from pytradekit.runtime.ports.telemetry import TelemetryFlushPort
 
-__all__ = ["ClockPort", "SecretsPort"]
+__all__ = ["ClockPort", "SecretsPort", "TelemetryFlushPort"]
