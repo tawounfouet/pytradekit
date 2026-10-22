@@ -24,7 +24,7 @@ class CancelOrder:
         repository: OrderRepository,
         execution: ExecutionPort,
         clock: ClockPort,
-        authorization_gate: OrderAuthorizationGatePort | None = None,
+        authorization_gate: OrderAuthorizationGatePort,
     ) -> None:
         self._repository = repository
         self._execution = execution
@@ -33,13 +33,12 @@ class CancelOrder:
 
     def execute(self, command: CancelOrderCommand) -> CancelOrderResult:
         """Execute one cancellation request without blind retry."""
-        if self._authorization_gate is not None:
-            account_id = command.account_id
-            if account_id is None:
-                raise InvalidOrderError(
-                    "Authorization-gated cancellation requires account_id."
-                )
-            self._authorization_gate.ensure_cancel_allowed(account_id)
+        account_id = command.account_id
+        if account_id is None:
+            raise InvalidOrderError(
+                "Order cancellation requires account_id for authorization."
+            )
+        self._authorization_gate.ensure_cancel_allowed(account_id)
 
         order = self._repository.get(command.order_id)
         if order is None:

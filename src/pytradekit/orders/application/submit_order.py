@@ -28,7 +28,7 @@ class SubmitOrder:
         clock: ClockPort,
         risk: RiskEvaluationPort | None = None,
         consistency_gate: ConsistencyGatePort | None = None,
-        authorization_gate: OrderAuthorizationGatePort | None = None,
+        authorization_gate: OrderAuthorizationGatePort,
     ) -> None:
         self._repository = repository
         self._execution = execution
@@ -39,13 +39,12 @@ class SubmitOrder:
 
     def execute(self, command: SubmitOrderCommand) -> SubmitOrderResult:
         """Execute one order submission without blind retry or safety bypass."""
-        if self._authorization_gate is not None:
-            account_id = command.account_id
-            if account_id is None:
-                raise InvalidOrderError(
-                    "Authorization-gated submission requires account_id."
-                )
-            self._authorization_gate.ensure_submit_allowed(account_id)
+        account_id = command.account_id
+        if account_id is None:
+            raise InvalidOrderError(
+                "Order submission requires account_id for authorization."
+            )
+        self._authorization_gate.ensure_submit_allowed(account_id)
 
         order_id = command.order_id or OrderId.new()
         now = self._clock.now()

@@ -27,6 +27,7 @@ from pytradekit.market_data.domain import HistoricalDataset, MarketDataEvent
 from pytradekit.orders.adapters import InMemoryOrderRepository
 from pytradekit.orders.application import HandleExecutionReport, SubmitOrder, SubmitOrderCommand
 from pytradekit.orders.domain import OrderId
+from pytradekit.orders.ports import OrderAuthorizationGatePort
 from pytradekit.portfolio.adapters import (
     InMemoryBalanceRepository,
     InMemoryPositionRepository,
@@ -79,6 +80,13 @@ class RunBacktestCommand:
 
 class RunBacktest:
     """Execute Strategy -> Risk -> OMS -> simulated execution -> Portfolio."""
+
+    def __init__(
+        self,
+        *,
+        authorization_gate: OrderAuthorizationGatePort,
+    ) -> None:
+        self._authorization_gate = authorization_gate
 
     def execute(self, command: RunBacktestCommand) -> BacktestReport:
         self._validate_command(command)
@@ -153,6 +161,7 @@ class RunBacktest:
             execution=simulated,
             clock=clock,
             risk=risk_adapter,
+            authorization_gate=self._authorization_gate,
         )
         handle_report = HandleExecutionReport(
             repository=orders,
