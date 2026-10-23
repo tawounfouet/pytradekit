@@ -329,32 +329,6 @@ class IBKRTransportPort(Protocol):
 
         ...
 
-    def read_client(self) -> object:
-        """Return the synchronized provider client for provider-local reads."""
-
-        ...
-
-    def accountValues(self, account: str = "") -> list[object]:
-        """Return synchronized provider account values."""
-
-        ...
-
-    def portfolio(self, account: str = "") -> list[object]:
-        """Return synchronized provider portfolio rows."""
-
-        ...
-
-    def trades(self) -> list[object]:
-        """Return synchronized provider trades."""
-
-        ...
-
-    def fills(self) -> list[object]:
-        """Return synchronized provider fills."""
-
-        ...
-
-
 class IBAsyncPaperTransport:
     """ib_async-backed IB Gateway PAPER transport with fail-closed validation."""
 
