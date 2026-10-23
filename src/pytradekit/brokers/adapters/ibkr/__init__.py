@@ -124,6 +124,7 @@ from .read_side import (
     IBKROrderIdentityResolver,
     IBKRReadSideCaptureStats,
     IBKRReadSideClient,
+    IBKRReadSideCoverageEvidence,
     IBKRReadSideError,
     StaticIBKRAccountRestrictionsProvider,
     StaticIBKRInstrumentResolver,
