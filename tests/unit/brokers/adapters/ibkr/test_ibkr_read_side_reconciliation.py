@@ -9,7 +9,6 @@ from decimal import Decimal
 import pytest
 
 from pytradekit.brokers import ProviderProtocolError
-from pytradekit.orders.domain import OrderId
 from pytradekit.brokers.adapters.ibkr import (
     IBKRAccountRestrictionsObservation,
     IBKRBrokerSnapshotPort,
@@ -22,6 +21,7 @@ from pytradekit.brokers.adapters.ibkr import (
     IBKRStartupReconciliationGate,
     map_ibkr_stock_contract,
 )
+from pytradekit.orders.domain import OrderId
 from pytradekit.portfolio.domain import AccountId
 from pytradekit.reconciliation.application import ReconciliationOutcome
 from pytradekit.reconciliation.domain import (
@@ -283,12 +283,18 @@ class _Restrictions:
         )
 
 
-def _coverage() -> IBKRReadSideCoverageEvidence:
+def _coverage(
+    *,
+    orders_complete: bool = True,
+    fills_complete: bool = True,
+    positions_complete: bool = True,
+    account_complete: bool = True,
+) -> IBKRReadSideCoverageEvidence:
     return IBKRReadSideCoverageEvidence(
-        orders_complete=True,
-        fills_complete=True,
-        positions_complete=True,
-        account_complete=True,
+        orders_complete=orders_complete,
+        fills_complete=fills_complete,
+        positions_complete=positions_complete,
+        account_complete=account_complete,
         evidence_source="deterministic-lot06.2-fixture",
     )
 
@@ -317,6 +323,7 @@ def _snapshot_port(
     client: _Client | None = None,
     mapping: IBKRInstrumentMappingResult | None = None,
     restrictions_available: bool = True,
+    coverage: IBKRReadSideCoverageEvidence | None = None,
 ) -> IBKRBrokerSnapshotPort:
     identity = _IdentityResolver()
     identity.order_id = None
@@ -328,7 +335,7 @@ def _snapshot_port(
         ),
         identities=identity,
         restrictions=_Restrictions(restrictions_available),
-        coverage=_coverage(),
+        coverage=coverage or _coverage(),
         clock=_Clock(),
     )
 
@@ -366,6 +373,23 @@ def test_missing_restriction_evidence_marks_snapshot_partial() -> None:
 
     assert snapshot.completeness is SnapshotCompleteness.PARTIAL
     assert snapshot.balances == ()
+
+
+def test_incomplete_execution_history_marks_snapshot_partial() -> None:
+    port = _snapshot_port(
+        coverage=_coverage(fills_complete=False),
+    )
+
+    snapshot = port.capture(
+        account_id=AccountId.new(),
+        scope=ReconciliationScope.FULL,
+    )
+
+    assert snapshot.completeness is SnapshotCompleteness.PARTIAL
+    assert port.last_stats is not None
+    assert "execution history coverage is not complete" in (
+        port.last_stats.partial_reasons
+    )
 
 
 def test_unresolved_position_mapping_marks_snapshot_partial() -> None:
