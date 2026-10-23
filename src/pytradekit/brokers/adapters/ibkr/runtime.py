@@ -89,6 +89,26 @@ class _IBAsyncClient(Protocol):
 
         ...
 
+    def accountValues(self, account: str = "") -> list[object]:
+        """Return synchronized account values."""
+
+        ...
+
+    def portfolio(self, account: str = "") -> list[object]:
+        """Return synchronized portfolio rows."""
+
+        ...
+
+    def trades(self) -> list[object]:
+        """Return synchronized trades from this session."""
+
+        ...
+
+    def fills(self) -> list[object]:
+        """Return synchronized fills from this session."""
+
+        ...
+
 
 IBAsyncClientFactory = Callable[[], _IBAsyncClient]
 
@@ -295,6 +315,11 @@ class IBKRTransportPort(Protocol):
 
         ...
 
+    def read_client(self) -> object:
+        """Return the synchronized provider client for provider-local reads."""
+
+        ...
+
 
 class IBAsyncPaperTransport:
     """ib_async-backed IB Gateway PAPER transport with fail-closed validation."""
@@ -401,6 +426,16 @@ class IBAsyncPaperTransport:
             return bool(self._client.isConnected())
         except Exception:
             return False
+
+    def read_client(self) -> object:
+        client = self._client
+        if client is None or not self.is_connected():
+            raise ProviderUnavailableError(
+                "IBKR read client is unavailable before synchronized connection.",
+                provider=IBKR_PROVIDER_KEY,
+                operation="read_client",
+            )
+        return client
 
     def _resolve_factory(self) -> tuple[IBAsyncClientFactory, str]:
         if self._client_factory is not None:
@@ -541,6 +576,17 @@ class IBKRPaperConnectionRuntime:
                 ),
             ),
         )
+
+    def read_client(self) -> object:
+        """Return the connected provider-local read client."""
+
+        if self.connection_evidence is None:
+            raise ProviderUnavailableError(
+                "IBKR PAPER runtime has not completed startup.",
+                provider=IBKR_PROVIDER_KEY,
+                operation="read_client",
+            )
+        return self.transport.read_client()
 
     def stop(self) -> None:
         self.transport.disconnect()
