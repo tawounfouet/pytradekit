@@ -31,6 +31,7 @@ def _evidence() -> IBKRPaperEvidenceBundle:
             source_ref="github-actions:ibkr-paper:qualification",
             workflow_run_id=2001,
             deterministic_ci_run_id=2000,
+            artifact_id=2002,
         ),
         captured_at=_NOW,
         sdk_name="ib_async",
