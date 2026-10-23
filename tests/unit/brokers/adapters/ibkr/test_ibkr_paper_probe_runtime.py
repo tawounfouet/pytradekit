@@ -28,7 +28,7 @@ def _load_probe_module() -> ModuleType:
 _probe = _load_probe_module()
 _wait_position_quantity = cast(
     Callable[..., Decimal],
-    getattr(_probe, "_wait_position_quantity"),
+    vars(_probe)["_wait_position_quantity"],
 )
 
 
