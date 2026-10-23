@@ -336,17 +336,6 @@ def _run_probe(config: ProbeConfig) -> IBKRPaperEvidenceBundle:
         release_ready = config.ci_qualified and controlled_passed
 
         c3 = _c3_capabilities(gates, proofs) if release_ready else ()
-        source_payload = {
-            "commit": config.commit_sha,
-            "account": profile.masked_account_id,
-            "contract_id": config.contract_id,
-            "symbol": config.symbol,
-            "gates": gates,
-            "proofs": proofs,
-            "observations": observations,
-        }
-        source_hash = canonical_ibkr_evidence_sha256(source_payload)
-
         payload = {
             "schema_version": "1",
             "provider": "ibkr",
@@ -354,7 +343,7 @@ def _run_probe(config: ProbeConfig) -> IBKRPaperEvidenceBundle:
             "provenance": {
                 "qualified_commit": config.commit_sha,
                 "artifact_name": "ibkr-paper-controlled-probe.json",
-                "artifact_json_sha256": source_hash,
+                "artifact_json_sha256": "0" * 64,
                 "source_ref": (
                     "manual:ibkr-paper-controlled-probe:"
                     f"{config.commit_sha[:12]}"
@@ -371,6 +360,10 @@ def _run_probe(config: ProbeConfig) -> IBKRPaperEvidenceBundle:
             "c3_capabilities": [capability.value for capability in c3],
             "proofs": proofs,
         }
+        provenance = cast(dict[str, object], payload["provenance"])
+        provenance["artifact_json_sha256"] = (
+            canonical_ibkr_evidence_sha256(payload)
+        )
         return IBKRPaperEvidenceBundle.from_dict(payload)
     finally:
         connection.stop()
