@@ -45,6 +45,16 @@ from .identities import (
     IBKRSessionOrderId,
 )
 from .identity_registry import IBKROrderIdentityRegistry
+from .order_commands import (
+    IBKROrderAction,
+    IBKROrderCommand,
+    IBKROrderCommandError,
+    IBKROrderType,
+    IBKRPlacementCommand,
+    IBKRTimeInForce,
+    IBKRTransmitPolicy,
+    map_ibkr_order_command,
+)
 
 __all__ = [
     "IBKR_DEFERRED_CAPABILITIES",
@@ -74,16 +84,24 @@ __all__ = [
     "IBKRExecutionIdentity",
     "IBKRIdentityError",
     "IBKRInstrumentMappingResult",
+    "IBKROrderAction",
+    "IBKROrderCommand",
+    "IBKROrderCommandError",
     "IBKROrderIdentity",
     "IBKROrderIdentityRegistry",
     "IBKROrderIdentityRole",
     "IBKROrderReference",
+    "IBKROrderType",
     "IBKRPermanentOrderId",
+    "IBKRPlacementCommand",
     "IBKRPriceIncrementMode",
     "IBKRReadinessFact",
     "IBKRSecurityType",
     "IBKRSessionOrderId",
+    "IBKRTimeInForce",
+    "IBKRTransmitPolicy",
     "build_ibkr_contract_freeze",
+    "map_ibkr_order_command",
     "map_ibkr_stock_contract",
     "validate_ibkr_paper_port",
 ]

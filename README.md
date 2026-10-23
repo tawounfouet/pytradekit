@@ -8,9 +8,9 @@ PyTradeKit 0.8.0b1 - IBKR Anti-Corruption Layer
 
 PyTradeKit 0.8 continues the Broker Compliance, Certification & IBKR milestone on top of the qualified 0.7 security and operations baseline.
 
-LOT-05.1 and LOT-05.2 now provide the first concrete IBKR Anti-Corruption Layer foundations. Provider identities are explicit, and qualified STK contracts can be normalized into Instrument, InstrumentMapping and ContractSpecification without leaking IBKR SDK types.
+LOT-05.1 through LOT-05.3 now provide the first concrete IBKR Anti-Corruption Layer foundations. Provider identities are explicit, qualified STK contracts map into canonical reference models, and submitted MARKET/LIMIT DAY orders can be projected into SDK-free IBKR placement commands.
 
-Dynamic IBKR market rules remain provider-specific instead of being collapsed into a false static tick size. Provider-neutral reference and broker models remain unchanged. No IBKR SDK dependency or provider network call is introduced yet. LIVE remains unavailable.
+Session orderId allocation remains outside the mapper, dynamic market rules remain provider-specific, and prices and quantities stay Decimal until the future transport boundary. No IBKR SDK dependency or provider network call is introduced yet. LIVE remains unavailable.
 
 ## Requirements
 
@@ -326,6 +326,7 @@ package import graph remains acyclic
 - 0.8.0a4 release notes: docs/releases/0.8.0a4.md
 - IBKR provider identity architecture: docs/architecture/ibkr-identity-model.md
 - IBKR contract and instrument mapping: docs/architecture/ibkr-contract-instrument-mapping.md
+- IBKR order command mapping: docs/architecture/ibkr-order-command-mapping.md
 - 0.8.0b1 release notes: docs/releases/0.8.0b1.md
 - ADRs: docs/adr/
 
