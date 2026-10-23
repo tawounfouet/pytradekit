@@ -334,6 +334,26 @@ class IBKRTransportPort(Protocol):
 
         ...
 
+    def accountValues(self, account: str = "") -> list[object]:
+        """Return synchronized provider account values."""
+
+        ...
+
+    def portfolio(self, account: str = "") -> list[object]:
+        """Return synchronized provider portfolio rows."""
+
+        ...
+
+    def trades(self) -> list[object]:
+        """Return synchronized provider trades."""
+
+        ...
+
+    def fills(self) -> list[object]:
+        """Return synchronized provider fills."""
+
+        ...
+
 
 class IBAsyncPaperTransport:
     """ib_async-backed IB Gateway PAPER transport with fail-closed validation."""
@@ -484,6 +504,18 @@ class IBAsyncPaperTransport:
                 operation="read_client",
             )
         return client
+
+    def accountValues(self, account: str = "") -> list[object]:
+        return cast(_IBAsyncClient, self.read_client()).accountValues(account)
+
+    def portfolio(self, account: str = "") -> list[object]:
+        return cast(_IBAsyncClient, self.read_client()).portfolio(account)
+
+    def trades(self) -> list[object]:
+        return cast(_IBAsyncClient, self.read_client()).trades()
+
+    def fills(self) -> list[object]:
+        return cast(_IBAsyncClient, self.read_client()).fills()
 
     def _resolve_factory(self) -> tuple[IBAsyncClientFactory, str]:
         if self._client_factory is not None:
