@@ -1,0 +1,163 @@
+name: IBKR Real PAPER Qualification
+
+on:
+  workflow_dispatch:
+    inputs:
+      deterministic_ci_run_id:
+        description: Successful CI run ID for this exact commit
+        required: true
+        type: string
+      symbol:
+        description: US equity symbol used by the controlled PAPER probe
+        required: true
+        default: AAPL
+        type: string
+      contract_id:
+        description: IBKR conId matching the qualification symbol
+        required: true
+        default: "265598"
+        type: string
+      limit_price:
+        description: Passive valid LIMIT price to submit and cancel
+        required: true
+        type: string
+      quantity:
+        description: PAPER share quantity
+        required: true
+        default: "1"
+        type: string
+      client_id:
+        description: Dedicated non-zero IBKR API client ID
+        required: true
+        default: "71"
+        type: string
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  real-paper:
+    name: Real IBKR PAPER evidence
+    runs-on:
+      - self-hosted
+      - linux
+      - pytradekit-ibkr-paper
+    timeout-minutes: 30
+
+    env:
+      PYTRADEKIT_RUNTIME_PROFILE: ibkr-paper
+      PYTRADEKIT_IBKR_EXPECTED_ACCOUNT_ID: ${{ secrets.PYTRADEKIT_IBKR_EXPECTED_ACCOUNT_ID }}
+      PYTRADEKIT_IBKR_HOST: 127.0.0.1
+      PYTRADEKIT_IBKR_PORT: "4002"
+      PYTRADEKIT_IBKR_CLIENT_ID: ${{ inputs.client_id }}
+      PYTRADEKIT_IBKR_CONNECT_TIMEOUT_SECONDS: "10"
+      PYTRADEKIT_IBKR_ORDER_PROBE_SYMBOL: ${{ inputs.symbol }}
+      PYTRADEKIT_IBKR_ORDER_PROBE_CONID: ${{ inputs.contract_id }}
+      PYTRADEKIT_IBKR_LIMIT_PRICE: ${{ inputs.limit_price }}
+      PYTRADEKIT_IBKR_ORDER_PROBE_QUANTITY: ${{ inputs.quantity }}
+      PYTRADEKIT_IBKR_ORDER_PROBE_TIMEOUT_SECONDS: "90"
+      PYTRADEKIT_IBKR_ORDER_PROBE_ACK: I_UNDERSTAND_PAPER_ORDERS_WILL_BE_CREATED
+
+    steps:
+      - name: Checkout qualification commit
+        uses: actions/checkout@v4
+
+      - name: Verify deterministic CI belongs to this commit
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const runId = Number("${{ inputs.deterministic_ci_run_id }}");
+            if (!Number.isInteger(runId) || runId <= 0) {
+              core.setFailed("deterministic_ci_run_id must be a positive integer");
+              return;
+            }
+            const response = await github.rest.actions.getWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: runId,
+            });
+            const run = response.data;
+            if (run.head_sha !== context.sha) {
+              core.setFailed(
+                `CI run head_sha ${run.head_sha} does not match ${context.sha}`
+              );
+              return;
+            }
+            if (run.conclusion !== "success") {
+              core.setFailed(
+                `CI run conclusion is ${run.conclusion}, expected success`
+              );
+              return;
+            }
+            if (run.name !== "CI") {
+              core.setFailed(
+                `Workflow name is ${run.name}, expected CI`
+              );
+            }
+
+      - name: Verify PAPER account secret is configured
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${PYTRADEKIT_IBKR_EXPECTED_ACCOUNT_ID:-}" ]; then
+            echo "::error::PYTRADEKIT_IBKR_EXPECTED_ACCOUNT_ID is not configured"
+            exit 1
+          fi
+          echo "PYTRADEKIT_IBKR_EXPECTED_ACCOUNT_ID=PRESENT"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install qualification dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev,ibkr]"
+
+      - name: Verify IB Gateway PAPER port
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import socket
+          with socket.create_connection(("127.0.0.1", 4002), timeout=5):
+              print("IB Gateway PAPER port 4002 is reachable")
+          PY
+
+      - name: Run controlled real IBKR PAPER probe
+        run: |
+          mkdir -p artifacts/qualification/brokers/ibkr
+          python scripts/qualify_ibkr_real_paper.py \
+            --with-orders \
+            --ci-qualified \
+            --runbook-reviewed \
+            --output artifacts/qualification/brokers/ibkr/real-paper-probe.json
+
+      - name: Normalize retained evidence with provenance
+        run: |
+          python scripts/normalize_ibkr_paper_evidence.py \
+            --probe-report artifacts/qualification/brokers/ibkr/real-paper-probe.json \
+            --source-release 0.8.0b8 \
+            --qualified-commit "${GITHUB_SHA}" \
+            --artifact-name pytradekit-ibkr-paper-qualification \
+            --workflow-run-id "${GITHUB_RUN_ID}" \
+            --deterministic-ci-run-id "${{ inputs.deterministic_ci_run_id }}" \
+            --output artifacts/qualification/brokers/ibkr/retained-evidence.json
+
+      - name: Require target C3 certification
+        run: |
+          python scripts/qualify_ibkr_0_8_certification.py \
+            --evidence-record artifacts/qualification/brokers/ibkr/retained-evidence.json \
+            --require-c3-target \
+            --output artifacts/qualification/brokers/ibkr/compliance-certification.json
+
+      - name: Upload sanitized qualification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytradekit-ibkr-paper-qualification
+          path: artifacts/qualification/brokers/ibkr/
+          if-no-files-found: warn
