@@ -18,14 +18,15 @@ report complete = true
 
 ## 2. Real PAPER prerequisites
 
-Use a dedicated IBKR Paper Trading Account and a running IB Gateway PAPER session.
+Use a dedicated IBKR Paper Trading Account and a running TWS PAPER session.
 
 Required runtime settings:
 
 ~~~text
 PYTRADEKIT_IBKR_EXPECTED_ACCOUNT_ID
+PYTRADEKIT_IBKR_SURFACE=TWS
 PYTRADEKIT_IBKR_HOST=127.0.0.1
-PYTRADEKIT_IBKR_PORT=4002
+PYTRADEKIT_IBKR_PORT=7497
 PYTRADEKIT_IBKR_CLIENT_ID=<non-zero unique client>
 ~~~
 
@@ -63,9 +64,9 @@ Do not rerun blindly after a failure involving an economic write. Inspect the PA
 
 ## 4. Official C3 capture
 
-Use the manual GitHub Actions workflow `IBKR Real PAPER Certification` only on a self-hosted macOS runner labelled `ibkr-paper` with IB Gateway already running on the same Mac.
+Use the manual GitHub Actions workflow `IBKR Real PAPER Certification` only on a self-hosted macOS runner labelled `ibkr-paper` with TWS PAPER already running on the same Mac.
 
-The runner must expose the GitHub labels `self-hosted`, `macOS` and `ibkr-paper`. IB Gateway PAPER must be reachable from that same Mac at `127.0.0.1:4002`.
+The runner must expose the GitHub labels `self-hosted`, `macOS` and `ibkr-paper`. TWS PAPER must be reachable from that same Mac at `127.0.0.1:7497`.
 
 The workflow requires:
 
