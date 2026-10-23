@@ -492,9 +492,10 @@ def _deterministic_capability_check(
         passed = callable(getattr(IBKRExecutionAdapter, "cancel", None))
     elif capability is BrokerCapability.PARTIAL_FILL:
         passed = callable(map_ibkr_execution_report)
-    elif capability is BrokerCapability.POSITION_QUERY:
-        passed = callable(getattr(IBKRBrokerSnapshotPort, "capture", None))
-    elif capability is BrokerCapability.BALANCE_QUERY:
+    elif capability in {
+        BrokerCapability.POSITION_QUERY,
+        BrokerCapability.BALANCE_QUERY,
+    }:
         passed = callable(getattr(IBKRBrokerSnapshotPort, "capture", None))
     elif capability is BrokerCapability.CLIENT_ORDER_REFERENCE:
         passed = callable(getattr(IBKROrderSessionRuntime, "reserve", None))
