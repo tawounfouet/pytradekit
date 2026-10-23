@@ -20,6 +20,7 @@ from pytradekit.brokers.adapters.ibkr import (
     IBKRContractId,
     IBKREconomicWriteAdmission,
     IBKRExecutionInstrumentBinding,
+    IBKROperationalRuntime,
     IBKRPaperRuntimeProfile,
     StaticIBKRExecutionInstrumentResolver,
     build_ibkr_execution_adapter,
@@ -291,7 +292,7 @@ def main() -> int:
     controlled_probe_passed = False
     cleanup_passed = False
     provider: _ProviderLike | None = None
-    operations = None
+    operations: IBKROperationalRuntime | None = None
 
     try:
         startup = connection.start()
