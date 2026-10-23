@@ -129,12 +129,12 @@ class IBKRStartupReconciliationGate:
                 name="economic_write_admission",
                 status=ReadinessCheckStatus.FAIL,
                 detail=(
-                    "LOT-06.2 qualifies read-side convergence only; "
-                    "IBKR economic writes remain blocked."
+                    "IBKR economic-write implementation exists, but real PAPER "
+                    "execution certification is not complete."
                 ),
             )
         )
-        gaps.append("IBKR economic write path is not qualified yet")
+        gaps.append("IBKR economic write path is not PAPER certified yet")
 
         return TradingReadinessReport(
             provider=startup.provider,
