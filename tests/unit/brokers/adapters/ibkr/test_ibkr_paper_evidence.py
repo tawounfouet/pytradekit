@@ -40,11 +40,11 @@ def _bundle(
             "final_status": "Cancelled",
         },
     }
-    return IBKRPaperEvidenceBundle(
+    unsigned = IBKRPaperEvidenceBundle(
         provenance=IBKRPaperEvidenceProvenance(
             qualified_commit="a" * 40,
             artifact_name="ibkr-paper.json",
-            artifact_json_sha256="b" * 64,
+            artifact_json_sha256="0" * 64,
             source_ref="manual:ibkr-paper:20261023",
         ),
         captured_at=datetime(2026, 10, 23, 12, 0, tzinfo=UTC),
@@ -57,6 +57,13 @@ def _bundle(
         c3_capabilities=c3_capabilities,
         proofs=proofs,
     )
+    payload = unsigned.to_dict()
+    provenance = payload["provenance"]
+    assert isinstance(provenance, dict)
+    provenance["artifact_json_sha256"] = (
+        canonical_ibkr_evidence_sha256(payload)
+    )
+    return IBKRPaperEvidenceBundle.from_dict(payload)
 
 
 def test_valid_market_order_c3_bundle_is_accepted() -> None:
@@ -64,7 +71,9 @@ def test_valid_market_order_c3_bundle_is_accepted() -> None:
 
     assert bundle.paper_proof_passes(BrokerCapability.MARKET_ORDER)
     assert not bundle.paper_proof_passes(BrokerCapability.PARTIAL_FILL)
-    assert bundle.provenance.artifact_json_sha256 == "b" * 64
+    assert bundle.provenance.artifact_json_sha256 == (
+        canonical_ibkr_evidence_sha256(bundle.to_dict())
+    )
 
 
 def test_claimed_c3_without_required_gate_fails_closed() -> None:
@@ -131,6 +140,19 @@ def test_evidence_round_trip_preserves_c3_claims() -> None:
 
     assert restored.c3_capabilities == bundle.c3_capabilities
     assert restored.paper_proof_passes(BrokerCapability.CANCEL_ORDER)
+
+
+def test_tampered_retained_evidence_is_rejected() -> None:
+    bundle = _bundle()
+    payload = bundle.to_dict()
+    proofs = payload["proofs"]
+    assert isinstance(proofs, dict)
+    market = proofs[BrokerCapability.MARKET_ORDER.value]
+    assert isinstance(market, dict)
+    market["terminal_status"] = "Cancelled"
+
+    with pytest.raises(IBKREvidenceError, match="SHA-256"):
+        IBKRPaperEvidenceBundle.from_dict(payload)
 
 
 def test_canonical_evidence_sha256_is_stable() -> None:
