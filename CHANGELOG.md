@@ -6,6 +6,38 @@ The project is currently pre-1.0 and public APIs remain experimental unless expl
 
 ## [Unreleased]
 
+## [0.8.0b3] - 2026-10-23
+
+### Added
+
+- LOT-06.2 IBKR Read-Side Snapshot & Startup Reconciliation.
+- IBKRBrokerSnapshotPort over synchronized account, portfolio, trade and fill state.
+- Explicit conId instrument resolution through pre-qualified IBKRInstrumentMappingResult values.
+- Explicit durable permId and optional orderRef resolution for provider orders.
+- Explicit account restriction evidence before canonical balance emission.
+- IBKRReadSideCoverageEvidence for orders, fills, positions and account inventories.
+- PARTIAL snapshot semantics when provider history coverage is not proven.
+- External order and fill visibility without automatic adoption.
+- IBKRStartupReconciliationGate over the generic reconciliation workflow.
+- CONSISTENT/HIGH read-side evidence with economic write admission still blocked.
+- Dedicated LOT-06.2 architecture, public-contract, unit and qualification gates.
+
+### Architecture
+
+- IBAsyncPaperTransport exposes synchronized read-side state without leaking the raw ib_async client.
+- LOT-05 account, position, order-status and execution semantics are reused.
+- Historical provider completeness is explicit rather than inferred.
+- Domain, OMS, Portfolio, Risk, Reconciliation and Safety remain provider-neutral.
+- Read-side convergence does not yet imply TRADING_READY.
+- LIVE remains unavailable.
+
+### Compatibility
+
+- BrokerAdapterContract remains candidate version 1.0-rc1.
+- LOT-06.1 connection behavior remains unchanged.
+- No real IBKR PAPER capability certification claim is made.
+- Economic writes remain deferred to later LOT-06 stages.
+
 ## [0.8.0b2] - 2026-10-23
 
 ### Added
