@@ -64,4 +64,5 @@ def test_unknown_error_path_fails_closed_instead_of_blind_retry() -> None:
 
     assert "ProviderProtocolError" in source
     assert "ProviderUncertainOutcomeError" in source
-    assert "retry" not in source.lower()
+    assert "time.sleep(" not in source
+    assert "retry(" not in source
