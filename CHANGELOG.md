@@ -10,6 +10,15 @@ The project is currently pre-1.0 and public APIs remain experimental unless expl
 
 ### Added
 
+- LOT-05.6 IBKR Account, Balance & Position Mapping.
+- SDK-free IBKRAccountSummaryObservation and IBKRPortfolioPositionObservation.
+- Explicit provider metric tags for TotalCashValue, NetLiquidation, BuyingPower, AvailableFunds, CashBalance and margin values.
+- TotalCashValue to canonical Balance.cash mapping.
+- NetLiquidation to canonical equity mapping without portfolio_value fabrication.
+- AccountReady fail-closed behavior and explicit account restriction evidence.
+- Signed position, average cost, market value, unrealized PNL and realized PNL retention.
+- No fabricated position available_quantity.
+- Dedicated LOT-05.6 architecture, public-contract, unit and qualification gates.
 - LOT-05.5 IBKR Execution Details & Fill Mapping.
 - SDK-free IBKRExecutionDetailsObservation and IBKRExecutionRegistry.
 - execId-based Fill deduplication and deterministic canonical FillId generation.
@@ -74,7 +83,8 @@ The project is currently pre-1.0 and public APIs remain experimental unless expl
 - LOT-05.3 Order Command Mapping is implemented.
 - LOT-05.4 Order Status & Callback Normalization is implemented.
 - LOT-05.5 Execution Details & Fill Mapping is implemented.
-- LOT-05.6 Account, Balance & Position Mapping remains next.
+- LOT-05.6 Account, Balance & Position Mapping is implemented.
+- LOT-05.7 Error Taxonomy, Readiness & Capability Manifest remains next.
 
 ## [0.8.0a4] - 2026-10-23
 

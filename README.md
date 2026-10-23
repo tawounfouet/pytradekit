@@ -8,9 +8,9 @@ PyTradeKit 0.8.0b1 - IBKR Anti-Corruption Layer
 
 PyTradeKit 0.8 continues the Broker Compliance, Certification & IBKR milestone on top of the qualified 0.7 security and operations baseline.
 
-LOT-05.1 through LOT-05.5 now provide the first concrete IBKR Anti-Corruption Layer foundations. Provider identities are explicit, qualified STK contracts map into canonical reference models, submitted MARKET/LIMIT DAY orders project into SDK-free placement commands, callbacks normalize conservatively, and execDetails can create idempotent canonical Fill facts.
+LOT-05.1 through LOT-05.6 now provide the first concrete IBKR Anti-Corruption Layer foundations. Provider identities, instruments, order commands, callbacks, execution facts, account values and positions all map through SDK-free provider records into existing broker-neutral models.
 
-Session orderId allocation remains outside the mapper, exact execId replay creates no second effect, execution corrections require reconciliation, pending price revisions block Fill emission, and provider local execution times are converted to UTC rather than relabeled. No IBKR SDK dependency or provider network call is introduced yet. LIVE remains unavailable.
+Distinct IBKR account metrics are not collapsed into fake balance symmetry: TotalCashValue maps to canonical cash, NetLiquidation to equity, BuyingPower stays separate from AvailableFunds, CashBalance remains provider-specific, and AccountReady must be true before snapshot emission. No IBKR SDK dependency or provider network call is introduced yet. LIVE remains unavailable.
 
 ## Requirements
 
@@ -329,6 +329,7 @@ package import graph remains acyclic
 - IBKR order command mapping: docs/architecture/ibkr-order-command-mapping.md
 - IBKR order callback normalization: docs/architecture/ibkr-order-callback-normalization.md
 - IBKR execution and Fill mapping: docs/architecture/ibkr-execution-fill-mapping.md
+- IBKR account and position mapping: docs/architecture/ibkr-account-position-mapping.md
 - 0.8.0b1 release notes: docs/releases/0.8.0b1.md
 - ADRs: docs/adr/
 
