@@ -102,6 +102,7 @@ class IBKRContractResolutionEvidence:
     exact_match_count: int
     resolved: bool
     canonical_instrument_id: InstrumentId | None
+    cache_hit: bool = False
     valid_exchanges: tuple[str, ...] = ()
     market_rule_ids: tuple[int | None, ...] = ()
     price_increment_mode: IBKRPriceIncrementMode | None = None
@@ -126,6 +127,8 @@ class IBKRContractResolutionEvidence:
             )
         if type(self.resolved) is not bool:
             raise IBKRContractResolutionError("resolved must be a bool.")
+        if type(self.cache_hit) is not bool:
+            raise IBKRContractResolutionError("cache_hit must be a bool.")
 
 
 class StaticIBKRCanonicalInstrumentIdResolver:
@@ -292,9 +295,10 @@ class IBKRContractReferenceResolver:
             self._last_evidence = _evidence_from_mapping(
                 contract_id=contract_id,
                 symbol=normalized_symbol,
-                provider_match_count=1,
-                exact_match_count=1,
+                provider_match_count=0,
+                exact_match_count=0,
                 mapping=cached,
+                cache_hit=True,
             )
             return cached
 
@@ -652,6 +656,7 @@ def _evidence_from_mapping(
     provider_match_count: int,
     exact_match_count: int,
     mapping: IBKRInstrumentMappingResult,
+    cache_hit: bool = False,
 ) -> IBKRContractResolutionEvidence:
     return IBKRContractResolutionEvidence(
         contract_id=contract_id,
@@ -660,6 +665,7 @@ def _evidence_from_mapping(
         exact_match_count=exact_match_count,
         resolved=True,
         canonical_instrument_id=mapping.instrument.id,
+        cache_hit=cache_hit,
         valid_exchanges=mapping.valid_exchanges,
         market_rule_ids=mapping.market_rule_ids,
         price_increment_mode=mapping.price_increment_mode,
