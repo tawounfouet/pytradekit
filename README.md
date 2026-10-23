@@ -8,9 +8,9 @@ PyTradeKit 0.8.0b1 - IBKR Anti-Corruption Layer
 
 PyTradeKit 0.8 continues the Broker Compliance, Certification & IBKR milestone on top of the qualified 0.7 security and operations baseline.
 
-LOT-05.1 through LOT-05.6 now provide the first concrete IBKR Anti-Corruption Layer foundations. Provider identities, instruments, order commands, callbacks, execution facts, account values and positions all map through SDK-free provider records into existing broker-neutral models.
+LOT-05.1 through LOT-05.7 now provide the first concrete IBKR Anti-Corruption Layer foundations. Provider identities, instruments, order commands, callbacks, execution facts, account values, positions, error semantics, readiness and capability declarations all map through SDK-free provider records into existing broker-neutral models.
 
-Distinct IBKR account metrics are not collapsed into fake balance symmetry: TotalCashValue maps to canonical cash, NetLiquidation to equity, BuyingPower stays separate from AvailableFunds, CashBalance remains provider-specific, and AccountReady must be true before snapshot emission. No IBKR SDK dependency or provider network call is introduced yet. LIVE remains unavailable.
+Distinct IBKR account metrics are not collapsed into fake balance symmetry: TotalCashValue maps to canonical cash, NetLiquidation to equity, BuyingPower stays separate from AvailableFunds, CashBalance remains provider-specific, and AccountReady must be true before snapshot emission. Connectivity loss during an economic write is treated as an uncertain outcome, restored sessions remain reconciliation-gated, and the capability manifest deliberately does not declare LATEST_QUOTE or REPLACE_ORDER yet. No IBKR SDK dependency or provider network call is introduced yet. LIVE remains unavailable.
 
 ## Requirements
 
