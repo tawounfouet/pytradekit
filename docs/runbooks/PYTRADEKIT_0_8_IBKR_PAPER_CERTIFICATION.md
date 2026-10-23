@@ -84,6 +84,8 @@ It then executes:
 ~~~text
 canonical IBKRExecutionAdapter probe
 -> real-paper-probe.json
+-> upload raw provider evidence
+-> retained provider artifact_id
 -> Actions-only normalize_ibkr_paper_evidence.py
 -> SHA-256 verified real-paper-evidence.json
 -> ComplianceHarness replay
@@ -113,7 +115,13 @@ Inspect synchronized trades, orderRef, permId and fills.
 
 ### LIMIT unexpectedly filled
 
-Cleanup must restore the baseline position before the artifact can be accepted.
+Cleanup is derived from the fills actually observed for the probe, including any partial LIMIT execution. The baseline position must be restored before the artifact can be accepted.
+
+### Failure after a provider fill
+
+If the scenario stops after an observed provider fill but before normal cleanup, the probe attempts one best-effort cleanup before shutdown.
+
+Do not replay cleanup if a cleanup order was already attempted. Inspect provider state first.
 
 ### Cancel not terminal
 
@@ -129,14 +137,14 @@ RECONNECT_RECOVERY remains C2.
 
 ## 7. Artifact retention
 
-Retain both:
+Retain the raw provider evidence artifact before C3 normalization, then retain:
 
 ~~~text
 real-paper-evidence.json
 real-paper-certification.json
 ~~~
 
-Retain the PAPER workflow run ID, deterministic CI run ID and canonical bundle SHA-256. Record the uploaded artifact ID when freezing evidence into repository qualification records.
+The normalized bundle must contain the retained provider artifact ID, PAPER workflow run ID, deterministic CI run ID and canonical bundle SHA-256.
 
 ## 8. Release rule
 
