@@ -36,7 +36,7 @@ permissions:
 jobs:
   real-paper:
     name: Real IBKR PAPER evidence
-    runs-on: [self-hosted, linux, ibkr-paper]
+    runs-on: [self-hosted, macOS, ibkr-paper]
 
     env:
       PYTRADEKIT_IBKR_EXPECTED_ACCOUNT_ID: ${{ secrets.PYTRADEKIT_IBKR_EXPECTED_ACCOUNT_ID }}
