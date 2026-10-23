@@ -39,6 +39,21 @@ class _DeterministicTransport:
     def is_connected(self) -> bool:
         return self.connected
 
+    def read_client(self) -> object:
+        return self
+
+    def accountValues(self, account: str = "") -> list[object]:
+        return []
+
+    def portfolio(self, account: str = "") -> list[object]:
+        return []
+
+    def trades(self) -> list[object]:
+        return []
+
+    def fills(self) -> list[object]:
+        return []
+
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
