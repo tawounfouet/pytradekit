@@ -493,8 +493,14 @@ class IBKRBrokerSnapshotPort(BrokerSnapshotPort):
     ) -> tuple[tuple[CanonicalPosition, ...], tuple[str, ...]]:
         result: list[CanonicalPosition] = []
         partial: list[str] = []
+        try:
+            raw_positions = self._client.portfolio(
+                self._external_account_id
+            )
+        except Exception:
+            return (), ("provider portfolio read failed",)
 
-        for raw in self._client.portfolio(self._external_account_id):
+        for raw in raw_positions:
             try:
                 item = _portfolio_item(raw)
                 if item.account != self._external_account_id:
@@ -568,8 +574,12 @@ class IBKRBrokerSnapshotPort(BrokerSnapshotPort):
     ) -> tuple[tuple[CanonicalOrder, ...], tuple[str, ...]]:
         result: list[CanonicalOrder] = []
         partial: list[str] = []
+        try:
+            raw_trades = self._client.trades()
+        except Exception:
+            return (), ("provider trade inventory read failed",)
 
-        for raw in self._client.trades():
+        for raw in raw_trades:
             try:
                 trade = _trade(raw)
                 order = trade.order
@@ -639,8 +649,12 @@ class IBKRBrokerSnapshotPort(BrokerSnapshotPort):
         result: list[CanonicalFill] = []
         partial: list[str] = []
         registry = IBKRExecutionRegistry()
+        try:
+            raw_fills = self._client.fills()
+        except Exception:
+            return (), ("provider fill inventory read failed",)
 
-        for raw in self._client.fills():
+        for raw in raw_fills:
             try:
                 fill = _fill(raw)
                 execution = fill.execution
