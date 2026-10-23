@@ -4,11 +4,10 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import UTC, datetime
-from typing import cast
-
 import pytest
 
 from pytradekit.brokers import (
+    ProviderProtocolError,
     ProviderRateLimitError,
     ProviderStateReconciliationRequired,
     ProviderUnavailableError,
@@ -29,6 +28,7 @@ from pytradekit.reconciliation.application import ReconciliationOutcome
 from pytradekit.reconciliation.domain import (
     ConsistencyStatus,
     ReconciliationRun,
+    ReconciliationRunStatus,
     ReconciliationScope,
     ReconciliationTrigger,
     StateConfidence,
@@ -145,18 +145,8 @@ class _Reconciliation:
             started_at=_NOW,
             correlation_id=CorrelationId.new(),
         )
-        run.transition_to(
-            __import__(
-                "pytradekit.reconciliation.domain",
-                fromlist=["ReconciliationRunStatus"],
-            ).ReconciliationRunStatus.CAPTURING
-        )
-        run.transition_to(
-            __import__(
-                "pytradekit.reconciliation.domain",
-                fromlist=["ReconciliationRunStatus"],
-            ).ReconciliationRunStatus.COMPARING
-        )
+        run.transition_to(ReconciliationRunStatus.CAPTURING)
+        run.transition_to(ReconciliationRunStatus.COMPARING)
         run.complete(
             completed_at=_NOW,
             result_status=self.status,
@@ -208,7 +198,7 @@ def test_ib_async_default_pacing_is_within_qualified_ceiling() -> None:
 
 def test_pacing_configuration_above_ceiling_fails_closed() -> None:
     with pytest.raises(
-        Exception,
+        ProviderProtocolError,
         match="request rate exceeds",
     ):
         qualify_ib_async_pacing(
@@ -335,7 +325,7 @@ def test_explicit_socket_recovery_rebinds_then_reconciles() -> None:
     recovery = IBKRReconnectRecoveryRuntime(
         connection=connection,
         operations=runtime,
-        reconciliation=cast(object, reconciliation),
+        reconciliation=reconciliation,
     )
 
     evidence = recovery.recover(reconnect_socket=True)
