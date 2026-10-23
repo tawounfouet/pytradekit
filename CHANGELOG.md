@@ -6,6 +6,40 @@ The project is currently pre-1.0 and public APIs remain experimental unless expl
 
 ## [Unreleased]
 
+## [0.8.0b5] - 2026-10-23
+
+### Added
+
+- LOT-06.4 IBKR Request/Callback Correlation & Order Session Sequencing Runtime.
+- Synchronized order ID reservation through the ib_async request sequence.
+- Explicit canonical OrderId plus orderRef pre-write correlation.
+- IBKROrderSessionRuntime and IBKROrderSessionSequencer.
+- IBKROrderCorrelationRegistry and callback correlation router.
+- openOrder and orderStatus correlation against pre-reserved routes.
+- permId late binding through the existing IBKROrderIdentityRegistry.
+- Order-scoped error-event discrimination.
+- Unknown callback and other-client non-adoption.
+- Safe real IBKR PAPER order-sequence probe with no economic write.
+- Dedicated LOT-06.4 architecture, public-contract, unit and qualification gates.
+
+### Architecture
+
+- Canonical OrderId, orderRef, clientId plus orderId, and permId remain distinct identity roles.
+- The runtime relies on the nextValidId-derived sequence synchronized by ib_async.
+- A session orderId reservation is not treated as evidence of submission.
+- Unknown callbacks remain outside the internal order correlation path.
+- Cumulative orderStatus state never fabricates a Fill.
+- Domain, OMS, Portfolio, Risk, Reconciliation and Safety remain provider-neutral.
+- Economic write admission remains closed.
+- LIVE remains unavailable.
+
+### Compatibility
+
+- BrokerAdapterContract remains candidate version 1.0-rc1.
+- LOT-06.1 connection, LOT-06.2 read-side and LOT-06.3 contract resolution remain unchanged.
+- No real IBKR PAPER execution capability certification claim is made.
+- placeOrder and cancelOrder remain deferred to later LOT-06 stages.
+
 ## [0.8.0b4] - 2026-10-23
 
 ### Added

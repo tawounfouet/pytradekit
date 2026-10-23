@@ -4,13 +4,13 @@ PyTradeKit is a domain-first, broker-agnostic trading framework designed around 
 
 ## Current milestone
 
-PyTradeKit 0.8.0b4 - IBKR Contract Reference Resolution
+PyTradeKit 0.8.0b5 - IBKR Order Session Sequencing
 
 PyTradeKit 0.8 continues the Broker Compliance, Certification & IBKR milestone on top of the qualified 0.7 security and operations baseline.
 
-LOT-05.1 through LOT-05.7 provide the completed SDK-free IBKR Anti-Corruption Layer. LOT-06.1 adds the concrete ib_async==2.1.0 PAPER connection runtime, LOT-06.2 adds synchronized read-side reconciliation, and LOT-06.3 now resolves provider contract reference data through conId-based reqContractDetails queries.
+LOT-05.1 through LOT-05.7 provide the completed SDK-free IBKR Anti-Corruption Layer. LOT-06.1 adds the concrete ib_async==2.1.0 PAPER connection runtime, LOT-06.2 adds synchronized read-side reconciliation, LOT-06.3 resolves provider contract reference data, and LOT-06.4 now reserves synchronized order IDs and correlates provider callbacks before any economic write.
 
-The contract runtime requires an existing canonical InstrumentId, enforces an exact conId plus symbol match, preserves SMART routing, primaryExchange, validExchanges and marketRuleIds, and reuses LOT-05.2 without collapsing dynamic price rules into a false static tick. Economic writes remain blocked and the runtime still does not claim TRADING_READY or C3 PAPER certification. LIVE remains unavailable.
+The order-session runtime keeps canonical OrderId, orderRef, clientId plus orderId, and permId as separate identity roles. Unknown callbacks are not adopted, permId is bound only after provider evidence appears, and allocation of an orderId is never treated as proof of submission. Economic writes remain blocked and the runtime still does not claim TRADING_READY or C3 PAPER certification. LIVE remains unavailable.
 
 ## Requirements
 
@@ -49,7 +49,7 @@ pytradekit --version
 Current release version:
 
 ~~~text
-0.8.0b4
+0.8.0b5
 ~~~
 
 ## Milestone flow
