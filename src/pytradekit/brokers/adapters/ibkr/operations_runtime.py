@@ -334,6 +334,12 @@ class IBKROperationalGuard:
             operation=operation,
             economic_write_in_flight=economic_write_in_flight,
         )
+        if (
+            code == 1102
+            and self._reconciliation_complete
+            and not economic_write_in_flight
+        ):
+            mapped = None
         if mapped is not None and observation.code not in {
             100,
             200,
