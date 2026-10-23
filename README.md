@@ -4,13 +4,13 @@ PyTradeKit is a domain-first, broker-agnostic trading framework designed around 
 
 ## Current milestone
 
-PyTradeKit 0.8.0b6 - IBKR Economic Write Execution
+PyTradeKit 0.8.0b7 - IBKR Operational Runtime
 
 PyTradeKit 0.8 continues the Broker Compliance, Certification & IBKR milestone on top of the qualified 0.7 security and operations baseline.
 
-LOT-05.1 through LOT-05.7 provide the completed SDK-free IBKR Anti-Corruption Layer. LOT-06.1 adds the concrete ib_async==2.1.0 PAPER connection runtime, LOT-06.2 adds synchronized read-side reconciliation, LOT-06.3 resolves provider contract reference data, LOT-06.4 reserves synchronized order IDs and correlates callbacks, and LOT-06.5 now implements the first controlled PAPER economic-write adapter.
+LOT-05.1 through LOT-05.7 provide the completed SDK-free IBKR Anti-Corruption Layer. LOT-06.1 adds the concrete ib_async==2.1.0 PAPER connection runtime, LOT-06.2 adds synchronized read-side reconciliation, LOT-06.3 resolves provider contract reference data, LOT-06.4 reserves synchronized order IDs and correlates callbacks, LOT-06.5 implements the first controlled PAPER economic-write adapter, and LOT-06.6 adds dynamic market-rule validation, pacing containment and explicit reconnect recovery.
 
-The execution adapter preserves distinct OrderId, orderRef, clientId plus orderId, and permId roles, uses exactly one placeOrder and one cancelOrder call site, treats post-write failures as uncertain outcomes, and never retries an economic write automatically. Dynamic market-rule LIMIT orders remain fail-closed until reqMarketRule is qualified. Real PAPER execution certification and TRADING_READY remain unavailable. LIVE remains unavailable.
+The execution adapter preserves distinct OrderId, orderRef, clientId plus orderId, and permId roles, uses exactly one placeOrder and one cancelOrder call site, treats post-write failures as uncertain outcomes, and never retries an economic write automatically. Dynamic market-rule LIMIT orders are now validated through reqMarketRule before placeOrder. Pacing and connectivity transitions remain explicitly contained, reconnect requires reconciliation before write readmission, and no economic intent is replayed automatically. Real PAPER execution certification and TRADING_READY remain unavailable. LIVE remains unavailable.
 
 ## Requirements
 
@@ -49,7 +49,7 @@ pytradekit --version
 Current release version:
 
 ~~~text
-0.8.0b6
+0.8.0b7
 ~~~
 
 ## Milestone flow
