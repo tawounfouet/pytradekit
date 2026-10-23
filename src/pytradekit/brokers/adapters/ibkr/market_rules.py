@@ -32,6 +32,11 @@ class IBKRMarketRuleClient(Protocol):
         ...
 
 
+class _ProviderPriceIncrementLike(Protocol):
+    lowEdge: object
+    increment: object
+
+
 @dataclass(frozen=True, slots=True)
 class IBKRPriceIncrement:
     """SDK-free price increment active from one inclusive low edge."""
@@ -348,13 +353,14 @@ def normalize_ibkr_market_rule(
                 provider=IBKR_PROVIDER_KEY,
                 operation="reqMarketRule",
             )
+        provider_increment = cast(_ProviderPriceIncrementLike, raw)
         low_edge = _provider_decimal(
-            getattr(raw, "lowEdge"),
+            provider_increment.lowEdge,
             field_name="lowEdge",
             allow_zero=True,
         )
         increment = _provider_decimal(
-            getattr(raw, "increment"),
+            provider_increment.increment,
             field_name="increment",
             allow_zero=False,
         )
