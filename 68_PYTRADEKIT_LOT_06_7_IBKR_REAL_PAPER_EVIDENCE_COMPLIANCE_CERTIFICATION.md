@@ -175,7 +175,9 @@ Le probe ne remplace jamais une market rule dynamique par minTick.
 
 Le probe compare la position finale a la position de depart.
 
-Si une position supplementaire a ete creee, un MARKET inverse de cleanup est emis.
+Le cleanup est derive de la quantite effectivement observee dans les fills du probe, y compris une execution partielle eventuelle du LIMIT. Il n'utilise pas une quantite de compensation supposee.
+
+Si une exception interrompt le scenario apres des fills provider observes et avant le cleanup normal, un unique cleanup best-effort est tente avant shutdown. Aucun second ordre de cleanup n'est rejoue si un premier cleanup a deja ete tente.
 
 Le gate paper_cleanup ne passe que si la position de depart est restauree.
 
