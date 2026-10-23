@@ -4,12 +4,12 @@ from datetime import UTC, datetime
 
 import pytest
 
-from pytradekit.brokers.compliance import BrokerCapability
 from pytradekit.brokers.adapters.ibkr import (
     IBKREvidenceError,
     IBKRPaperEvidenceBundle,
     IBKRPaperEvidenceProvenance,
 )
+from pytradekit.brokers.compliance import BrokerCapability
 
 _CAPTURED = datetime(2026, 10, 23, 12, 0, tzinfo=UTC)
 _SHA = "a" * 64
