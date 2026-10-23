@@ -113,15 +113,14 @@ class IBKROrderCommand:
                 "IBKR LIMIT command requires limit_price."
             )
 
-        if self.limit_price is not None:
-            if (
-                not isinstance(self.limit_price, Decimal)
-                or not self.limit_price.is_finite()
-                or self.limit_price <= 0
-            ):
-                raise IBKROrderCommandError(
-                    "limit_price must be a finite positive Decimal."
-                )
+        if self.limit_price is not None and (
+            not isinstance(self.limit_price, Decimal)
+            or not self.limit_price.is_finite()
+            or self.limit_price <= 0
+        ):
+            raise IBKROrderCommandError(
+                "limit_price must be a finite positive Decimal."
+            )
 
 
 @dataclass(frozen=True, slots=True)
