@@ -107,11 +107,27 @@ jobs:
                 "Workflow path is " + run.path + ", expected .github/workflows/ci.yml"
               );
             }
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-          cache: pip
+      - name: Prepare Python 3.12 on self-hosted macOS
+        shell: bash
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: "1"
+        run: |
+          set -euo pipefail
+          if ! command -v brew >/dev/null 2>&1; then
+            echo "::error::Homebrew is required on the self-hosted macOS runner"
+            exit 1
+          fi
+          if ! brew list --versions python@3.12 >/dev/null 2>&1; then
+            brew install python@3.12
+          fi
+          python_bin="$(brew --prefix python@3.12)/bin/python3.12"
+          if [ ! -x "${python_bin}" ]; then
+            echo "::error::Python 3.12 executable was not found after Homebrew setup"
+            exit 1
+          fi
+          "${python_bin}" --version
+          "${python_bin}" -m venv "${RUNNER_TEMP}/pytradekit-ibkr-paper-venv"
+          echo "${RUNNER_TEMP}/pytradekit-ibkr-paper-venv/bin" >> "${GITHUB_PATH}"
 
       - name: Install IBKR qualification dependencies
         run: |
