@@ -9,6 +9,7 @@ from pytradekit.brokers.adapters.ibkr import (
     IBKRContractDetailsRecord,
     IBKRContractId,
     IBKRContractRecord,
+    IBKRInstrumentMappingResult,
     IBKROrderAction,
     IBKROrderCommandError,
     IBKROrderType,
@@ -25,7 +26,10 @@ from pytradekit.shared import CorrelationId, Currency, InstrumentId, Price, Quan
 _NOW = datetime(2026, 10, 23, 2, 30, tzinfo=UTC)
 
 
-def _instrument(*, market_rule: bool = False):
+def _instrument(
+    *,
+    market_rule: bool = False,
+) -> tuple[IBKRContractRecord, IBKRInstrumentMappingResult, InstrumentId]:
     contract = IBKRContractRecord(
         contract_id=IBKRContractId(265598),
         symbol="AAPL",
@@ -48,22 +52,6 @@ def _instrument(*, market_rule: bool = False):
     mapping = map_ibkr_stock_contract(details, instrument_id=instrument_id)
     return contract, mapping, instrument_id
 
-
-def _market_order(*, side: OrderSide = OrderSide.BUY, tif: TimeInForce = TimeInForce.DAY):
-    _contract, _mapping, instrument_id = _instrument()
-    order = Order.create_market(
-        order_id=OrderId.new(),
-        instrument_id=instrument_id,
-        side=side,
-        quantity=Quantity(Decimal("10")),
-        time_in_force=tif,
-        correlation_id=CorrelationId.new(),
-        occurred_at=_NOW,
-        client_order_id="ptk-market-1",
-    )
-    order.validate(occurred_at=_NOW)
-    order.mark_submitted(occurred_at=_NOW)
-    return order
 
 
 def test_market_buy_maps_to_explicit_transmitted_day_command() -> None:
