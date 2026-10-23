@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-from pytradekit.brokers.adapters.ibkr import IBKRContractId, IBKRPaperRuntimeProfile
-
 from scripts import ibkr_paper_controlled_probe as probe
+
+from pytradekit.brokers.adapters.ibkr import IBKRContractId, IBKRPaperRuntimeProfile
 
 
 class _LaggingPortfolioProvider:
