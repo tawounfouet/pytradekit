@@ -4,13 +4,13 @@ PyTradeKit is a domain-first, broker-agnostic trading framework designed around 
 
 ## Current milestone
 
-PyTradeKit 0.8.0a1 - Broker Adapter Contract Candidate
+PyTradeKit 0.8.0a2 - Compliance Test Kit & Evidence Model
 
-PyTradeKit 0.8 starts the Broker Compliance, Certification & IBKR milestone on top of the qualified 0.7 security and operations baseline.
+PyTradeKit 0.8 continues the Broker Compliance, Certification & IBKR milestone on top of the qualified 0.7 security and operations baseline.
 
-LOT-01 introduces the provider-neutral BrokerAdapterContract candidate, capability taxonomy, ProviderCapabilityManifest, certification levels, provider fixture protocol and architecture fitness functions.
+LOT-02 makes broker qualification executable through common requirements, scenarios, explicit PASS/FAIL/BLOCKED results, sanitized retained evidence, capability certification, a generated registry and stale-evidence invalidation.
 
-The existing Alpaca integration remains PAPER-only. No IBKR adapter is implemented yet. LIVE trading remains unavailable by design.
+The same ComplianceHarness is provider-neutral and ready to be connected to Alpaca in LOT-03 and IBKR later in 0.8. The existing Alpaca integration remains PAPER-only. LIVE trading remains unavailable by design.
 
 ## Requirements
 
@@ -48,7 +48,7 @@ pytradekit --version
 Current release version:
 
 ~~~text
-0.8.0a1
+0.8.0a2
 ~~~
 
 ## Milestone flow
@@ -313,7 +313,9 @@ package import graph remains acyclic
 - 0.6.0rc2 release notes: docs/releases/0.6.0rc2.md
 - 0.6.0 Qualified Release notes: docs/releases/0.6.0.md
 - Broker compliance architecture: docs/architecture/broker-compliance.md
+- Broker certification guide: docs/guides/broker-certification.md
 - 0.8.0a1 release notes: docs/releases/0.8.0a1.md
+- 0.8.0a2 release notes: docs/releases/0.8.0a2.md
 - ADRs: docs/adr/
 
 ## Quality commands
