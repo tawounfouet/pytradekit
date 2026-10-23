@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from collections.abc import Mapping
 from datetime import UTC, datetime
 from pathlib import Path
@@ -43,6 +44,11 @@ def main() -> int:
         raise ValueError("--workflow-run-id must be positive.")
     if args.deterministic_ci_run_id <= 0:
         raise ValueError("--deterministic-ci-run-id must be positive.")
+
+    _require_github_actions_provenance(
+        qualified_commit=args.qualified_commit,
+        workflow_run_id=args.workflow_run_id,
+    )
 
     raw = json.loads(args.probe_report.read_text(encoding="utf-8"))
     if not isinstance(raw, dict):
@@ -164,6 +170,32 @@ def main() -> int:
         )
     )
     return 0
+
+
+def _require_github_actions_provenance(
+    *,
+    qualified_commit: str,
+    workflow_run_id: int,
+) -> None:
+    if os.environ.get("GITHUB_ACTIONS", "").lower() != "true":
+        raise ValueError(
+            "C3 evidence normalization must run inside GitHub Actions."
+        )
+    github_sha = os.environ.get("GITHUB_SHA", "").strip()
+    if github_sha != qualified_commit.strip():
+        raise ValueError(
+            "GITHUB_SHA does not match the qualified commit."
+        )
+    github_run_id = os.environ.get("GITHUB_RUN_ID", "").strip()
+    if github_run_id != str(workflow_run_id):
+        raise ValueError(
+            "GITHUB_RUN_ID does not match --workflow-run-id."
+        )
+    workflow = os.environ.get("GITHUB_WORKFLOW", "").strip()
+    if workflow != "IBKR Real PAPER Certification":
+        raise ValueError(
+            "Unexpected GitHub workflow for IBKR C3 evidence normalization."
+        )
 
 
 def _validate_probe_identity(probe: Mapping[str, object]) -> None:
