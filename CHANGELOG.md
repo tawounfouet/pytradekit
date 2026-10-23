@@ -10,6 +10,10 @@ The project is currently pre-1.0 and public APIs remain experimental unless expl
 
 ### Added
 
+- Real PAPER qualification through the canonical IBKRExecutionAdapter path.
+- Actions-only retained evidence normalizer with exact workflow and commit provenance.
+- Canonical bundle SHA-256 verification before parsing and certification replay.
+- Exact deterministic CI run ID required for any C3 evidence claim.
 - LOT-06.7 IBKR Real PAPER Evidence & Compliance Certification.
 - Deterministic C2 certification for every declared IBKR capability.
 - IBKRPaperEvidenceBundle and provenance model.
@@ -22,6 +26,10 @@ The project is currently pre-1.0 and public APIs remain experimental unless expl
 
 ### Architecture
 
+- Local diagnostic probes cannot produce official C3 retained evidence.
+- The real PAPER workflow verifies a successful CI run on the exact candidate commit before qualification.
+- MARKET, LIMIT, CANCEL and cleanup writes in the probe use IBKRExecutionAdapter rather than direct provider write calls.
+- C3 normalization requires the expected GitHub Actions workflow, GITHUB_SHA and GITHUB_RUN_ID.
 - No retained PAPER evidence means no IBKR C3 certification.
 - No static pre-certified IBKR C3 capability set exists.
 - A successful capability proof never promotes unrelated capabilities.
