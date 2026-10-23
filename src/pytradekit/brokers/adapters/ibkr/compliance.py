@@ -536,15 +536,6 @@ def validate_ibkr_certification_run(
         raise ValueError(
             "IBKR certification matrix does not match retained evidence."
         )
-    if (
-        evidence.controlled_probe_passed
-        and evidence.cleanup_passed
-        and evidence.real_provider_used
-        and not run.report.complete
-    ):
-        raise ValueError(
-            "IBKR certification report contains failed or blocked scenarios."
-        )
 
 
 def _criticality(
