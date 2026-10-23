@@ -10,6 +10,14 @@ The project is currently pre-1.0 and public APIs remain experimental unless expl
 
 ### Added
 
+- LOT-05.4 IBKR Order Status & Callback Normalization.
+- SDK-free IBKROpenOrderObservation, IBKROrderStatusObservation and IBKROrderErrorObservation.
+- Explicit PendingSubmit, PreSubmitted, Submitted, PendingCancel, ApiCancelled, Cancelled, Filled and Inactive rules.
+- Cumulative order-state snapshots without synthetic Fill creation.
+- Explicit error 201 rejection and error 202 cancellation facts.
+- Unknown and Inactive states routed to reconciliation.
+- Callback ordering support without assuming openOrder precedes orderStatus.
+- Dedicated LOT-05.4 architecture, public-contract, unit and qualification gates.
 - LOT-05.3 IBKR Order Command Mapping.
 - SDK-free IBKROrderCommand and IBKRPlacementCommand.
 - BUY/SELL, MKT/LMT and DAY mapping from canonical Order semantics.
@@ -55,7 +63,8 @@ The project is currently pre-1.0 and public APIs remain experimental unless expl
 - LIVE remains unavailable.
 - LOT-05.2 Contract & Instrument Mapping is implemented.
 - LOT-05.3 Order Command Mapping is implemented.
-- LOT-05.4 Order Status & Callback Normalization remains next.
+- LOT-05.4 Order Status & Callback Normalization is implemented.
+- LOT-05.5 Execution Details & Fill Mapping remains next.
 
 ## [0.8.0a4] - 2026-10-23
 
