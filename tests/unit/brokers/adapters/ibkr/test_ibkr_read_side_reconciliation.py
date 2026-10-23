@@ -505,7 +505,7 @@ def test_startup_gate_proves_consistent_high_but_keeps_writes_blocked() -> None:
     assert report.state is TradingReadinessState.NOT_READY
     assert report.consistency_status is ConsistencyStatus.CONSISTENT
     assert report.state_confidence is StateConfidence.HIGH
-    assert "IBKR economic write path is not qualified yet" in report.gaps
+    assert "IBKR economic write path is not PAPER certified yet" in report.gaps
     assert workflow.calls == 1
 
 
