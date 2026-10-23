@@ -6,6 +6,39 @@ The project is currently pre-1.0 and public APIs remain experimental unless expl
 
 ## [Unreleased]
 
+## [0.8.0b8] - 2026-10-23
+
+### Added
+
+- LOT-06.7 IBKR Real PAPER Evidence & Compliance Certification.
+- Deterministic C2 certification for every declared IBKR capability.
+- IBKRPaperEvidenceBundle and provenance model.
+- Evidence linkage to qualified commit, ib_async version, masked account and SHA-256.
+- Capability-specific explicit C3 claims.
+- Retained real PAPER evidence replay through the common ComplianceHarness.
+- Controlled real IBKR PAPER MARKET, LIMIT, CANCEL and cleanup probe.
+- Manual self-hosted IBKR PAPER certification workflow.
+- Deterministic LOT-06.7 certification gate in standard CI.
+
+### Architecture
+
+- No retained PAPER evidence means no IBKR C3 certification.
+- No static pre-certified IBKR C3 capability set exists.
+- A successful capability proof never promotes unrelated capabilities.
+- PARTIAL_FILL requires a real observed partial execution.
+- RECONNECT_RECOVERY requires fresh reconciliation and proof of no economic replay.
+- Standard CI never executes the real PAPER controlled probe.
+- Real PAPER writes require explicit acknowledgement.
+- LIVE remains unavailable.
+- TRADING_READY remains closed until the release policy is satisfied.
+
+### Compatibility
+
+- BrokerAdapterContract remains candidate version 1.0-rc1.
+- LOT-06.1 through LOT-06.6 behavior remains compatible.
+- The compliance manifest now records ib_async 2.1.0 as the selected runtime SDK.
+- The current repository state contains no fabricated real IBKR PAPER certification evidence.
+
 ## [0.8.0b7] - 2026-10-23
 
 ### Added
