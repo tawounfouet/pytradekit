@@ -27,7 +27,6 @@ from pytradekit.runtime import TradingReadinessReport
 from pytradekit.runtime.ports import ClockPort
 from pytradekit.shared import CorrelationId
 
-from .discovery import IBKR_PROVIDER_KEY
 from .read_side import (
     IBKRAccountRestrictionsProvider,
     IBKRBrokerSnapshotPort,
