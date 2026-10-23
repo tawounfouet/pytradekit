@@ -14,7 +14,7 @@ _CORE_ROOTS = (
 )
 
 
-def test_ibkr_discovery_has_no_provider_sdk_dependency() -> None:
+def test_ibkr_discovery_remains_sdk_free_with_optional_runtime_transport() -> None:
     source = _IBKR_DISCOVERY.read_text(encoding="utf-8")
     pyproject = _PYPROJECT.read_text(encoding="utf-8").lower()
 
@@ -23,7 +23,7 @@ def test_ibkr_discovery_has_no_provider_sdk_dependency() -> None:
     assert "import ib_async" not in source
     assert "from ib_async" not in source
     assert "ibapi" not in pyproject
-    assert "ib_async" not in pyproject
+    assert 'ibkr = ["ib_async==2.1.0"]' in pyproject
 
 
 def test_ibkr_semantics_do_not_enter_canonical_core() -> None:
