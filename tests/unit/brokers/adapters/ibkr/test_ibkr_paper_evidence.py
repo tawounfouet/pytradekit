@@ -6,13 +6,13 @@ from datetime import UTC, datetime
 
 import pytest
 
-from pytradekit.brokers.compliance import BrokerCapability
 from pytradekit.brokers.adapters.ibkr import (
     IBKREvidenceError,
     IBKRPaperEvidenceBundle,
     IBKRPaperEvidenceProvenance,
     canonical_ibkr_evidence_sha256,
 )
+from pytradekit.brokers.compliance import BrokerCapability
 
 
 def _bundle(
