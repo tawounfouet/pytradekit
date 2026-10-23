@@ -317,13 +317,13 @@ def test_position_without_portfolio_marks_keeps_optional_values_unknown() -> Non
 def _position_observation(
     *,
     external_account_id: str = "DU1234567",
-    contract_id: IBKRContractId = IBKRContractId(265598),
+    contract_id: IBKRContractId | None = None,
     symbol: str = "AAPL",
     currency: Currency = _USD,
 ) -> IBKRPortfolioPositionObservation:
     return IBKRPortfolioPositionObservation(
         external_account_id=external_account_id,
-        contract_id=contract_id,
+        contract_id=contract_id or IBKRContractId(265598),
         symbol=symbol,
         currency=currency,
         signed_quantity=Decimal("1"),
