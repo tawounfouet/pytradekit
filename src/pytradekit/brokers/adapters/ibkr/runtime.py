@@ -22,6 +22,7 @@ from pytradekit.runtime import (
 )
 
 from .discovery import (
+    IBKR_PAPER_PORTS,
     IBKR_PROVIDER_KEY,
     IBKRClientSurface,
     validate_ibkr_paper_port,
@@ -138,9 +139,10 @@ def _required_text(value: object, *, field_name: str) -> str:
 
 @dataclass(frozen=True, slots=True, repr=False)
 class IBKRPaperRuntimeProfile:
-    """Provider-local configuration for the first IB Gateway PAPER runtime."""
+    """Provider-local configuration for a qualified IBKR PAPER runtime."""
 
     expected_account_id: str
+    surface: IBKRClientSurface = IBKRClientSurface.IB_GATEWAY
     host: str = "127.0.0.1"
     port: int = 4002
     client_id: IBKRClientId = field(default_factory=lambda: IBKRClientId(1))
@@ -156,6 +158,11 @@ class IBKRPaperRuntimeProfile:
                 field_name="expected_account_id",
             ),
         )
+        if not isinstance(self.surface, IBKRClientSurface):
+            raise IBKRRuntimeConfigurationError(
+                "surface must be an IBKRClientSurface."
+            )
+
         normalized_host = _required_text(self.host, field_name="host").lower()
         if normalized_host not in {"127.0.0.1", "localhost"}:
             raise IBKRRuntimeConfigurationError(
@@ -164,7 +171,7 @@ class IBKRPaperRuntimeProfile:
         object.__setattr__(self, "host", normalized_host)
 
         validate_ibkr_paper_port(
-            surface=IBKRClientSurface.IB_GATEWAY,
+            surface=self.surface,
             port=self.port,
         )
 
@@ -210,6 +217,7 @@ class IBKRPaperRuntimeProfile:
         return (
             "IBKRPaperRuntimeProfile("
             f"name={self.name!r}, "
+            f"surface={self.surface.value!r}, "
             f"host={self.host!r}, "
             f"port={self.port!r}, "
             f"client_id={self.client_id.value!r}, "
@@ -232,8 +240,21 @@ class IBKRPaperRuntimeProfile:
             "",
         )
         host = source.get("PYTRADEKIT_IBKR_HOST", "127.0.0.1")
+        surface_text = source.get(
+            "PYTRADEKIT_IBKR_SURFACE",
+            IBKRClientSurface.IB_GATEWAY.value,
+        )
+        try:
+            surface = IBKRClientSurface(surface_text)
+        except ValueError as exc:
+            raise IBKRRuntimeConfigurationError(
+                "PYTRADEKIT_IBKR_SURFACE must be TWS or IB_GATEWAY."
+            ) from exc
         port = _parse_int(
-            source.get("PYTRADEKIT_IBKR_PORT", "4002"),
+            source.get(
+                "PYTRADEKIT_IBKR_PORT",
+                str(IBKR_PAPER_PORTS[surface]),
+            ),
             field_name="PYTRADEKIT_IBKR_PORT",
         )
         client_id = _parse_int(
@@ -248,6 +269,7 @@ class IBKRPaperRuntimeProfile:
         return cls(
             name=source.get("PYTRADEKIT_RUNTIME_PROFILE", "ibkr-paper"),
             expected_account_id=expected_account_id,
+            surface=surface,
             host=host,
             port=port,
             client_id=IBKRClientId(client_id),
@@ -257,7 +279,7 @@ class IBKRPaperRuntimeProfile:
 
 @dataclass(frozen=True, slots=True)
 class IBKRTransportConnectionEvidence:
-    """Sanitized evidence from one synchronized IB Gateway connection."""
+    """Sanitized evidence from one synchronized IBKR PAPER connection."""
 
     transport_name: str
     transport_version: str
@@ -337,7 +359,7 @@ class _IBKRReadTransportCapability(Protocol):
 
 
 class IBAsyncPaperTransport:
-    """ib_async-backed IB Gateway PAPER transport with fail-closed validation."""
+    """ib_async-backed IBKR PAPER transport with fail-closed validation."""
 
     def __init__(
         self,
@@ -530,7 +552,7 @@ class IBAsyncPaperTransport:
 
 @dataclass(slots=True)
 class IBKRPaperConnectionRuntime:
-    """LOT-06.1 provider-local startup composition for IB Gateway PAPER."""
+    """LOT-06.1 provider-local startup composition for IBKR PAPER."""
 
     profile: IBKRPaperRuntimeProfile
     transport: IBKRTransportPort
@@ -586,7 +608,10 @@ class IBKRPaperConnectionRuntime:
                 ReadinessCheck(
                     name="paper_endpoint",
                     status=ReadinessCheckStatus.PASS,
-                    detail="IB Gateway PAPER port 4002 validated.",
+                    detail=(
+                        f"{self.profile.surface.value} PAPER port "
+                        f"{self.profile.port} validated."
+                    ),
                 ),
                 ReadinessCheck(
                     name="socket",

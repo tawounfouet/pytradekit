@@ -104,7 +104,7 @@ localhost
 
 Une IP distante est rejetee.
 
-Cette contrainte reduit la surface de configuration avant la qualification PAPER complete.
+La surface par defaut reste IB Gateway PAPER 4002. Une surface TWS PAPER 7497 peut etre selectionnee explicitement pour la qualification provider sans ouvrir aucun port LIVE.
 
 ## 6. PAPER endpoint hard lock
 
@@ -311,7 +311,7 @@ LOT-06.1 prouve :
 PyTradeKit
 -> provider-local IBKR runtime
 -> ib_async 2.1.0
--> IB Gateway PAPER 4002
+-> explicit PAPER surface: IB Gateway 4002 or TWS 7497
 -> synchronized socket
 -> expected account identity
 -> READY_FOR_STARTUP

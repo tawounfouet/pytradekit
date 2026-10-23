@@ -7,6 +7,7 @@ from pytradekit.brokers.adapters.ibkr import (
     IBKR_ASYNC_VERSION_TARGET,
     IBAsyncPaperTransport,
     IBKRClientId,
+    IBKRClientSurface,
     IBKRPaperRuntimeProfile,
     IBKRRuntimeConfigurationError,
     build_ibkr_paper_connection_runtime,
@@ -96,14 +97,46 @@ def _profile() -> IBKRPaperRuntimeProfile:
     )
 
 
-def test_profile_is_hard_locked_to_ib_gateway_paper() -> None:
+def test_profile_defaults_to_ib_gateway_paper() -> None:
     profile = _profile()
 
     assert profile.provider == "ibkr"
     assert profile.environment.value == "PAPER"
+    assert profile.surface is IBKRClientSurface.IB_GATEWAY
     assert profile.host == "127.0.0.1"
     assert profile.port == 4002
     assert profile.client_id.value == 1
+
+
+def test_profile_accepts_explicit_tws_paper_surface() -> None:
+    profile = IBKRPaperRuntimeProfile(
+        expected_account_id="DU1234567",
+        surface=IBKRClientSurface.TWS,
+        port=7497,
+        client_id=IBKRClientId(71),
+    )
+
+    assert profile.surface is IBKRClientSurface.TWS
+    assert profile.port == 7497
+    assert profile.client_id.value == 71
+
+
+def test_profile_rejects_live_tws_port() -> None:
+    with pytest.raises(ValueError, match="LIVE"):
+        IBKRPaperRuntimeProfile(
+            expected_account_id="DU1234567",
+            surface=IBKRClientSurface.TWS,
+            port=7496,
+        )
+
+
+def test_profile_rejects_surface_port_mismatch() -> None:
+    with pytest.raises(ValueError, match="TWS"):
+        IBKRPaperRuntimeProfile(
+            expected_account_id="DU1234567",
+            surface=IBKRClientSurface.TWS,
+            port=4002,
+        )
 
 
 def test_profile_rejects_live_gateway_port() -> None:
@@ -141,20 +174,22 @@ def test_profile_from_environment_uses_provider_local_settings() -> None:
     profile = IBKRPaperRuntimeProfile.from_environment(
         {
             "PYTRADEKIT_IBKR_EXPECTED_ACCOUNT_ID": "DU1234567",
+            "PYTRADEKIT_IBKR_SURFACE": "TWS",
             "PYTRADEKIT_IBKR_HOST": "localhost",
-            "PYTRADEKIT_IBKR_PORT": "4002",
+            "PYTRADEKIT_IBKR_PORT": "7497",
             "PYTRADEKIT_IBKR_CLIENT_ID": "7",
             "PYTRADEKIT_IBKR_CONNECT_TIMEOUT_SECONDS": "4.5",
         }
     )
 
+    assert profile.surface is IBKRClientSurface.TWS
     assert profile.host == "localhost"
-    assert profile.port == 4002
+    assert profile.port == 7497
     assert profile.client_id.value == 7
     assert profile.connect_timeout_seconds == 4.5
 
 
-def test_ib_async_transport_uses_frozen_connection_parameters() -> None:
+def test_ib_async_transport_uses_qualified_connection_parameters() -> None:
     client = _FakeIBClient()
     transport = IBAsyncPaperTransport(
         client_factory=lambda: client,
@@ -177,6 +212,43 @@ def test_ib_async_transport_uses_frozen_connection_parameters() -> None:
     assert evidence.account_verified
     assert evidence.server_version == 178
     assert transport.is_connected()
+
+
+def test_ib_async_transport_connects_to_tws_paper_port() -> None:
+    client = _FakeIBClient()
+    transport = IBAsyncPaperTransport(
+        client_factory=lambda: client,
+        package_version=IBKR_ASYNC_VERSION_TARGET,
+    )
+    profile = IBKRPaperRuntimeProfile(
+        expected_account_id="DU1234567",
+        surface=IBKRClientSurface.TWS,
+        port=7497,
+        client_id=IBKRClientId(71),
+    )
+
+    evidence = transport.connect(profile)
+
+    assert client.connect_args == (
+        "127.0.0.1",
+        7497,
+        71,
+        10.0,
+        False,
+        "DU1234567",
+        True,
+    )
+    assert evidence.synchronized
+
+
+def test_profile_from_environment_rejects_unknown_surface() -> None:
+    with pytest.raises(IBKRRuntimeConfigurationError, match="TWS or IB_GATEWAY"):
+        IBKRPaperRuntimeProfile.from_environment(
+            {
+                "PYTRADEKIT_IBKR_EXPECTED_ACCOUNT_ID": "DU1234567",
+                "PYTRADEKIT_IBKR_SURFACE": "DESKTOP",
+            }
+        )
 
 
 def test_account_identity_mismatch_fails_closed_and_disconnects() -> None:

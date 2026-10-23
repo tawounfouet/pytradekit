@@ -197,7 +197,8 @@ utilise :
 workflow_dispatch
 self-hosted macOS runner
 label ibkr-paper
-IB Gateway PAPER on the same Mac at 127.0.0.1:4002
+explicit runtime surface TWS
+TWS PAPER on the same Mac at 127.0.0.1:7497
 explicit acknowledgement input
 expected PAPER account secret
 ~~~

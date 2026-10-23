@@ -232,6 +232,7 @@ The project is currently pre-1.0 and public APIs remain experimental unless expl
 - Optional ibkr dependency extra with exact ib_async==2.1.0 pin.
 - Provider-local IBKRPaperRuntimeProfile without modifying the Alpaca RuntimeProfile.
 - Loopback-only IB Gateway PAPER runtime on port 4002.
+- Explicit TWS PAPER runtime on port 7497 for provider qualification.
 - Non-zero client ID policy to avoid automatic manual-order binding.
 - IBAsyncPaperTransport with synchronized protocol readiness and account verification.
 - Sanitized startup readiness report with no trading-ready claim.
