@@ -37,7 +37,7 @@ class IBKRStartupReconciliationWorkflow(Protocol):
 
 @dataclass(slots=True)
 class IBKRStartupReconciliationGate:
-    """Require fresh CONSISTENT/HIGH reconciliation before trading admission."""
+    """Prove fresh read-side convergence while keeping economic writes closed."""
 
     account_id: AccountId
     workflows: IBKRStartupReconciliationWorkflow
@@ -123,6 +123,18 @@ class IBKRStartupReconciliationGate:
             gaps.append(
                 "startup reconciliation did not prove CONSISTENT/HIGH"
             )
+
+        checks.append(
+            ReadinessCheck(
+                name="economic_write_admission",
+                status=ReadinessCheckStatus.FAIL,
+                detail=(
+                    "LOT-06.2 qualifies read-side convergence only; "
+                    "IBKR economic writes remain blocked."
+                ),
+            )
+        )
+        gaps.append("IBKR economic write path is not qualified yet")
 
         return TradingReadinessReport(
             provider=startup.provider,
