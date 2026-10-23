@@ -341,3 +341,57 @@ LOT-02 does not implement:
 - LIVE qualification.
 
 Those concerns belong to later 0.8 LOTs.
+
+
+## LOT-03 - Alpaca Compliance Certification
+
+LOT-03 is the first provider-specific proof of the 0.8 compliance model.
+
+The frozen Alpaca PAPER adapter is mapped to ProviderCapabilityManifest and qualified through the same ComplianceHarness introduced by LOT-02.
+
+The retained source evidence is the real Alpaca PAPER qualification used for the PyTradeKit 0.5 release.
+
+The normalized evidence record retains:
+
+~~~text
+source release
+qualified commit
+deterministic CI run
+real PAPER workflow run
+artifact ID
+artifact SHA-256
+source JSON SHA-256
+SDK version
+PAPER gate results
+capability-specific proof
+~~~
+
+The certification matrix is:
+
+~~~text
+ACCOUNT_QUERY           C3
+ORDER_QUERY             C3
+MARKET_ORDER            C3
+LIMIT_ORDER             C3
+CANCEL_ORDER            C3
+PARTIAL_FILL            C2
+POSITION_QUERY          C3
+BALANCE_QUERY           C3
+CLIENT_ORDER_REFERENCE  C3
+EXECUTION_FACTS         C3
+RECONNECT_RECOVERY      C3
+LATEST_QUOTE            C3
+REPLACE_ORDER           not declared
+~~~
+
+PARTIAL_FILL is deliberately retained at C2 because the real provider evidence did not trigger a genuine partial_fill event.
+
+This is an explicit example of capability-specific certification rather than provider-wide certification.
+
+A fresh real provider rerun is available through:
+
+~~~text
+.github/workflows/v080-alpaca-paper-certification.yml
+~~~
+
+The default CI does not use provider credentials and does not create PAPER orders.

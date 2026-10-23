@@ -1,5 +1,23 @@
 """Alpaca broker adapter discovery, runtime, ACL, execution, snapshots, and recovery."""
 
+from .compliance import (
+    ALPACA_COMPLIANCE_ADAPTER_VERSION,
+    ALPACA_DECLARED_CAPABILITIES,
+    ALPACA_EXPECTED_CERTIFICATION_LEVELS,
+    ALPACA_REAL_PAPER_C3_CAPABILITIES,
+    AlpacaComplianceScenarioExecutor,
+    AlpacaRetainedEvidenceFixture,
+    build_alpaca_capability_manifest,
+    build_alpaca_certification_run,
+    build_alpaca_compliance_requirements,
+    build_alpaca_compliance_scenarios,
+    validate_alpaca_certification_run,
+)
+from .compliance_evidence import (
+    AlpacaEvidenceError,
+    AlpacaPaperEvidenceBundle,
+    AlpacaPaperEvidenceProvenance,
+)
 from .controlled_order_probe import (
     AlpacaPaperControlledOrderProbe,
     AlpacaPaperOrderProbeConfig,
@@ -55,7 +73,13 @@ from .stream import (
 )
 
 __all__ = [
+    "ALPACA_COMPLIANCE_ADAPTER_VERSION",
+    "ALPACA_DECLARED_CAPABILITIES",
+    "ALPACA_EXPECTED_CERTIFICATION_LEVELS",
+    "ALPACA_REAL_PAPER_C3_CAPABILITIES",
     "AlpacaCommandClient",
+    "AlpacaComplianceScenarioExecutor",
+    "AlpacaEvidenceError",
     "AlpacaExecutionAdapter",
     "AlpacaInstrumentResolver",
     "AlpacaMarketDataSnapshots",
@@ -64,6 +88,8 @@ __all__ = [
     "AlpacaOrderStateReader",
     "AlpacaPaperCommandClient",
     "AlpacaPaperControlledOrderProbe",
+    "AlpacaPaperEvidenceBundle",
+    "AlpacaPaperEvidenceProvenance",
     "AlpacaPaperOrderProbeConfig",
     "AlpacaPaperOrderProbeReport",
     "AlpacaPaperProbeConfig",
@@ -74,6 +100,7 @@ __all__ = [
     "AlpacaPaperStartupReadiness",
     "AlpacaPaperTradeStream",
     "AlpacaReadClient",
+    "AlpacaRetainedEvidenceFixture",
     "AlpacaSimulatedResponseLoss",
     "AlpacaSingleAttemptTradingClient",
     "AlpacaSnapshotReferenceResolver",
@@ -86,6 +113,10 @@ __all__ = [
     "RemoteOpenOrder",
     "StaticAlpacaReferenceResolver",
     "TradeUpdateProcessingResult",
+    "build_alpaca_capability_manifest",
+    "build_alpaca_certification_run",
+    "build_alpaca_compliance_requirements",
+    "build_alpaca_compliance_scenarios",
     "build_alpaca_paper_manifest",
     "build_alpaca_paper_order_probe",
     "build_alpaca_paper_probe",
@@ -93,4 +124,5 @@ __all__ = [
     "build_alpaca_paper_runtime_system",
     "build_qualified_alpaca_paper_runtime",
     "translate_alpaca_error",
+    "validate_alpaca_certification_run",
 ]

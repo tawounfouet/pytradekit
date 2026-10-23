@@ -57,6 +57,9 @@ RELEASE_DOCUMENTS = (
     Path("docs/runbooks/PYTRADEKIT_0_7_RELEASE_QUALIFICATION.md"),
     Path("docs/architecture/broker-compliance.md"),
     Path("docs/guides/broker-certification.md"),
+    Path("docs/qualification/alpaca-compliance-certification.md"),
+    Path("docs/qualification/evidence/alpaca/v050-paper-20261022.json"),
+    Path("docs/runbooks/PYTRADEKIT_0_8_ALPACA_CERTIFICATION.md"),
 )
 
 
