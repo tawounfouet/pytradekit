@@ -19,6 +19,7 @@ from typing import Protocol, cast
 from uuid import uuid4
 
 from pytradekit.brokers.adapters.ibkr import (
+    IBKRContractDetailsRecord,
     IBKRMarketRuleClient,
     IBKRMarketRuleResolver,
     IBKRPaperEvidenceBundle,
@@ -574,7 +575,7 @@ def _resolve_contract(
         exchange="SMART",
     )
     raw_details = client.reqContractDetails(request)
-    exact: list[tuple[object, object]] = []
+    exact: list[tuple[object, IBKRContractDetailsRecord]] = []
     for raw in raw_details:
         normalized = normalize_ibkr_contract_details(raw)
         if (
@@ -587,9 +588,9 @@ def _resolve_contract(
         raise RuntimeError(
             "IBKR controlled probe requires exactly one conId plus symbol match."
         )
-    raw_contract, normalized = exact[0]
+    raw_contract, qualified_details = exact[0]
     mapping = map_ibkr_stock_contract(
-        normalized,
+        qualified_details,
         instrument_id=InstrumentId.new(),
     )
     return raw_contract, mapping
