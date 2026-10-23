@@ -242,6 +242,23 @@ def test_code_100_latches_pacing_until_explicit_recovery() -> None:
     guard.require_write_allowed(operation="submit")
 
 
+def test_standalone_1102_preserves_existing_safe_reconciliation() -> None:
+    guard = IBKROperationalGuard(
+        socket_connected=True,
+        provider_connected=True,
+        reconciliation_complete=True,
+    )
+
+    mapped = guard.observe_error(
+        _error(1102),
+        operation="provider_event",
+    )
+
+    assert mapped is None
+    assert guard.snapshot.reconciliation_complete
+    guard.require_write_allowed(operation="submit")
+
+
 def test_1100_then_1102_still_requires_reconciliation() -> None:
     guard = IBKROperationalGuard(
         socket_connected=True,
@@ -320,7 +337,11 @@ def test_explicit_socket_recovery_rebinds_then_reconciles() -> None:
         reconciliation_complete=True,
         clock=_Clock(),
     )
-    runtime.guard.on_disconnected()
+    runtime.guard.observe_error(
+        _error(1300),
+        operation="provider_event",
+    )
+    assert runtime.guard.snapshot.reconnect_required
     reconciliation = _Reconciliation()
     recovery = IBKRReconnectRecoveryRuntime(
         connection=connection,
