@@ -16,7 +16,7 @@ from pytradekit.brokers.compliance import (
     EvidenceSanitizer,
     StaleEvidencePolicy,
 )
-from tests.compliance_fakes import compliance_manifest
+from pytradekit.testing import compliance_manifest
 
 
 def test_ff_057_c3_requires_real_paper_evidence_type() -> None:
