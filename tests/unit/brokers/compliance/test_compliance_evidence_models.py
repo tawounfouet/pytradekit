@@ -4,6 +4,7 @@ from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
 import pytest
+
 from pytradekit.brokers.compliance import (
     BROKER_ADAPTER_CONTRACT_V1_CANDIDATE_VERSION,
     BrokerCapability,
