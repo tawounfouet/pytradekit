@@ -27,6 +27,8 @@ successful CI run on exact commit
 -> self-hosted IBKR PAPER workflow
 -> canonical IBKRExecutionAdapter probe
 -> sanitized raw probe report
+-> raw provider evidence retained with upload-artifact
+-> retained provider artifact_id
 -> Actions-only evidence normalizer
 -> PAPER workflow_run_id
 -> deterministic_ci_run_id
@@ -99,10 +101,11 @@ and the workflow verifies the supplied deterministic CI run against the GitHub A
 
 ## Artifacts
 
-The official workflow retains:
+The official workflow first retains real-paper-probe.json as provider evidence and injects that artifact_id into the normalized bundle before C3 replay.
+
+It then retains:
 
 ~~~text
-real-paper-probe.json
 real-paper-evidence.json
 real-paper-certification.json
 ~~~
