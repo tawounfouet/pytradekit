@@ -395,3 +395,56 @@ A fresh real provider rerun is available through:
 ~~~
 
 The default CI does not use provider credentials and does not create PAPER orders.
+
+
+## LOT-04 - IBKR Discovery & Contract Freeze
+
+LOT-04 challenges the BrokerAdapterContract candidate with Interactive Brokers before any SDK-backed adapter exists.
+
+The frozen first vertical slice is:
+
+~~~text
+IB Gateway
+TWS API socket
+PAPER
+US equities
+MARKET
+LIMIT
+CANCEL
+DAY
+~~~
+
+The identity mapping is:
+
+~~~text
+client_order_id     -> orderRef candidate
+external_order_id   -> permId
+adapter session id  -> orderId
+external_fill_id    -> execId
+instrument id       -> conId
+connection identity -> clientId
+~~~
+
+orderId, clientId and nextValidId remain provider runtime state.
+
+The canonical Domain, OMS, Risk, Portfolio, Reconciliation and Safety layers remain unchanged.
+
+The current Alpaca-only RuntimeProfile is not extended with IBKR branches. LOT-05/LOT-06 must build provider-local IBKR composition and only extract a new shared runtime abstraction if both providers prove it.
+
+The reconnect freeze requires:
+
+~~~text
+maintainAndResubmitOrdersOnReconnect = false
+~~~
+
+and:
+
+~~~text
+transport restored
+!=
+state recovered
+~~~
+
+A reconnect must reconcile before new economic writes are admitted.
+
+LOT-04 emits no IBKR CertifiedCapability and performs no provider network operation.

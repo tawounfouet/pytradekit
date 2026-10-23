@@ -167,9 +167,9 @@ A C3 capability does not imply that the provider is currently healthy or that a 
 
 ## Current milestone
 
-0.8.0a2 provides the common test kit and evidence model.
+0.8.0a4 freezes the first IBKR implementation contract after the Alpaca LOT-03 certification.
 
-LOT-03 will connect the existing Alpaca PAPER integration to this harness and produce provider-specific CertifiedCapability evidence.
+LOT-04 intentionally emits no IBKR CertifiedCapability. It defines the provider identity, runtime, reconnect and scope assumptions that later IBKR implementation and PAPER qualification must prove.
 
 
 ## Alpaca LOT-03 example
@@ -206,3 +206,31 @@ REPLACE_ORDER
 PARTIAL_FILL remains C2 until a real provider partial_fill event is retained.
 
 Use the manual 0.8 Alpaca PAPER workflow when fresh provider evidence is required.
+
+
+## IBKR LOT-04 pre-certification boundary
+
+The IBKR freeze is intentionally below C1.
+
+It records:
+
+~~~text
+candidate capabilities
+identity semantics
+PAPER ports
+readiness facts
+reconnect rules
+dependency policy
+open provider questions
+~~~
+
+It does not claim:
+
+~~~text
+adapter implemented
+integration qualified
+PAPER qualified
+LIVE qualified
+~~~
+
+The first IBKR certification record can only be produced after the ACL and PAPER runtime exist.

@@ -60,6 +60,9 @@ RELEASE_DOCUMENTS = (
     Path("docs/qualification/alpaca-compliance-certification.md"),
     Path("docs/qualification/evidence/alpaca/v050-paper-20261022.json"),
     Path("docs/runbooks/PYTRADEKIT_0_8_ALPACA_CERTIFICATION.md"),
+    Path("docs/architecture/ibkr-contract-freeze.md"),
+    Path("docs/guides/ibkr-discovery.md"),
+    Path("docs/qualification/ibkr-discovery-contract-freeze.md"),
 )
 
 
