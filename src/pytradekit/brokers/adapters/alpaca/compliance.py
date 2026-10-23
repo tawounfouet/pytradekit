@@ -38,6 +38,7 @@ from pytradekit.orders.ports import ExecutionPort
 from pytradekit.reconciliation.ports import BrokerSnapshotPort
 from pytradekit.reference import AssetClass
 from pytradekit.runtime import RuntimeEnvironment
+
 from .compliance_evidence import AlpacaPaperEvidenceBundle
 from .contract import (
     ALPACA_PROVIDER_KEY,
@@ -291,7 +292,10 @@ def build_alpaca_capability_manifest() -> ProviderCapabilityManifest:
             "MARKET and LIMIT submission with DAY time in force.",
             "REPLACE_ORDER is unsupported.",
             "LATEST_QUOTE is limited to the IEX feed.",
-            "PARTIAL_FILL is retained at C2 because the real 2026-10-22 PAPER proof did not trigger a partial fill.",
+            (
+                "PARTIAL_FILL is retained at C2 because the real 2026-10-22 "
+                "PAPER proof did not trigger a partial fill."
+            ),
             "LIVE qualification is unavailable.",
         ),
     )
@@ -308,7 +312,8 @@ def build_alpaca_compliance_requirements() -> tuple[ComplianceRequirement, ...]:
                 capability=capability,
                 level=CertificationLevel.C2_INTEGRATION_QUALIFIED,
                 description=(
-                    f"Alpaca {capability.value} passes retained deterministic integration qualification."
+                    f"Alpaca {capability.value} passes retained deterministic "
+                    "integration qualification."
                 ),
                 criticality=_criticality(capability),
                 applicable=True,
@@ -363,7 +368,9 @@ def build_alpaca_compliance_scenarios() -> tuple[ComplianceScenario, ...]:
                         "source release gate passed",
                     ),
                     action=f"validate retained PAPER proof for {capability.value}",
-                    expected_result="real provider behavior satisfies canonical capability semantics",
+                    expected_result=(
+                        "real provider behavior satisfies canonical capability semantics"
+                    ),
                     failure_semantics="missing or contradictory provider proof prevents C3",
                     cleanup="source PAPER qualification restored its controlled baseline",
                     required_evidence=(ComplianceEvidenceType.PAPER,),
