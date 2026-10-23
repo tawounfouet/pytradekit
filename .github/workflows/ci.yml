@@ -86,6 +86,13 @@ jobs:
             tests/integration/test_security_operations_production_qualification.py
           python scripts/qualify_0_7.py
 
+      - name: 0.8 LOT-01 broker compliance qualification
+        run: |
+          pytest \
+            tests/unit/brokers/compliance \
+            tests/contracts/brokers/compliance \
+            tests/architecture/test_broker_compliance_boundaries.py
+
       - name: Unit, property, and integration tests
         run: pytest --cov=pytradekit --cov-report=term-missing
 

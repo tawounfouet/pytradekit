@@ -4,13 +4,13 @@ PyTradeKit is a domain-first, broker-agnostic trading framework designed around 
 
 ## Current milestone
 
-PyTradeKit 0.7.0 - Stable Qualified Release
+PyTradeKit 0.8.0a1 - Broker Adapter Contract Candidate
 
-PyTradeKit 0.7 adds explicit identity, scoped RBAC, and authorization on top of the qualified reconciliation and recovery baseline.
+PyTradeKit 0.8 starts the Broker Compliance, Certification & IBKR milestone on top of the qualified 0.7 security and operations baseline.
 
-PyTradeKit 0.7.0 is the stable qualified release of the complete Security, Governance & Production Operations milestone. LOT-01 through LOT-08 are complete and the adversarial production qualification gates are part of both CI and Release.
+LOT-01 introduces the provider-neutral BrokerAdapterContract candidate, capability taxonomy, ProviderCapabilityManifest, certification levels, provider fixture protocol and architecture fitness functions.
 
-The Alpaca integration remains PAPER-only. LIVE trading is unavailable by design in 0.7.0.
+The existing Alpaca integration remains PAPER-only. No IBKR adapter is implemented yet. LIVE trading remains unavailable by design.
 
 ## Requirements
 
@@ -48,7 +48,7 @@ pytradekit --version
 Current release version:
 
 ~~~text
-0.7.0
+0.8.0a1
 ~~~
 
 ## Milestone flow
@@ -267,6 +267,7 @@ src/pytradekit/
 |-- persistence/
 |-- reconciliation/
 |-- brokers/
+|   |-- compliance/
 |   `-- adapters/alpaca/
 |-- runtime/
 `-- testing/
@@ -280,6 +281,7 @@ Important invariants include:
 Domain does not depend on SQLAlchemy
 Domain does not depend on broker SDKs
 Alpaca SDK stays inside the adapter boundary
+broker compliance core imports no concrete adapter
 provider IDs never replace canonical IDs
 Strategy domain does not depend on brokers
 Backtest reuses canonical Risk
@@ -310,6 +312,8 @@ package import graph remains acyclic
 - 0.6.0rc1 release notes: docs/releases/0.6.0rc1.md
 - 0.6.0rc2 release notes: docs/releases/0.6.0rc2.md
 - 0.6.0 Qualified Release notes: docs/releases/0.6.0.md
+- Broker compliance architecture: docs/architecture/broker-compliance.md
+- 0.8.0a1 release notes: docs/releases/0.8.0a1.md
 - ADRs: docs/adr/
 
 ## Quality commands
