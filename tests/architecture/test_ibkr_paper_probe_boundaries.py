@@ -40,6 +40,8 @@ def test_standard_ci_never_runs_real_paper_probe() -> None:
 def test_real_paper_workflow_verifies_ci_and_normalizes_evidence() -> None:
     source = _REAL_WORKFLOW.read_text(encoding="utf-8")
 
+    assert "runs-on: [self-hosted, macOS, ibkr-paper]" in source
+    assert "runs-on: [self-hosted, linux, ibkr-paper]" not in source
     assert "deterministic_ci_run_id" in source
     assert "github.rest.actions.getWorkflowRun" in source
     assert "run.head_sha !== context.sha" in source

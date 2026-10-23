@@ -195,9 +195,9 @@ utilise :
 
 ~~~text
 workflow_dispatch
-self-hosted linux runner
+self-hosted macOS runner
 label ibkr-paper
-IB Gateway PAPER on 127.0.0.1:4002
+IB Gateway PAPER on the same Mac at 127.0.0.1:4002
 explicit acknowledgement input
 expected PAPER account secret
 ~~~
