@@ -406,6 +406,17 @@ class IBKROperationalGuard:
             )
         self._reconciliation_complete = True
 
+    def fail_closed(self, *, provider_code: int | None = None) -> None:
+        if provider_code is not None and (
+            type(provider_code) is not int or provider_code <= 0
+        ):
+            raise IBKROperationalRuntimeError(
+                "provider_code must be a positive int or None."
+            )
+        self._fail_closed_latched = True
+        if provider_code is not None:
+            self._last_provider_code = provider_code
+
     def mark_market_data_resubscribed(self) -> None:
         if not self._socket_connected or not self._provider_connected:
             raise IBKROperationalRuntimeError(
@@ -478,10 +489,10 @@ class IBKROperationalEventBridge:
     ) -> None:
         _ = contract
         if type(req_id) is not int or type(error_code) is not int:
-            self._guard._fail_closed_latched = True
+            self._guard.fail_closed()
             return
         if not isinstance(error_string, str) or not error_string.strip():
-            self._guard._fail_closed_latched = True
+            self._guard.fail_closed(provider_code=error_code)
             return
         try:
             observation = IBKRErrorObservation(
@@ -496,7 +507,7 @@ class IBKROperationalEventBridge:
                 economic_write_in_flight=False,
             )
         except Exception:
-            self._guard._fail_closed_latched = True
+            self._guard.fail_closed(provider_code=error_code)
 
 
 @dataclass(slots=True)
