@@ -77,7 +77,7 @@ controlled quantity
 dedicated non-zero client ID
 ~~~
 
-The workflow verifies the CI run through the GitHub Actions API before any provider qualification step.
+The workflow verifies the CI run through the GitHub Actions API before any provider qualification step. The run must come from .github/workflows/ci.yml, succeed, and target the exact candidate commit.
 
 It then executes:
 
