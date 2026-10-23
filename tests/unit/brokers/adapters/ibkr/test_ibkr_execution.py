@@ -32,7 +32,7 @@ from pytradekit.orders.domain import (
     OrderSide,
     TimeInForce,
 )
-from pytradekit.shared import CorrelationId, Currency, Price, Quantity
+from pytradekit.shared import CorrelationId, Currency, InstrumentId, Price, Quantity
 
 _NOW = datetime(2026, 10, 23, 10, 30, tzinfo=UTC)
 
@@ -172,10 +172,7 @@ def _binding(
     )
     mapping = map_ibkr_stock_contract(
         details,
-        instrument_id=__import__(
-            "pytradekit.shared",
-            fromlist=["InstrumentId"],
-        ).InstrumentId.new(),
+        instrument_id=InstrumentId.new(),
     )
     return IBKRExecutionInstrumentBinding(
         contract=contract,
