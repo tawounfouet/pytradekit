@@ -33,6 +33,7 @@ from .read_side import (
     IBKRBrokerSnapshotPort,
     IBKRInstrumentResolver,
     IBKRReadSideClient,
+    IBKRReadSideCoverageEvidence,
 )
 from .runtime import IBKRPaperConnectionRuntime
 from .startup_reconciliation import IBKRStartupReconciliationGate
@@ -127,6 +128,7 @@ def build_ibkr_startup_reconciliation_runtime(
     account_id: AccountId,
     instruments: IBKRInstrumentResolver,
     restrictions: IBKRAccountRestrictionsProvider,
+    coverage: IBKRReadSideCoverageEvidence,
     session_factory: sessionmaker[Session],
     clock: ClockPort,
 ) -> IBKRStartupReconciliationRuntime:
@@ -145,6 +147,7 @@ def build_ibkr_startup_reconciliation_runtime(
         instruments=instruments,
         identities=identities,
         restrictions=restrictions,
+        coverage=coverage,
         clock=clock,
     )
     registry = ConsistencyRegistry()
