@@ -407,15 +407,6 @@ def main() -> int:
             "exec_id_present": market_exec_id_present,
             "initial_result": market_result.status.value,
         }
-        query_report = execution.query_order(market_order)
-        proofs["ORDER_QUERY"] = {
-            "query_observed": query_report is not None,
-            "perm_id_present": (
-                query_report is not None
-                and bool(query_report.external_order_id)
-            ),
-            "status_observed": query_report is not None,
-        }
         proofs["CLIENT_ORDER_REFERENCE"] = {
             "order_ref_present": bool(market_ref),
             "round_trip_match": (
@@ -457,6 +448,20 @@ def main() -> int:
         market_rule_evidence = execution.last_market_rule_evidence
         limit_status_before_cancel = _trade_status(limit_trade)
         limit_submitted = limit_status_before_cancel != "Filled"
+
+        query_report = (
+            execution.query_order(limit_order)
+            if limit_submitted
+            else None
+        )
+        proofs["ORDER_QUERY"] = {
+            "query_observed": query_report is not None,
+            "perm_id_present": (
+                query_report is not None
+                and bool(query_report.external_order_id)
+            ),
+            "status_observed": query_report is not None,
+        }
 
         cancel_requested = False
         terminal_cancelled = False
@@ -686,18 +691,26 @@ def _restore_probe_baseline(
     clock: SystemClock,
     timeout_seconds: float,
 ) -> bool:
-    current_quantity = _position_quantity(
-        provider=provider,
-        profile=profile,
-        contract_id=contract_id,
-    )
     observed_probe_quantity = _observed_probe_buy_quantity(
         provider,
         prefix=prefix,
     )
     if observed_probe_quantity <= 0:
+        current_quantity = _position_quantity(
+            provider=provider,
+            profile=profile,
+            contract_id=contract_id,
+        )
         return current_quantity == baseline_quantity
 
+    expected_probe_quantity = baseline_quantity + observed_probe_quantity
+    current_quantity = _wait_position_quantity(
+        provider=provider,
+        profile=profile,
+        contract_id=contract_id,
+        expected=expected_probe_quantity,
+        timeout_seconds=timeout_seconds,
+    )
     observed_position_delta = current_quantity - baseline_quantity
     if observed_position_delta != observed_probe_quantity:
         return False

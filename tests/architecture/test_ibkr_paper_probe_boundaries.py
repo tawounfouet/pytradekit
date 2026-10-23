@@ -23,10 +23,14 @@ def test_controlled_probe_uses_canonical_execution_adapter() -> None:
     assert "build_ibkr_execution_adapter" in source
     assert "execution.submit(" in source
     assert "execution.cancel(" in source
+    assert "execution.query_order(limit_order)" in source
+    assert "execution.query_order(market_order)" not in source
     assert ".placeOrder(" not in source
     assert ".cancelOrder(" not in source
     assert "_restore_probe_baseline" in source
     assert "_observed_probe_buy_quantity" in source
+    assert "expected_probe_quantity = baseline_quantity + observed_probe_quantity" in source
+    assert "_wait_position_quantity(" in source
     assert "if (\n            args.with_orders\n            and not cleanup_attempted" in source
 
 
