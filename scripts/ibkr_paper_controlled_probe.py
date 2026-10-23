@@ -19,6 +19,7 @@ from pytradekit.brokers.adapters.ibkr import (
     IBKR_ASYNC_VERSION_TARGET,
     IBKRContractId,
     IBKREconomicWriteAdmission,
+    IBKRExecutionAdapter,
     IBKRExecutionInstrumentBinding,
     IBKROperationalRuntime,
     IBKRPaperRuntimeProfile,
@@ -293,6 +294,10 @@ def main() -> int:
     cleanup_passed = False
     provider: _ProviderLike | None = None
     operations: IBKROperationalRuntime | None = None
+    execution: IBKRExecutionAdapter | None = None
+    binding: IBKRExecutionInstrumentBinding | None = None
+    baseline_quantity: Decimal | None = None
+    cleanup_attempted = False
 
     try:
         startup = connection.start()
@@ -491,34 +496,22 @@ def main() -> int:
             "terminal_cancelled": terminal_cancelled,
         }
 
-        cleanup_ref = f"{prefix}-cleanup"
-        cleanup_order = _market_order(
-            instrument_id=binding.mapping.instrument.id,
-            quantity=quantity,
-            side=OrderSide.SELL,
-            reference=cleanup_ref,
-            occurred_at=clock.now(),
-        )
-        execution.submit(cleanup_order)
-        cleanup_trade = _wait_trade(
-            provider,
-            order_ref=cleanup_ref,
-            terminal_statuses={"Filled"},
-            timeout_seconds=timeout_seconds,
-        )
-        cleanup_passed = _trade_status(cleanup_trade) == "Filled"
-        final_quantity = _wait_position_quantity(
+        cleanup_attempted = True
+        gates["real_paper_cleanup"] = "FAIL"
+        cleanup_passed = _restore_probe_baseline(
             provider=provider,
             profile=profile,
             contract_id=contract_id,
-            expected=baseline_quantity,
+            execution=execution,
+            binding=binding,
+            baseline_quantity=baseline_quantity,
+            prefix=prefix,
+            clock=clock,
             timeout_seconds=timeout_seconds,
         )
-        baseline_restored = final_quantity == baseline_quantity
-        cleanup_passed = cleanup_passed and baseline_restored
         proofs["POSITION_QUERY"] = {
             "baseline_observed": True,
-            "baseline_restored": baseline_restored,
+            "baseline_restored": cleanup_passed,
         }
         gates["real_paper_cleanup"] = (
             "PASS" if cleanup_passed else "FAIL"
@@ -603,6 +596,40 @@ def main() -> int:
             file=sys.stderr,
         )
     finally:
+        if (
+            args.with_orders
+            and not cleanup_attempted
+            and provider is not None
+            and execution is not None
+            and binding is not None
+            and baseline_quantity is not None
+        ):
+            cleanup_attempted = True
+            gates["real_paper_cleanup"] = "FAIL"
+            try:
+                cleanup_passed = _restore_probe_baseline(
+                    provider=provider,
+                    profile=profile,
+                    contract_id=contract_id,
+                    execution=execution,
+                    binding=binding,
+                    baseline_quantity=baseline_quantity,
+                    prefix=prefix,
+                    clock=clock,
+                    timeout_seconds=timeout_seconds,
+                )
+            except Exception:
+                cleanup_passed = False
+            proofs["POSITION_QUERY"] = {
+                "baseline_observed": True,
+                "baseline_restored": cleanup_passed,
+            }
+            gates["real_paper_cleanup"] = (
+                "PASS" if cleanup_passed else "FAIL"
+            )
+        elif args.with_orders and not cleanup_passed:
+            gates["real_paper_cleanup"] = "FAIL"
+
         if operations is not None:
             operations.stop()
         if provider is not None:
@@ -645,6 +672,93 @@ def main() -> int:
     )
     print(f"Wrote sanitized IBKR PAPER probe to {args.output}")
     return 0 if controlled_probe_passed else 1
+
+
+def _restore_probe_baseline(
+    *,
+    provider: _ProviderLike,
+    profile: IBKRPaperRuntimeProfile,
+    contract_id: IBKRContractId,
+    execution: IBKRExecutionAdapter,
+    binding: IBKRExecutionInstrumentBinding,
+    baseline_quantity: Decimal,
+    prefix: str,
+    clock: SystemClock,
+    timeout_seconds: float,
+) -> bool:
+    current_quantity = _position_quantity(
+        provider=provider,
+        profile=profile,
+        contract_id=contract_id,
+    )
+    if current_quantity == baseline_quantity:
+        return True
+
+    observed_probe_quantity = _observed_probe_buy_quantity(
+        provider,
+        prefix=prefix,
+    )
+    if observed_probe_quantity <= 0:
+        return False
+
+    cleanup_ref = f"{prefix}-cleanup"
+    cleanup_order = _market_order(
+        instrument_id=binding.mapping.instrument.id,
+        quantity=Quantity(observed_probe_quantity),
+        side=OrderSide.SELL,
+        reference=cleanup_ref,
+        occurred_at=clock.now(),
+    )
+    cleanup_result = execution.submit(cleanup_order)
+    if cleanup_result.status not in {
+        SubmissionStatus.ACKNOWLEDGED,
+        SubmissionStatus.UNCERTAIN,
+    }:
+        return False
+
+    cleanup_trade = _wait_trade(
+        provider,
+        order_ref=cleanup_ref,
+        terminal_statuses={"Filled"},
+        timeout_seconds=timeout_seconds,
+    )
+    if _trade_status(cleanup_trade) != "Filled":
+        return False
+
+    final_quantity = _wait_position_quantity(
+        provider=provider,
+        profile=profile,
+        contract_id=contract_id,
+        expected=baseline_quantity,
+        timeout_seconds=timeout_seconds,
+    )
+    return final_quantity == baseline_quantity
+
+
+def _observed_probe_buy_quantity(
+    provider: _ProviderLike,
+    *,
+    prefix: str,
+) -> Decimal:
+    total = Decimal("0")
+    for raw in provider.fills():
+        if not hasattr(raw, "execution"):
+            continue
+        fill = cast(_FillLike, raw)
+        order_ref = fill.execution.orderRef
+        if (
+            not isinstance(order_ref, str)
+            or not order_ref.startswith(prefix)
+            or order_ref.endswith("-cleanup")
+        ):
+            continue
+        try:
+            shares = Decimal(str(fill.execution.shares))
+        except InvalidOperation:
+            continue
+        if shares > 0:
+            total += shares
+    return total
 
 
 def _resolve_execution_binding(
