@@ -496,26 +496,9 @@ class IBAsyncPaperTransport:
         return client
 
     def read_client(self) -> object:
-        client = self._client
-        if client is None or not self.is_connected():
-            raise ProviderUnavailableError(
-                "IBKR read client is unavailable before synchronized connection.",
-                provider=IBKR_PROVIDER_KEY,
-                operation="read_client",
-            )
-        return client
+        """Return the connected provider-local read client."""
 
-    def accountValues(self, account: str = "") -> list[object]:
-        return cast(_IBAsyncClient, self.read_client()).accountValues(account)
-
-    def portfolio(self, account: str = "") -> list[object]:
-        return cast(_IBAsyncClient, self.read_client()).portfolio(account)
-
-    def trades(self) -> list[object]:
-        return cast(_IBAsyncClient, self.read_client()).trades()
-
-    def fills(self) -> list[object]:
-        return cast(_IBAsyncClient, self.read_client()).fills()
+        return self._require_connected_client()
 
     def _resolve_factory(self) -> tuple[IBAsyncClientFactory, str]:
         if self._client_factory is not None:
