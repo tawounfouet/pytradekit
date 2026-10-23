@@ -8,6 +8,7 @@ from pytradekit.brokers.adapters.ibkr import (
     IBKRBrokerSnapshotPort,
     IBKRContractId,
     IBKRInstrumentMappingResult,
+    IBKRReadSideCoverageEvidence,
     IBKRStartupReconciliationGate,
 )
 from pytradekit.orders.domain import OrderId
@@ -114,6 +115,16 @@ class _Restrictions:
         )
 
 
+def _coverage() -> IBKRReadSideCoverageEvidence:
+    return IBKRReadSideCoverageEvidence(
+        orders_complete=True,
+        fills_complete=True,
+        positions_complete=True,
+        account_complete=True,
+        evidence_source="deterministic-lot06.2-fixture",
+    )
+
+
 def _completed_outcome(account_id: AccountId) -> ReconciliationOutcome:
     run = ReconciliationRun.create(
         account_id=account_id,
@@ -160,6 +171,7 @@ def test_lot06_2_complete_read_side_can_reconcile_without_write_admission() -> N
         instruments=_NoInstrumentLookup(),
         identities=_NoOrderLookup(),
         restrictions=_Restrictions(),
+        coverage=_coverage(),
         clock=_Clock(),
     )
     snapshot = broker.capture(
