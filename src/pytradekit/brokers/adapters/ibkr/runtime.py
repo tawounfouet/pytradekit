@@ -113,6 +113,20 @@ class _IBAsyncClient(Protocol):
 IBAsyncClientFactory = Callable[[], _IBAsyncClient]
 
 
+class _IBAsyncReadClient(Protocol):
+    def accountValues(self, account: str = "") -> list[object]:
+        ...
+
+    def portfolio(self, account: str = "") -> list[object]:
+        ...
+
+    def trades(self) -> list[object]:
+        ...
+
+    def fills(self) -> list[object]:
+        ...
+
+
 def _required_text(value: object, *, field_name: str) -> str:
     if not isinstance(value, str):
         raise IBKRRuntimeConfigurationError(f"{field_name} must be a string.")
@@ -426,6 +440,40 @@ class IBAsyncPaperTransport:
             return bool(self._client.isConnected())
         except Exception:
             return False
+
+    def accountValues(self, account: str = "") -> list[object]:
+        """Return synchronized account values from the connected session."""
+
+        client = cast(_IBAsyncReadClient, self._require_connected_client())
+        return list(client.accountValues(account))
+
+    def portfolio(self, account: str = "") -> list[object]:
+        """Return synchronized portfolio items from the connected session."""
+
+        client = cast(_IBAsyncReadClient, self._require_connected_client())
+        return list(client.portfolio(account))
+
+    def trades(self) -> list[object]:
+        """Return synchronized open and completed trades from the session."""
+
+        client = cast(_IBAsyncReadClient, self._require_connected_client())
+        return list(client.trades())
+
+    def fills(self) -> list[object]:
+        """Return synchronized fills from the connected session."""
+
+        client = cast(_IBAsyncReadClient, self._require_connected_client())
+        return list(client.fills())
+
+    def _require_connected_client(self) -> _IBAsyncClient:
+        client = self._client
+        if client is None or not self.is_connected():
+            raise ProviderUnavailableError(
+                "IBKR PAPER read-side requires an active connection.",
+                provider=IBKR_PROVIDER_KEY,
+                operation="read_side",
+            )
+        return client
 
     def read_client(self) -> object:
         client = self._client
