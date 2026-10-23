@@ -181,6 +181,22 @@ def test_1101_requires_reconciliation_and_market_data_resubscription() -> None:
     assert decision.market_data_resubscription_required
 
 
+def test_1102_allows_resume_after_explicit_reconciliation() -> None:
+    decision = evaluate_ibkr_readiness(
+        _ready(
+            last_connectivity_code=1102,
+            reconciliation_complete=True,
+            market_data_resubscribed=True,
+        )
+    )
+
+    assert decision.ready_for_reads
+    assert decision.ready_for_market_data
+    assert decision.ready_for_economic_writes
+    assert not decision.reconciliation_required
+    assert not decision.market_data_resubscription_required
+
+
 def test_market_data_farm_disconnect_does_not_block_account_reads() -> None:
     decision = evaluate_ibkr_readiness(_ready(last_connectivity_code=2103))
 
