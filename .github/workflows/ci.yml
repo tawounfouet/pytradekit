@@ -227,6 +227,17 @@ jobs:
           python scripts/qualify_ibkr_0_8_read_side_reconciliation.py \
             --output artifacts/qualification/brokers/ibkr/read-side-reconciliation.json
 
+      - name: 0.8 LOT-06.3 IBKR contract reference resolution
+        run: |
+          pytest \
+            tests/unit/brokers/adapters/ibkr/test_ibkr_contract_resolution.py \
+            tests/contracts/brokers/ibkr/test_ibkr_contract_resolution_public_contract.py \
+            tests/architecture/test_ibkr_contract_resolution_boundaries.py \
+            tests/qualification/brokers/ibkr/test_ibkr_contract_resolution_runtime.py
+          mkdir -p artifacts/qualification/brokers/ibkr
+          python scripts/qualify_ibkr_0_8_contract_resolution.py \
+            --output artifacts/qualification/brokers/ibkr/contract-reference-resolution.json
+
       - name: Unit, property, and integration tests
         run: pytest --cov=pytradekit --cov-report=term-missing
 
