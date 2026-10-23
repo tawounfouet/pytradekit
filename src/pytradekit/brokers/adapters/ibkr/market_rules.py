@@ -443,10 +443,7 @@ def _provider_decimal(
             provider=IBKR_PROVIDER_KEY,
             operation="reqMarketRule",
         )
-    if allow_zero:
-        valid = decimal_value >= 0
-    else:
-        valid = decimal_value > 0
+    valid = decimal_value >= 0 if allow_zero else decimal_value > 0
     if not valid:
         raise ProviderProtocolError(
             f"IBKR {field_name} is outside the qualified numeric range.",
