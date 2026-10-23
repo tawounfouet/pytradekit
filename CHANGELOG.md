@@ -6,6 +6,37 @@ The project is currently pre-1.0 and public APIs remain experimental unless expl
 
 ## [Unreleased]
 
+## [0.8.0a3] - 2026-10-23
+
+### Added
+
+- LOT-03 Alpaca Compliance Certification.
+- Alpaca ProviderCapabilityManifest mapping for the frozen PAPER adapter.
+- Capability-specific Alpaca C2/C3 requirements and scenarios.
+- Normalized retained real PAPER evidence with GitHub Actions provenance and SHA-256 linkage.
+- AlpacaComplianceScenarioExecutor and retained-evidence fixture.
+- Alpaca CertifiedCapability generation through the common ComplianceHarness.
+- Capability matrix with C3 for real PAPER-proven capabilities and C2 for PARTIAL_FILL.
+- Dedicated Alpaca 0.8 qualification report and runbook.
+- Manual v0.8.0a3 real PAPER requalification workflow.
+- Dedicated LOT-03 CI qualification gate.
+
+### Qualification
+
+- Real Alpaca PAPER evidence comes from workflow run 39789766678 and artifact 12430172671.
+- MARKET, LIMIT, CANCEL, queries, client reference, execution facts, recovery, account, balance, position and IEX quote evidence are replayed through the common compliance harness.
+- PARTIAL_FILL remains C2 because the retained real provider artifact contains no genuine partial_fill event.
+- Adapter version changes invalidate retained certification.
+- No fake PAPER evidence is promoted to C3.
+- LIVE remains unavailable.
+
+### Compatibility
+
+- BrokerAdapterContract remains candidate version 1.0-rc1.
+- The frozen Alpaca adapter remains behavior-compatible with the qualified 0.5 scope.
+- IBKR discovery and contract freeze remain deferred to LOT-04.
+- Public APIs remain pre-1.0 and experimental unless explicitly documented otherwise.
+
 ## [0.8.0a2] - 2026-10-23
 
 ### Added

@@ -1,0 +1,98 @@
+{
+  "schema_version": "1",
+  "provider": "alpaca",
+  "environment": "PAPER",
+  "provenance": {
+    "source_release": "v0.5.0",
+    "qualified_commit": "a7768911b56bb25a7efd24aae12f3cb032a5c9ef",
+    "release_commit": "7e844a0c3bfa564638530c43fe59df31d9d9bd1b",
+    "deterministic_ci_run_id": 39789341350,
+    "workflow_run_id": 39789766678,
+    "artifact_id": 12430172671,
+    "artifact_name": "pytradekit-v050-paper-qualification",
+    "artifact_zip_sha256": "587c0238c5b4d36d9cbd63603dd48f8367c0cf0defc64a6a7936acd95a925b3f",
+    "artifact_json_sha256": "f4b271d0bf3148a8b400bdee6c10525d07b1ee5b033dc08f981a70c136ca1ab1"
+  },
+  "captured_at": "2026-10-22T13:47:02.769613+00:00",
+  "sdk": {
+    "name": "alpaca-py",
+    "version": "0.44.0"
+  },
+  "release_ready": true,
+  "controlled_probe_passed": true,
+  "gates": {
+    "ci_quality_gate": "PASS",
+    "postgres_restart_e2e": "PASS",
+    "crash_window_faults": "PASS",
+    "graceful_shutdown": "PASS",
+    "provider_429_5xx_semantics": "PASS",
+    "real_paper_runtime_start_restart": "PASS",
+    "real_paper_market_limit_cancel": "PASS",
+    "real_paper_trade_updates": "PASS",
+    "real_paper_uncertain_recovery": "PASS",
+    "real_paper_cleanup": "PASS",
+    "incident_runbook": "PASS"
+  },
+  "proofs": {
+    "ACCOUNT_QUERY": {
+      "status": "ACTIVE",
+      "account_blocked": false,
+      "trading_blocked": false
+    },
+    "ORDER_QUERY": {
+      "recovery_queries": 1,
+      "recovered_order_id_present": true,
+      "recovered_status": "filled"
+    },
+    "MARKET_ORDER": {
+      "type": "market",
+      "status": "filled",
+      "filled_quantity_positive": true,
+      "submit_attempts": 1
+    },
+    "LIMIT_ORDER": {
+      "type": "limit",
+      "status": "canceled",
+      "limit_price_present": true,
+      "submit_attempts": 1
+    },
+    "CANCEL_ORDER": {
+      "requested": true,
+      "transport_result": "request_returned",
+      "final_status": "canceled",
+      "cancel_attempts": 1
+    },
+    "POSITION_QUERY": {
+      "baseline_position_qty": "0",
+      "final_position_qty": "0",
+      "baseline_restored": true
+    },
+    "BALANCE_QUERY": {
+      "cash_present": true,
+      "currency": "USD"
+    },
+    "CLIENT_ORDER_REFERENCE": {
+      "client_order_id_present": true,
+      "recovery_queries": 1,
+      "resubmitted": false,
+      "submit_attempts": 1
+    },
+    "EXECUTION_FACTS": {
+      "event_count": 9,
+      "fill_event_count": 2,
+      "fill_execution_ids_present": true
+    },
+    "RECONNECT_RECOVERY": {
+      "runtime_cycles": 2,
+      "all_trading_ready": true,
+      "all_shutdown_drained": true,
+      "all_readiness_checks_passed": true
+    },
+    "LATEST_QUOTE": {
+      "feed": "iex",
+      "bid_present": true,
+      "ask_present": true,
+      "market_open": true
+    }
+  }
+}

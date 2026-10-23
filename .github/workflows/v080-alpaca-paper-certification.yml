@@ -1,0 +1,104 @@
+name: v0.8.0a3 Alpaca PAPER Certification
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  real-paper:
+    name: Real Alpaca PAPER compliance gate
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: pytradekit
+          POSTGRES_USER: pytradekit
+          POSTGRES_PASSWORD: pytradekit
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U pytradekit -d pytradekit"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      PYTRADEKIT_RUNTIME_ENVIRONMENT: PAPER
+      PYTRADEKIT_ALPACA_EXPECTED_ACCOUNT_ID: ${{ secrets.PYTRADEKIT_ALPACA_EXPECTED_ACCOUNT_ID }}
+      PYTRADEKIT_ALPACA_PAPER_API_KEY: ${{ secrets.PYTRADEKIT_ALPACA_PAPER_API_KEY }}
+      PYTRADEKIT_ALPACA_PAPER_SECRET_KEY: ${{ secrets.PYTRADEKIT_ALPACA_PAPER_SECRET_KEY }}
+      PYTRADEKIT_DATABASE_URL: postgresql+psycopg://pytradekit:pytradekit@localhost:5432/pytradekit
+      PYTRADEKIT_QUALIFICATION_ACCOUNT_ID: 00000000-0000-4000-8000-000000000801
+      PYTRADEKIT_QUALIFICATION_INSTRUMENT_ID: 00000000-0000-4000-8000-000000000802
+      PYTRADEKIT_ALPACA_ORDER_PROBE_SYMBOL: AAPL
+      PYTRADEKIT_ALPACA_DATA_FEED: iex
+      PYTRADEKIT_ALPACA_ORDER_PROBE_ACK: I_UNDERSTAND_PAPER_ORDERS_WILL_BE_CREATED
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify PAPER secrets are configured
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing=0
+          for name in \
+            PYTRADEKIT_ALPACA_EXPECTED_ACCOUNT_ID \
+            PYTRADEKIT_ALPACA_PAPER_API_KEY \
+            PYTRADEKIT_ALPACA_PAPER_SECRET_KEY
+          do
+            if [ -z "${!name:-}" ]; then
+              echo "::error::${name} is not configured"
+              missing=1
+            else
+              echo "${name}=PRESENT"
+            fi
+          done
+          exit "${missing}"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install qualification dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev,postgres,alpaca]"
+
+      - name: Apply PostgreSQL migrations
+        run: alembic upgrade head
+
+      - name: Run current real Alpaca PAPER probe
+        run: |
+          mkdir -p artifacts/qualification/brokers/alpaca
+          python scripts/alpaca_paper_v050_qualification.py \
+            --with-orders \
+            --ci-qualified \
+            --runbook-reviewed \
+            --output artifacts/qualification/brokers/alpaca/source-paper.json
+
+      - name: Generate 0.8 Alpaca CertifiedCapability evidence
+        run: |
+          python scripts/qualify_alpaca_0_8.py \
+            --v050-report artifacts/qualification/brokers/alpaca/source-paper.json \
+            --qualified-commit "${GITHUB_SHA}" \
+            --source-release "v0.8.0a3" \
+            --workflow-run-id "${GITHUB_RUN_ID}" \
+            --artifact-name "pytradekit-v080-alpaca-paper-certification" \
+            --normalized-output artifacts/qualification/brokers/alpaca/normalized-evidence.json \
+            --output artifacts/qualification/brokers/alpaca/compliance-run.json
+
+      - name: Upload sanitized 0.8 qualification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytradekit-v080-alpaca-paper-certification
+          path: artifacts/qualification/brokers/alpaca
+          if-no-files-found: warn

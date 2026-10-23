@@ -4,13 +4,13 @@ PyTradeKit is a domain-first, broker-agnostic trading framework designed around 
 
 ## Current milestone
 
-PyTradeKit 0.8.0a2 - Compliance Test Kit & Evidence Model
+PyTradeKit 0.8.0a3 - Alpaca Compliance Certification
 
 PyTradeKit 0.8 continues the Broker Compliance, Certification & IBKR milestone on top of the qualified 0.7 security and operations baseline.
 
-LOT-02 makes broker qualification executable through common requirements, scenarios, explicit PASS/FAIL/BLOCKED results, sanitized retained evidence, capability certification, a generated registry and stale-evidence invalidation.
+LOT-03 maps the frozen Alpaca PAPER adapter into the common compliance model and produces capability-specific CertifiedCapability records from retained deterministic and real PAPER evidence.
 
-The same ComplianceHarness is provider-neutral and ready to be connected to Alpaca in LOT-03 and IBKR later in 0.8. The existing Alpaca integration remains PAPER-only. LIVE trading remains unavailable by design.
+Alpaca now provides the first concrete provider certification under the 0.8 BrokerAdapterContract candidate. PARTIAL_FILL remains C2 because the retained real PAPER evidence did not trigger a genuine partial fill. LIVE trading remains unavailable by design.
 
 ## Requirements
 
@@ -48,7 +48,7 @@ pytradekit --version
 Current release version:
 
 ~~~text
-0.8.0a2
+0.8.0a3
 ~~~
 
 ## Milestone flow
@@ -314,8 +314,11 @@ package import graph remains acyclic
 - 0.6.0 Qualified Release notes: docs/releases/0.6.0.md
 - Broker compliance architecture: docs/architecture/broker-compliance.md
 - Broker certification guide: docs/guides/broker-certification.md
+- Alpaca 0.8 compliance qualification: docs/qualification/alpaca-compliance-certification.md
+- Alpaca 0.8 certification runbook: docs/runbooks/PYTRADEKIT_0_8_ALPACA_CERTIFICATION.md
 - 0.8.0a1 release notes: docs/releases/0.8.0a1.md
 - 0.8.0a2 release notes: docs/releases/0.8.0a2.md
+- 0.8.0a3 release notes: docs/releases/0.8.0a3.md
 - ADRs: docs/adr/
 
 ## Quality commands

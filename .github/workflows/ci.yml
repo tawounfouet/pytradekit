@@ -102,6 +102,19 @@ jobs:
             tests/architecture/test_broker_compliance_evidence.py \
             tests/qualification/broker_compliance
 
+      - name: 0.8 LOT-03 Alpaca compliance certification
+        run: |
+          pytest \
+            tests/unit/brokers/adapters/alpaca/test_compliance.py \
+            tests/unit/brokers/adapters/alpaca/test_compliance_evidence.py \
+            tests/contracts/brokers/alpaca/test_alpaca_compliance_public_contract.py \
+            tests/architecture/test_alpaca_compliance_certification.py \
+            tests/qualification/brokers/alpaca
+          mkdir -p artifacts/qualification/brokers/alpaca
+          python scripts/qualify_alpaca_0_8.py \
+            --evidence-record docs/qualification/evidence/alpaca/v050-paper-20261022.json \
+            --output artifacts/qualification/brokers/alpaca/compliance-run.json
+
       - name: Unit, property, and integration tests
         run: pytest --cov=pytradekit --cov-report=term-missing
 

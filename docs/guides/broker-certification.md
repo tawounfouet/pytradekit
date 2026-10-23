@@ -170,3 +170,39 @@ A C3 capability does not imply that the provider is currently healthy or that a 
 0.8.0a2 provides the common test kit and evidence model.
 
 LOT-03 will connect the existing Alpaca PAPER integration to this harness and produce provider-specific CertifiedCapability evidence.
+
+
+## Alpaca LOT-03 example
+
+PyTradeKit 0.8.0a3 applies this model to the frozen Alpaca PAPER adapter.
+
+The source evidence is not a fake fixture. It is normalized from the retained real PAPER release qualification that produced the PyTradeKit 0.5 provider proof.
+
+The common harness produces capability-specific records rather than a global provider badge.
+
+Current Alpaca result:
+
+~~~text
+C3:
+ACCOUNT_QUERY
+ORDER_QUERY
+MARKET_ORDER
+LIMIT_ORDER
+CANCEL_ORDER
+POSITION_QUERY
+BALANCE_QUERY
+CLIENT_ORDER_REFERENCE
+EXECUTION_FACTS
+RECONNECT_RECOVERY
+LATEST_QUOTE
+
+C2:
+PARTIAL_FILL
+
+unsupported:
+REPLACE_ORDER
+~~~
+
+PARTIAL_FILL remains C2 until a real provider partial_fill event is retained.
+
+Use the manual 0.8 Alpaca PAPER workflow when fresh provider evidence is required.
