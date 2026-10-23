@@ -36,39 +36,72 @@ PYTRADEKIT_IBKR_ORDER_PROBE_ACK=
 I_UNDERSTAND_IBKR_PAPER_ORDERS_WILL_BE_CREATED
 ~~~
 
-## 3. Manual controlled probe
+## 3. Local diagnostic probe
 
-Choose an explicit safe LIMIT price for the selected US equity.
+Choose an explicit safe LIMIT price for the selected US equity and configure:
+
+~~~text
+PYTRADEKIT_IBKR_ORDER_PROBE_SYMBOL=AAPL
+PYTRADEKIT_IBKR_ORDER_PROBE_CONID=265598
+PYTRADEKIT_IBKR_LIMIT_PRICE=<explicit-paper-limit-price>
+PYTRADEKIT_IBKR_ORDER_PROBE_QUANTITY=1
+PYTRADEKIT_IBKR_ORDER_PROBE_TIMEOUT_SECONDS=90
+~~~
+
+Then run:
 
 ~~~bash
 python scripts/ibkr_paper_controlled_probe.py \
-  --commit-sha <candidate-sha> \
-  --contract-id 265598 \
-  --symbol AAPL \
-  --limit-price <explicit-paper-limit-price> \
   --with-orders \
-  --ci-qualified \
-  --output artifacts/qualification/brokers/ibkr/real-paper-evidence.json
+  --runbook-reviewed \
+  --output artifacts/qualification/brokers/ibkr/real-paper-probe.json
 ~~~
 
-Do not rerun blindly after a failure involving placeOrder.
+This local run is diagnostic only. Do not pass `--ci-qualified` locally and do not treat the raw probe report as retained C3 evidence.
 
-Inspect the PAPER account and retained orderRef values first.
+Do not rerun blindly after a failure involving an economic write. Inspect the PAPER account and retained orderRef values first.
 
-## 4. Certification replay
+## 4. Official C3 capture
+
+Use the manual GitHub Actions workflow `IBKR Real PAPER Certification` only on a self-hosted runner labelled `ibkr-paper` with IB Gateway already running.
+
+The workflow requires:
+
+~~~text
+a successful deterministic CI run ID for the exact candidate commit
+explicit PAPER order acknowledgement
+contract ID
+symbol
+safe LIMIT price
+controlled quantity
+dedicated non-zero client ID
+~~~
+
+The workflow verifies the CI run through the GitHub Actions API before any provider qualification step.
+
+It then executes:
+
+~~~text
+canonical IBKRExecutionAdapter probe
+-> real-paper-probe.json
+-> Actions-only normalize_ibkr_paper_evidence.py
+-> SHA-256 verified real-paper-evidence.json
+-> ComplianceHarness replay
+-> real-paper-certification.json
+~~~
+
+The normalizer refuses to run outside the expected GitHub Actions workflow and validates GITHUB_SHA plus GITHUB_RUN_ID.
+
+## 5. Certification replay
+
+The workflow performs certification replay automatically:
 
 ~~~bash
 python scripts/qualify_ibkr_0_8_compliance.py \
-  --commit-sha <candidate-sha> \
+  --commit-sha "$GITHUB_SHA" \
   --paper-evidence artifacts/qualification/brokers/ibkr/real-paper-evidence.json \
   --output artifacts/qualification/brokers/ibkr/real-paper-certification.json
 ~~~
-
-## 5. GitHub workflow
-
-Use the manual workflow `IBKR Real PAPER Certification` only on a self-hosted runner labelled `ibkr-paper` with IB Gateway already running.
-
-The workflow requires the acknowledgement text as an explicit input.
 
 ## 6. Failure handling
 
@@ -103,7 +136,7 @@ real-paper-evidence.json
 real-paper-certification.json
 ~~~
 
-Record the workflow run ID and artifact ID before freezing evidence into repository qualification records.
+Retain the PAPER workflow run ID, deterministic CI run ID and canonical bundle SHA-256. Record the uploaded artifact ID when freezing evidence into repository qualification records.
 
 ## 8. Release rule
 
