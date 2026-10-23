@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Protocol, cast
 from uuid import uuid4
 
+from pytradekit.brokers.compliance import BrokerCapability
 from pytradekit.brokers.adapters.ibkr import (
     IBKRMarketRuleClient,
     IBKRMarketRuleResolver,
@@ -589,7 +590,7 @@ def _resolve_contract(
         )
     raw_contract, normalized = exact[0]
     mapping = map_ibkr_stock_contract(
-        cast(object, normalized),
+        normalized,
         instrument_id=InstrumentId.new(),
     )
     return raw_contract, mapping
@@ -857,9 +858,7 @@ def _fill_rows(trade: object) -> list[dict[str, object]]:
 def _c3_capabilities(
     gates: dict[str, str],
     proofs: dict[str, dict[str, object]],
-) -> tuple[object, ...]:
-    from pytradekit.brokers.compliance import BrokerCapability
-
+) -> tuple[BrokerCapability, ...]:
     candidates: list[BrokerCapability] = []
     for capability in (
         BrokerCapability.ORDER_QUERY,
