@@ -156,3 +156,6 @@ The normalized bundle must contain the retained provider artifact ID, PAPER work
 Do not label IBKR TRADING_READY merely because some capabilities reached C3.
 
 Readiness requires the exact release policy and required capability set to be satisfied.
+
+
+Do not blindly retry the workflow after a failed cleanup attempt. Verify that the PAPER position has returned to the pre-run baseline. The probe waits for the provider portfolio to reflect its observed fills before issuing cleanup, and it refuses cleanup if the position delta does not exactly match those fills.
