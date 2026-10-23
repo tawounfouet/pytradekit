@@ -347,7 +347,7 @@ def test_unsafe_reconciliation_keeps_writes_closed() -> None:
         clock=_Clock(),
     )
     reconciliation = _Reconciliation(
-        status=ConsistencyStatus.DIVERGED,
+        status=ConsistencyStatus.INCONSISTENT,
         confidence=StateConfidence.LOW,
     )
     recovery = IBKRReconnectRecoveryRuntime(
