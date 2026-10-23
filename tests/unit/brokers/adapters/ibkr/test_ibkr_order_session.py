@@ -21,6 +21,8 @@ from pytradekit.brokers.adapters.ibkr import (
     IBKRCorrelatedOrderStatus,
     IBKROrderCorrelationRegistry,
     IBKROrderIdentityRegistry,
+    IBKROrderSessionError,
+    IBKROrderSessionReservation,
     IBKROrderReference,
     IBKROrderSessionRuntime,
     IBKRPaperConnectionRuntime,
@@ -424,10 +426,7 @@ def test_order_correlation_registry_rejects_reference_rebind() -> None:
     first = _context(reference="same-ref")
     second = _context(reference="same-ref")
     one = correlations.register(
-        reservation=__import__(
-            "pytradekit.brokers.adapters.ibkr",
-            fromlist=["IBKROrderSessionReservation"],
-        ).IBKROrderSessionReservation(
+        reservation=IBKROrderSessionReservation(
             context=first,
             client_id=IBKRClientId(7),
             session_order_id=IBKRSessionOrderId(100),
@@ -437,12 +436,9 @@ def test_order_correlation_registry_rejects_reference_rebind() -> None:
     assert one.context == first
     assert router is not None
 
-    with pytest.raises(Exception, match="orderRef"):
+    with pytest.raises(IBKROrderSessionError, match="orderRef"):
         correlations.register(
-            reservation=__import__(
-                "pytradekit.brokers.adapters.ibkr",
-                fromlist=["IBKROrderSessionReservation"],
-            ).IBKROrderSessionReservation(
+            reservation=IBKROrderSessionReservation(
                 context=second,
                 client_id=IBKRClientId(7),
                 session_order_id=IBKRSessionOrderId(101),
