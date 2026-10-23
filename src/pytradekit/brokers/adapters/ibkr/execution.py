@@ -749,6 +749,20 @@ def _normalize_trade(
 
     provider_order = cast(_ProviderOrderLike, order)
     provider_status = cast(_ProviderOrderStatusLike, status)
+    if (
+        type(provider_order.orderId) is not int
+        or type(provider_order.clientId) is not int
+        or type(provider_order.permId) is not int
+        or not isinstance(provider_order.orderRef, str)
+        or not isinstance(provider_order.account, str)
+        or type(provider_status.orderId) is not int
+        or type(provider_status.clientId) is not int
+        or type(provider_status.permId) is not int
+        or not isinstance(provider_status.status, str)
+    ):
+        return None
+    if provider_order.permId < 0 or provider_status.permId < 0:
+        return None
     if provider_order.clientId != expected_client_id.value:
         return None
     if provider_status.clientId != expected_client_id.value:
