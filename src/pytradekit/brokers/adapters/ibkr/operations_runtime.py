@@ -51,17 +51,39 @@ class _EventLike(Protocol):
 
 
 class _LowLevelOperationalClient(Protocol):
-    MaxRequests: int
-    RequestsInterval: float
-    throttleStart: _EventLike
-    throttleEnd: _EventLike
+    @property
+    def MaxRequests(self) -> int:
+        ...
+
+    @property
+    def RequestsInterval(self) -> float:
+        ...
+
+    @property
+    def throttleStart(self) -> _EventLike:
+        ...
+
+    @property
+    def throttleEnd(self) -> _EventLike:
+        ...
 
 
 class _OperationalClient(Protocol):
-    client: _LowLevelOperationalClient
-    connectedEvent: _EventLike
-    disconnectedEvent: _EventLike
-    errorEvent: _EventLike
+    @property
+    def client(self) -> _LowLevelOperationalClient:
+        ...
+
+    @property
+    def connectedEvent(self) -> _EventLike:
+        ...
+
+    @property
+    def disconnectedEvent(self) -> _EventLike:
+        ...
+
+    @property
+    def errorEvent(self) -> _EventLike:
+        ...
 
 
 class IBKRReconnectReconciliation(Protocol):
