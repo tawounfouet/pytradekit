@@ -9,7 +9,10 @@ from pytradekit.brokers.adapters.ibkr import (
     IBKROrderIdentityResolver,
     IBKRReadSideCaptureStats,
     IBKRReadSideClient,
+    IBKRReadSideCoverageEvidence,
     IBKRReadSideError,
+    StaticIBKRAccountRestrictionsProvider,
+    StaticIBKRInstrumentResolver,
     IBKRStartupReconciliationGate,
     IBKRStartupReconciliationWorkflow,
 )
@@ -26,7 +29,16 @@ def test_ibkr_lot06_2_public_surface_is_exported() -> None:
     assert IBKROrderIdentityResolver.__name__ == "IBKROrderIdentityResolver"
     assert IBKRReadSideCaptureStats.__name__ == "IBKRReadSideCaptureStats"
     assert IBKRReadSideClient.__name__ == "IBKRReadSideClient"
+    assert IBKRReadSideCoverageEvidence.__name__ == (
+        "IBKRReadSideCoverageEvidence"
+    )
     assert issubclass(IBKRReadSideError, ValueError)
+    assert StaticIBKRAccountRestrictionsProvider.__name__ == (
+        "StaticIBKRAccountRestrictionsProvider"
+    )
+    assert StaticIBKRInstrumentResolver.__name__ == (
+        "StaticIBKRInstrumentResolver"
+    )
     assert IBKRStartupReconciliationGate.__name__ == (
         "IBKRStartupReconciliationGate"
     )
