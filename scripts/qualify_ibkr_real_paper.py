@@ -128,7 +128,7 @@ class _ProviderLike(Protocol):
     def reqContractDetails(self, contract: object) -> list[object]:
         ...
 
-    def accountValues(self) -> list[object]:
+    def accountValues(self, account: str = "") -> list[object]:
         ...
 
     def portfolio(self, account: str = "") -> list[object]:
@@ -701,7 +701,9 @@ def _account_proof(
 ) -> dict[str, object]:
     values = [
         cast(_AccountValueLike, item)
-        for item in provider.accountValues()
+        for item in provider.accountValues(
+            profile.expected_account_id
+        )
         if (
             hasattr(item, "account")
             and cast(_AccountValueLike, item).account
