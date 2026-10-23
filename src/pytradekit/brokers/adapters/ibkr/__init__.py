@@ -138,7 +138,10 @@ from .read_side import (
     IBKROrderIdentityResolver,
     IBKRReadSideCaptureStats,
     IBKRReadSideClient,
+    IBKRReadSideCoverageEvidence,
     IBKRReadSideError,
+    StaticIBKRAccountRestrictionsProvider,
+    StaticIBKRInstrumentResolver,
 )
 from .startup_reconciliation import (
     IBKR_STARTUP_RECONCILIATION_VERSION,
@@ -232,6 +235,7 @@ __all__ = [
     "IBKRPriceIncrementMode",
     "IBKRReadSideCaptureStats",
     "IBKRReadSideClient",
+    "IBKRReadSideCoverageEvidence",
     "IBKRReadSideError",
     "IBKRReadinessDecision",
     "IBKRReadinessFact",
@@ -246,6 +250,8 @@ __all__ = [
     "IBKRTransmitPolicy",
     "IBKRTransportConnectionEvidence",
     "IBKRTransportPort",
+    "StaticIBKRAccountRestrictionsProvider",
+    "StaticIBKRInstrumentResolver",
     "assert_ibkr_ready_for_economic_write",
     "build_ibkr_capability_manifest",
     "build_ibkr_contract_freeze",
