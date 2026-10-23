@@ -245,7 +245,10 @@ def test_same_canonical_order_cannot_receive_two_reservations() -> None:
         _context(reference="ptk-first", order_id=order_id)
     )
 
-    with pytest.raises(ProviderProtocolError, match="conflicts"):
+    with pytest.raises(
+        ProviderProtocolError,
+        match="already has an IBKR session reservation",
+    ):
         runtime.reserve(
             _context(reference="ptk-second", order_id=order_id)
         )
