@@ -246,7 +246,7 @@ def test_mapping_rejects_existing_external_order_identity() -> None:
 
 
 def test_mapping_rejects_contract_identity_mismatch() -> None:
-    contract, mapping, instrument_id = _instrument()
+    _contract, mapping, instrument_id = _instrument()
     wrong_contract = IBKRContractRecord(
         contract_id=IBKRContractId(999999),
         symbol="AAPL",
