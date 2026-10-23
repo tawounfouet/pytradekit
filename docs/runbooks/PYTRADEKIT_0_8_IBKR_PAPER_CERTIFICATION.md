@@ -68,6 +68,8 @@ Use the manual GitHub Actions workflow `IBKR Real PAPER Certification` only on a
 
 The runner must expose the GitHub labels `self-hosted`, `macOS` and `ibkr-paper`. TWS PAPER must be reachable from that same Mac at `127.0.0.1:7497`.
 
+Homebrew must be available on the runner. The workflow bootstraps Python 3.12 from the Homebrew `python@3.12` formula into an isolated job virtual environment. It does not use `actions/setup-python`, avoiding the macOS hosted tool cache and interactive sudo requirements.
+
 The workflow requires:
 
 ~~~text

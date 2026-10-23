@@ -45,6 +45,9 @@ def test_real_paper_workflow_verifies_ci_and_normalizes_evidence() -> None:
     assert "PYTRADEKIT_IBKR_SURFACE: TWS" in source
     assert 'PYTRADEKIT_IBKR_PORT: "7497"' in source
     assert 'PYTRADEKIT_IBKR_PORT: "4002"' not in source
+    assert "actions/setup-python@" not in source
+    assert "brew --prefix python@3.12" in source
+    assert "pytradekit-ibkr-paper-venv" in source
     assert "deterministic_ci_run_id" in source
     assert "github.rest.actions.getWorkflowRun" in source
     assert "run.head_sha !== context.sha" in source
