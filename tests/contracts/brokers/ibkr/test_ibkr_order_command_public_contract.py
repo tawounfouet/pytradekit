@@ -19,7 +19,7 @@ def test_ibkr_order_command_surface_is_public() -> None:
     assert IBKROrderType.LIMIT.value == "LMT"
     assert IBKRTimeInForce.DAY.value == "DAY"
     assert IBKRTransmitPolicy.TRANSMIT.value == "TRANSMIT"
-    assert IBKROrderCommand
-    assert IBKRPlacementCommand
+    assert IBKROrderCommand.__name__ == "IBKROrderCommand"
+    assert IBKRPlacementCommand.__name__ == "IBKRPlacementCommand"
     assert issubclass(IBKROrderCommandError, ValueError)
     assert callable(map_ibkr_order_command)
