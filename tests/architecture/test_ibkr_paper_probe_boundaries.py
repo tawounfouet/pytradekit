@@ -52,5 +52,9 @@ def test_evidence_normalizer_derives_c3_from_contract() -> None:
     assert "paper_proof_passes" in source
     assert "canonical_ibkr_evidence_sha256" in source
     assert "deterministic_ci_run_id" in source
+    assert 'GITHUB_ACTIONS' in source
+    assert 'GITHUB_WORKFLOW' in source
+    assert 'GITHUB_SHA' in source
+    assert 'GITHUB_RUN_ID' in source
     assert "fill_mapping_observed" in source
     assert '"fresh_reconciliation": False' in source
