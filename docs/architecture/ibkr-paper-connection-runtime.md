@@ -30,7 +30,7 @@ Domain / OMS / Portfolio / Risk / Reconciliation / Safety
                  ib_async 2.1.0
                          |
                          v
-               IB Gateway PAPER 4002
+               IB Gateway PAPER 4002 or explicit TWS PAPER 7497
 ~~~
 
 No canonical layer imports ib_async.
