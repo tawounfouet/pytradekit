@@ -527,6 +527,8 @@ class IBKRCallbackCorrelationRouter:
         advanced_order_reject_json: str | None,
         observed_at: datetime,
     ) -> IBKRCorrelatedOrderError | None:
+        if type(request_or_order_id) is not int or request_or_order_id < 0:
+            return None
         session_order_id = _session_order_id(request_or_order_id)
         reservation = self._correlations.find_by_routing_key(
             client_id=self._expected_client_id,
