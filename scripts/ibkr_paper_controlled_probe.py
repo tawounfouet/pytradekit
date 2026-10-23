@@ -18,12 +18,10 @@ from pathlib import Path
 from typing import Protocol, cast
 from uuid import uuid4
 
-from pytradekit.brokers.compliance import BrokerCapability
 from pytradekit.brokers.adapters.ibkr import (
     IBKRMarketRuleClient,
     IBKRMarketRuleResolver,
     IBKRPaperEvidenceBundle,
-    IBKRPaperEvidenceProvenance,
     IBKRPaperRuntimeProfile,
     IBKRPriceIncrementMode,
     build_ibkr_paper_connection_runtime,
@@ -31,6 +29,7 @@ from pytradekit.brokers.adapters.ibkr import (
     map_ibkr_stock_contract,
     normalize_ibkr_contract_details,
 )
+from pytradekit.brokers.compliance import BrokerCapability
 from pytradekit.shared import InstrumentId
 
 _ACK_ENV = "PYTRADEKIT_IBKR_ORDER_PROBE_ACK"
