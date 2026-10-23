@@ -193,6 +193,17 @@ jobs:
           python scripts/qualify_ibkr_0_8_accounts.py \
             --output artifacts/qualification/brokers/ibkr/account-position-mapping.json
 
+      - name: 0.8 LOT-05.7 IBKR error taxonomy, readiness and capability manifest
+        run: |
+          pytest \
+            tests/unit/brokers/adapters/ibkr/test_error_readiness.py \
+            tests/contracts/brokers/ibkr/test_ibkr_error_readiness_public_contract.py \
+            tests/architecture/test_ibkr_error_readiness_boundaries.py \
+            tests/qualification/brokers/ibkr/test_ibkr_error_readiness_capability.py
+          mkdir -p artifacts/qualification/brokers/ibkr
+          python scripts/qualify_ibkr_0_8_error_readiness.py \
+            --output artifacts/qualification/brokers/ibkr/error-readiness-capability.json
+
       - name: Unit, property, and integration tests
         run: pytest --cov=pytradekit --cov-report=term-missing
 
