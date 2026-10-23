@@ -269,6 +269,31 @@ class _FillLike(Protocol):
 
 
 @dataclass(frozen=True, slots=True)
+class IBKRReadSideCoverageEvidence:
+    """Explicit proof of which synchronized provider inventories are complete."""
+
+    orders_complete: bool
+    fills_complete: bool
+    positions_complete: bool
+    account_complete: bool
+    evidence_source: str
+
+    def __post_init__(self) -> None:
+        for field_name in (
+            "orders_complete",
+            "fills_complete",
+            "positions_complete",
+            "account_complete",
+        ):
+            if type(getattr(self, field_name)) is not bool:
+                raise IBKRReadSideError(f"{field_name} must be a bool.")
+        source = self.evidence_source.strip()
+        if not source:
+            raise IBKRReadSideError("evidence_source must be non-empty.")
+        object.__setattr__(self, "evidence_source", source)
+
+
+@dataclass(frozen=True, slots=True)
 class IBKRReadSideCaptureStats:
     """Diagnostic counts for one provider snapshot capture."""
 
@@ -294,6 +319,7 @@ class IBKRBrokerSnapshotPort(BrokerSnapshotPort):
         instruments: IBKRInstrumentResolver,
         identities: IBKROrderIdentityResolver,
         restrictions: IBKRAccountRestrictionsProvider,
+        coverage: IBKRReadSideCoverageEvidence,
         clock: ClockPort,
     ) -> None:
         account = expected_external_account_id.strip()
@@ -305,7 +331,12 @@ class IBKRBrokerSnapshotPort(BrokerSnapshotPort):
         self._external_account_id = account
         self._instruments = instruments
         self._identities = identities
+        if not isinstance(coverage, IBKRReadSideCoverageEvidence):
+            raise IBKRReadSideError(
+                "coverage must be an IBKRReadSideCoverageEvidence."
+            )
         self._restrictions = restrictions
+        self._coverage = coverage
         self._clock = clock
         self._last_stats: IBKRReadSideCaptureStats | None = None
 
@@ -336,14 +367,20 @@ class IBKRBrokerSnapshotPort(BrokerSnapshotPort):
         if scope in {ReconciliationScope.ORDERS, ReconciliationScope.FULL}:
             orders, reasons = self._capture_orders()
             partial.extend(reasons)
+            if not self._coverage.orders_complete:
+                partial.append("order history coverage is not complete")
 
         if scope in {ReconciliationScope.FILLS, ReconciliationScope.FULL}:
             fills, reasons = self._capture_fills()
             partial.extend(reasons)
+            if not self._coverage.fills_complete:
+                partial.append("execution history coverage is not complete")
 
         if scope in {ReconciliationScope.POSITIONS, ReconciliationScope.FULL}:
             positions, reasons = self._capture_positions(account_id)
             partial.extend(reasons)
+            if not self._coverage.positions_complete:
+                partial.append("position inventory coverage is not complete")
 
         if scope in {
             ReconciliationScope.ACCOUNT,
@@ -352,6 +389,8 @@ class IBKRBrokerSnapshotPort(BrokerSnapshotPort):
         }:
             balances, reasons = self._capture_balances(account_id, captured_at)
             partial.extend(reasons)
+            if not self._coverage.account_complete:
+                partial.append("account inventory coverage is not complete")
 
         deduplicated_reasons = tuple(dict.fromkeys(partial))
         completeness = (
