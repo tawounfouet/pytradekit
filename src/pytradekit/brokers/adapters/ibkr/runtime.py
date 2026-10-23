@@ -329,6 +329,13 @@ class IBKRTransportPort(Protocol):
 
         ...
 
+class _IBKRReadTransportCapability(Protocol):
+    def read_client(self) -> object:
+        """Return the connected provider-local read client."""
+
+        ...
+
+
 class IBAsyncPaperTransport:
     """ib_async-backed IB Gateway PAPER transport with fail-closed validation."""
 
@@ -623,7 +630,17 @@ class IBKRPaperConnectionRuntime:
                 provider=IBKR_PROVIDER_KEY,
                 operation="read_client",
             )
-        return self.transport.read_client()
+        if not hasattr(self.transport, "read_client"):
+            raise ProviderUnavailableError(
+                "IBKR PAPER transport has no read-side capability.",
+                provider=IBKR_PROVIDER_KEY,
+                operation="read_client",
+            )
+        read_transport = cast(
+            _IBKRReadTransportCapability,
+            self.transport,
+        )
+        return read_transport.read_client()
 
     def stop(self) -> None:
         self.transport.disconnect()
