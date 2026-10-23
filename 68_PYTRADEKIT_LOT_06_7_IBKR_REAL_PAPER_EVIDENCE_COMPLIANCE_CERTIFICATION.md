@@ -48,7 +48,11 @@ SDK version matches ib_async 2.1.0
 +
 evidence qualified_commit matches certification target
 +
-artifact provenance contains SHA-256
+artifact provenance contains a verified canonical SHA-256
++
+PAPER workflow_run_id is present
++
+deterministic_ci_run_id identifies a successful CI run on the same commit
 ~~~
 
 Sinon la capability reste C2.
@@ -83,11 +87,14 @@ qualified_commit
 artifact_name
 artifact_json_sha256
 source_ref
-workflow_run_id optional
+workflow_run_id required for any C3 claim
+deterministic_ci_run_id required for any C3 claim
 artifact_id optional
 ~~~
 
-Le SHA-256 lie le bundle de certification a la source de qualification.
+Le SHA-256 est recalcule sur le bundle JSON canonique en excluant uniquement le champ de hash auto-referentiel. Tout changement du contenu apres capture invalide le bundle.
+
+Un bundle local sans workflow_run_id et deterministic_ci_run_id peut servir au diagnostic, mais il ne peut revendiquer aucune capability C3.
 
 ## 6. Capability-specific PAPER evidence
 
@@ -132,6 +139,8 @@ I_UNDERSTAND_IBKR_PAPER_ORDERS_WILL_BE_CREATED
 
 Il n'existe aucun mode LIVE.
 
+Le probe execute le chemin canonique PyTradeKit via IBKRExecutionAdapter. Il n'appelle jamais directement placeOrder ou cancelOrder.
+
 Le probe execute un scenario borne :
 
 ~~~text
@@ -172,6 +181,8 @@ Le gate paper_cleanup ne passe que si la position de depart est restauree.
 
 ## 10. Real PAPER workflow
 
+Le workflow manuel verifie d'abord qu'un run CI nomme CI a termine avec success sur exactement le meme commit. Le normalizer C3 exige ensuite GITHUB_ACTIONS=true, le GITHUB_SHA attendu, le GITHUB_RUN_ID attendu et le workflow IBKR Real PAPER Certification.
+
 Le workflow manuel :
 
 ~~~text
@@ -201,7 +212,9 @@ scripts/qualify_ibkr_0_8_compliance.py
 
 sans --paper-evidence produit une matrice C2 uniquement.
 
-Avec --paper-evidence, il rejoue le bundle via ComplianceHarness et promeut uniquement les claims C3 valides.
+Avec --paper-evidence, il verifie d'abord l'integrite SHA-256 du bundle, puis le rejoue via ComplianceHarness et promeut uniquement les claims C3 valides.
+
+Le rapport brut du probe ne constitue pas une preuve C3. Le script scripts/normalize_ibkr_paper_evidence.py produit le bundle retenu et derive les claims C3 capability par capability.
 
 ## 12. Current release status
 
