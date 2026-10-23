@@ -41,7 +41,6 @@ def test_real_paper_workflow_verifies_ci_and_normalizes_evidence() -> None:
     source = _REAL_WORKFLOW.read_text(encoding="utf-8")
 
     assert "deterministic_ci_run_id" in source
-    assert "artifact_id=args.artifact_id" in source
     assert "github.rest.actions.getWorkflowRun" in source
     assert "run.head_sha !== context.sha" in source
     assert 'run.conclusion !== "success"' in source
@@ -61,6 +60,7 @@ def test_evidence_normalizer_derives_c3_from_contract() -> None:
     assert "paper_proof_passes" in source
     assert "canonical_ibkr_evidence_sha256" in source
     assert "deterministic_ci_run_id" in source
+    assert "artifact_id=args.artifact_id" in source
     assert 'GITHUB_ACTIONS' in source
     assert 'GITHUB_WORKFLOW' in source
     assert 'GITHUB_SHA' in source
