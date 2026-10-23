@@ -353,7 +353,7 @@ def test_full_read_side_capture_normalizes_provider_truth() -> None:
     assert snapshot.completeness is SnapshotCompleteness.COMPLETE
     assert len(snapshot.orders) == 1
     assert snapshot.orders[0].external_order_id == "9001"
-    assert snapshot.orders[0].status == "ACCEPTED"
+    assert snapshot.orders[0].status == "accepted"
     assert len(snapshot.fills) == 1
     assert snapshot.fills[0].external_fill_id == "0001.01"
     assert snapshot.fills[0].origin.value == "UNKNOWN_EXTERNAL"
