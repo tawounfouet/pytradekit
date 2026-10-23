@@ -89,7 +89,7 @@ artifact_json_sha256
 source_ref
 workflow_run_id required for any C3 claim
 deterministic_ci_run_id required for any C3 claim
-artifact_id optional
+artifact_id required for any C3 claim
 ~~~
 
 Le SHA-256 est recalcule sur le bundle JSON canonique en excluant uniquement le champ de hash auto-referentiel. Tout changement du contenu apres capture invalide le bundle.
@@ -181,7 +181,7 @@ Le gate paper_cleanup ne passe que si la position de depart est restauree.
 
 ## 10. Real PAPER workflow
 
-Le workflow manuel verifie d'abord qu'un run CI nomme CI a termine avec success sur exactement le meme commit. Le normalizer C3 exige ensuite GITHUB_ACTIONS=true, le GITHUB_SHA attendu, le GITHUB_RUN_ID attendu et le workflow IBKR Real PAPER Certification.
+Le workflow manuel verifie d'abord qu'un run CI nomme CI a termine avec success sur exactement le meme commit. Le raw probe provider est ensuite conserve par upload-artifact avant toute normalisation C3. Le normalizer recoit l'artifact_id retourne par cette etape et exige ensuite GITHUB_ACTIONS=true, le GITHUB_SHA attendu, le GITHUB_RUN_ID attendu et le workflow IBKR Real PAPER Certification.
 
 Le workflow manuel :
 
