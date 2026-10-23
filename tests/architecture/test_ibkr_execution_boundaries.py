@@ -43,8 +43,8 @@ def test_economic_write_requires_explicit_admission() -> None:
     source = _SOURCE.read_text(encoding="utf-8")
 
     assert "IBKREconomicWriteAdmission" in source
-    assert "self._admission.require(operation="submit")" in source
-    assert "self._admission.require(operation="cancel")" in source
+    assert 'self._admission.require(operation="submit")' in source
+    assert 'self._admission.require(operation="cancel")' in source
 
 
 def test_place_order_uses_pre_reserved_session_order_id() -> None:
