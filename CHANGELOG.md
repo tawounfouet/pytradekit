@@ -10,6 +10,14 @@ The project is currently pre-1.0 and public APIs remain experimental unless expl
 
 ### Added
 
+- LOT-05.3 IBKR Order Command Mapping.
+- SDK-free IBKROrderCommand and IBKRPlacementCommand.
+- BUY/SELL, MKT/LMT and DAY mapping from canonical Order semantics.
+- Explicit orderRef mapping from client_order_id.
+- Explicit transmit intent, regular-hours-only behavior and safe TWS flags.
+- Static contract quantity/tick validation before transport.
+- Session orderId and nextValidId allocation kept outside the mapper.
+- Dedicated LOT-05.3 architecture, public-contract, unit and qualification gates.
 - LOT-05.2 IBKR Contract & Instrument Mapping.
 - SDK-free IBKRContractRecord and IBKRContractDetailsRecord.
 - IBKRInstrumentMappingResult retaining provider-only contract metadata.
@@ -46,7 +54,8 @@ The project is currently pre-1.0 and public APIs remain experimental unless expl
 - No IBKR PAPER certification claim is made.
 - LIVE remains unavailable.
 - LOT-05.2 Contract & Instrument Mapping is implemented.
-- LOT-05.3 Order Command Mapping remains next.
+- LOT-05.3 Order Command Mapping is implemented.
+- LOT-05.4 Order Status & Callback Normalization remains next.
 
 ## [0.8.0a4] - 2026-10-23
 
