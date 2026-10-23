@@ -10,6 +10,7 @@ from pytradekit.brokers.adapters.ibkr import (
     IBKRPaperEvidenceBundle,
     IBKRPaperEvidenceProvenance,
     build_ibkr_certification_run,
+    canonical_ibkr_evidence_sha256,
 )
 from pytradekit.brokers.compliance import (
     BrokerCapability,
@@ -22,11 +23,11 @@ _COMMIT = "c" * 40
 
 
 def _evidence() -> IBKRPaperEvidenceBundle:
-    return IBKRPaperEvidenceBundle(
+    unsigned = IBKRPaperEvidenceBundle(
         provenance=IBKRPaperEvidenceProvenance(
             qualified_commit=_COMMIT,
             artifact_name="ibkr-paper-real.json",
-            artifact_json_sha256="d" * 64,
+            artifact_json_sha256="0" * 64,
             source_ref="manual:ibkr-paper:qualification",
         ),
         captured_at=_NOW,
@@ -59,6 +60,13 @@ def _evidence() -> IBKRPaperEvidenceBundle:
             },
         },
     )
+    payload = unsigned.to_dict()
+    provenance = payload["provenance"]
+    assert isinstance(provenance, dict)
+    provenance["artifact_json_sha256"] = (
+        canonical_ibkr_evidence_sha256(payload)
+    )
+    return IBKRPaperEvidenceBundle.from_dict(payload)
 
 
 def _levels(
@@ -116,6 +124,44 @@ def test_retained_real_paper_evidence_promotes_only_explicit_claims() -> None:
         is CertificationLevel.C2_INTEGRATION_QUALIFIED
     )
     assert run.report.complete
+
+
+def test_certification_rejects_tampered_in_memory_evidence() -> None:
+    evidence = _evidence()
+    payload = evidence.to_dict()
+    proofs = payload["proofs"]
+    assert isinstance(proofs, dict)
+    market = proofs[BrokerCapability.MARKET_ORDER.value]
+    assert isinstance(market, dict)
+    market["terminal_status"] = "Cancelled"
+
+    with pytest.raises(ValueError, match="SHA-256"):
+        build_ibkr_certification_run(
+            commit_sha=_COMMIT,
+            captured_at=_NOW,
+            evidence=IBKRPaperEvidenceBundle(
+                provenance=evidence.provenance,
+                captured_at=evidence.captured_at,
+                sdk_name=evidence.sdk_name,
+                sdk_version=evidence.sdk_version,
+                account_mask=evidence.account_mask,
+                release_ready=evidence.release_ready,
+                controlled_probe_passed=evidence.controlled_probe_passed,
+                gates=evidence.gates,
+                c3_capabilities=evidence.c3_capabilities,
+                proofs={
+                    BrokerCapability.MARKET_ORDER: {
+                        "submit_attempts": 1,
+                        "perm_id_present": True,
+                        "terminal_status": "Cancelled",
+                        "exec_id_present": True,
+                    },
+                    BrokerCapability.CANCEL_ORDER: dict(
+                        evidence.proofs[BrokerCapability.CANCEL_ORDER]
+                    ),
+                },
+            ),
+        )
 
 
 def test_evidence_commit_must_match_certification_target() -> None:
