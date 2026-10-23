@@ -17,6 +17,7 @@ from pytradekit.brokers.adapters.ibkr import (
     IBKRContractId,
     IBKRContractRecord,
     IBKRInstrumentMappingResult,
+    IBKRReadSideCoverageEvidence,
     IBKRSecurityType,
     IBKRStartupReconciliationGate,
     map_ibkr_stock_contract,
@@ -282,6 +283,16 @@ class _Restrictions:
         )
 
 
+def _coverage() -> IBKRReadSideCoverageEvidence:
+    return IBKRReadSideCoverageEvidence(
+        orders_complete=True,
+        fills_complete=True,
+        positions_complete=True,
+        account_complete=True,
+        evidence_source="deterministic-lot06.2-fixture",
+    )
+
+
 def _instrument() -> IBKRInstrumentMappingResult:
     return map_ibkr_stock_contract(
         IBKRContractDetailsRecord(
@@ -317,6 +328,7 @@ def _snapshot_port(
         ),
         identities=identity,
         restrictions=_Restrictions(restrictions_available),
+        coverage=_coverage(),
         clock=_Clock(),
     )
 
@@ -364,6 +376,7 @@ def test_unresolved_position_mapping_marks_snapshot_partial() -> None:
         instruments=_InstrumentResolver(None),
         identities=_IdentityResolver(),
         restrictions=_Restrictions(),
+        coverage=_coverage(),
         clock=_Clock(),
     )
 
