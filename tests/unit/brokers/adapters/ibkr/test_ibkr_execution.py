@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
+from typing import cast
 
 import pytest
 
@@ -56,6 +57,25 @@ class _LowLevel:
 
 
 class _Object:
+    orderId: int
+    clientId: int
+    permId: int
+    orderRef: str
+    account: str
+    totalQuantity: Decimal
+    orderType: str
+    action: str
+    tif: str
+    transmit: bool
+    outsideRth: bool
+    whatIf: bool
+    overridePercentageConstraints: bool
+    lmtPrice: Decimal
+    conId: int
+    exchange: str
+    order: object
+    contract: object
+
     def __init__(self, **kwargs: object) -> None:
         for key, value in kwargs.items():
             setattr(self, key, value)
@@ -76,13 +96,14 @@ class _ProviderClient:
         if self.place_error is not None:
             raise self.place_error
 
-        setattr(order, "clientId", 7)
-        setattr(order, "permId", self.perm_id)
+        provider_order = cast(_Object, order)
+        provider_order.clientId = 7
+        provider_order.permId = self.perm_id
         status = _Object(
-            orderId=getattr(order, "orderId"),
+            orderId=provider_order.orderId,
             status="Submitted",
             filled=Decimal("0"),
-            remaining=getattr(order, "totalQuantity"),
+            remaining=provider_order.totalQuantity,
             avgFillPrice=Decimal("0"),
             permId=self.perm_id,
             clientId=7,
@@ -108,7 +129,7 @@ class _ProviderClient:
         if self.cancel_error is not None:
             raise self.cancel_error
         for trade in self._trades:
-            if getattr(trade, "order") is order:
+            if cast(_Object, trade).order is order:
                 return trade
         return None
 
@@ -273,8 +294,8 @@ def test_market_submit_calls_place_order_once_and_acknowledges_perm_id() -> None
     assert len(provider.trades()) == 1
 
     trade = provider.trades()[0]
-    sdk_order = getattr(trade, "order")
-    sdk_contract = getattr(trade, "contract")
+    sdk_order = cast(_Object, cast(_Object, trade).order)
+    sdk_contract = cast(_Object, cast(_Object, trade).contract)
     assert sdk_order.orderId == 500
     assert sdk_order.clientId == 7
     assert sdk_order.orderRef == "ptk-exec-1"
@@ -339,7 +360,10 @@ def test_static_limit_builds_decimal_lmt_price_and_places_once() -> None:
 
     assert result.status is SubmissionStatus.ACKNOWLEDGED
     assert provider.place_calls == 1
-    sdk_order = getattr(provider.trades()[0], "order")
+    sdk_order = cast(
+        _Object,
+        cast(_Object, provider.trades()[0]).order,
+    )
     assert sdk_order.orderType == "LMT"
     assert sdk_order.lmtPrice == Decimal("250.12")
     assert isinstance(sdk_order.lmtPrice, Decimal)
