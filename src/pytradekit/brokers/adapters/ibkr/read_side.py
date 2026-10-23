@@ -477,27 +477,28 @@ class IBKRBrokerSnapshotPort(BrokerSnapshotPort):
         partial: list[str] = []
 
         for raw in self._client.portfolio(self._external_account_id):
-            item = _portfolio_item(raw)
-            if item.account != self._external_account_id:
-                continue
-            quantity = _decimal(item.position, field_name="portfolio position")
-            if quantity == 0:
-                continue
-            contract = item.contract
             try:
+                item = _portfolio_item(raw)
+                if item.account != self._external_account_id:
+                    continue
+                quantity = _decimal(
+                    item.position,
+                    field_name="portfolio position",
+                )
+                if quantity == 0:
+                    continue
+                contract = item.contract
                 contract_id = IBKRContractId(contract.conId)
-            except Exception:
-                partial.append("position has no qualified conId")
-                continue
-            mapping = self._instruments.resolve(
-                contract_id=contract_id,
-                symbol=contract.symbol,
-            )
-            if mapping is None:
-                partial.append("position instrument mapping is unresolved")
-                continue
+                mapping = self._instruments.resolve(
+                    contract_id=contract_id,
+                    symbol=contract.symbol,
+                )
+                if mapping is None:
+                    partial.append(
+                        "position instrument mapping is unresolved"
+                    )
+                    continue
 
-            try:
                 observation = IBKRPortfolioPositionObservation(
                     external_account_id=item.account,
                     contract_id=contract_id,
@@ -546,53 +547,59 @@ class IBKRBrokerSnapshotPort(BrokerSnapshotPort):
         partial: list[str] = []
 
         for raw in self._client.trades():
-            trade = _trade(raw)
-            order = trade.order
-            status = trade.orderStatus
-            permanent_id = status.permId or order.permId
-            if permanent_id <= 0:
-                partial.append("order has no stable permId")
-                continue
+            try:
+                trade = _trade(raw)
+                order = trade.order
+                status = trade.orderStatus
+                permanent_id = status.permId or order.permId
+                if permanent_id <= 0:
+                    partial.append("order has no stable permId")
+                    continue
 
-            external_order_id = str(IBKRPermanentOrderId(permanent_id))
-            client_order_id = order.orderRef.strip() or None
-            order_id = self._identities.resolve_order_id(
-                external_order_id,
-                client_order_id,
-            )
-            provider_status = status.status.strip()
-            if not provider_status:
-                partial.append("order has no provider status")
-                continue
-
-            rule = ibkr_order_status_rule(provider_status)
-            cancel_requested = provider_status == "PendingCancel"
-            if rule.disposition is IBKROrderStateDisposition.MAP:
-                assert rule.canonical_status is not None
-                canonical_status = rule.canonical_status.value
-            elif provider_status == "PendingCancel":
-                canonical_status = "CANCEL_REQUESTED"
-            elif provider_status == "PendingSubmit":
-                canonical_status = "SUBMITTED"
-            else:
-                canonical_status = provider_status.upper()
-                partial.append(
-                    "order status requires reconciliation-specific handling"
+                external_order_id = str(
+                    IBKRPermanentOrderId(permanent_id)
                 )
-
-            result.append(
-                CanonicalOrder(
-                    order_id=order_id,
-                    client_order_id=client_order_id,
-                    external_order_id=external_order_id,
-                    status=canonical_status,
-                    filled_quantity=_non_negative_decimal(
-                        status.filled,
-                        field_name="order filled",
-                    ),
-                    cancel_requested=cancel_requested,
+                client_order_id = order.orderRef.strip() or None
+                order_id = self._identities.resolve_order_id(
+                    external_order_id,
+                    client_order_id,
                 )
-            )
+                provider_status = status.status.strip()
+                if not provider_status:
+                    partial.append("order has no provider status")
+                    continue
+
+                rule = ibkr_order_status_rule(provider_status)
+                cancel_requested = provider_status == "PendingCancel"
+                if rule.disposition is IBKROrderStateDisposition.MAP:
+                    assert rule.canonical_status is not None
+                    canonical_status = rule.canonical_status.value
+                elif provider_status == "PendingCancel":
+                    canonical_status = "CANCEL_REQUESTED"
+                elif provider_status == "PendingSubmit":
+                    canonical_status = "SUBMITTED"
+                else:
+                    canonical_status = provider_status.upper()
+                    partial.append(
+                        "order status requires reconciliation-specific handling"
+                    )
+
+                result.append(
+                    CanonicalOrder(
+                        order_id=order_id,
+                        client_order_id=client_order_id,
+                        external_order_id=external_order_id,
+                        status=canonical_status,
+                        filled_quantity=_non_negative_decimal(
+                            status.filled,
+                            field_name="order filled",
+                        ),
+                        cancel_requested=cancel_requested,
+                    )
+                )
+            except Exception:
+                partial.append("order observation could not be normalized")
+                continue
 
         result.sort(
             key=lambda item: (
@@ -609,33 +616,45 @@ class IBKRBrokerSnapshotPort(BrokerSnapshotPort):
         partial: list[str] = []
 
         for raw in self._client.fills():
-            fill = _fill(raw)
-            execution = fill.execution
-            if execution.acctNumber.strip() != self._external_account_id:
-                continue
-            if execution.permId <= 0:
-                partial.append("fill has no stable permId")
-                continue
-
-            external_order_id = str(IBKRPermanentOrderId(execution.permId))
-            client_order_id = execution.orderRef.strip() or None
-            order_id = self._identities.resolve_order_id(
-                external_order_id,
-                client_order_id,
-            )
             try:
+                fill = _fill(raw)
+                execution = fill.execution
+                if (
+                    execution.acctNumber.strip()
+                    != self._external_account_id
+                ):
+                    continue
+                if execution.permId <= 0:
+                    partial.append("fill has no stable permId")
+                    continue
+
+                external_order_id = str(
+                    IBKRPermanentOrderId(execution.permId)
+                )
+                client_order_id = execution.orderRef.strip() or None
+                order_id = self._identities.resolve_order_id(
+                    external_order_id,
+                    client_order_id,
+                )
                 execution_id = IBKRExecutionId(execution.execId)
                 contract_id = IBKRContractId(fill.contract.conId)
                 occurred_at = _aware_datetime(fill.time)
+
                 if client_order_id is not None:
                     IBKRExecutionDetailsObservation(
                         contract_id=contract_id,
                         symbol=fill.contract.symbol,
                         execution_id=execution_id,
                         client_id=IBKRClientId(execution.clientId),
-                        session_order_id=IBKRSessionOrderId(execution.orderId),
-                        permanent_order_id=IBKRPermanentOrderId(execution.permId),
-                        order_reference=IBKROrderReference(client_order_id),
+                        session_order_id=IBKRSessionOrderId(
+                            execution.orderId
+                        ),
+                        permanent_order_id=IBKRPermanentOrderId(
+                            execution.permId
+                        ),
+                        order_reference=IBKROrderReference(
+                            client_order_id
+                        ),
                         side=IBKRExecutionSide(execution.side),
                         shares=_positive_decimal(
                             execution.shares,
@@ -656,44 +675,47 @@ class IBKRBrokerSnapshotPort(BrokerSnapshotPort):
                         exchange=execution.exchange,
                         account=execution.acctNumber,
                         occurred_at=occurred_at,
-                        pending_price_revision=execution.pendingPriceRevision,
+                        pending_price_revision=(
+                            execution.pendingPriceRevision
+                        ),
                     )
+
+                if execution.pendingPriceRevision:
+                    partial.append("fill has pending price revision")
+                    continue
+
+                result.append(
+                    CanonicalFill(
+                        external_fill_id=execution_id.value,
+                        order_id=order_id,
+                        external_order_id=external_order_id,
+                        quantity=_positive_decimal(
+                            execution.shares,
+                            field_name="execution shares",
+                        ),
+                        price=_positive_decimal(
+                            execution.price,
+                            field_name="execution price",
+                        ),
+                        currency=Currency(fill.contract.currency),
+                        occurred_at=occurred_at,
+                        origin=(
+                            ExternalActivityOrigin.INTERNAL
+                            if order_id is not None
+                            else ExternalActivityOrigin.UNKNOWN_EXTERNAL
+                        ),
+                    )
+                )
             except Exception:
                 partial.append("fill execution observation is invalid")
                 continue
 
-            if execution.pendingPriceRevision:
-                partial.append("fill has pending price revision")
-                continue
-
-            if order_id is None and not external_order_id:
-                partial.append("fill cannot be correlated to an order")
-                continue
-
-            result.append(
-                CanonicalFill(
-                    external_fill_id=execution_id.value,
-                    order_id=order_id,
-                    external_order_id=external_order_id,
-                    quantity=_positive_decimal(
-                        execution.shares,
-                        field_name="execution shares",
-                    ),
-                    price=_positive_decimal(
-                        execution.price,
-                        field_name="execution price",
-                    ),
-                    currency=Currency(fill.contract.currency),
-                    occurred_at=occurred_at,
-                    origin=(
-                        ExternalActivityOrigin.INTERNAL
-                        if order_id is not None
-                        else ExternalActivityOrigin.UNKNOWN_EXTERNAL
-                    ),
-                )
+        result.sort(
+            key=lambda item: (
+                item.occurred_at,
+                item.external_fill_id,
             )
-
-        result.sort(key=lambda item: (item.occurred_at, item.external_fill_id))
+        )
         return tuple(result), tuple(partial)
 
 
