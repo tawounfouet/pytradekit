@@ -116,7 +116,6 @@ from .order_commands import (
     IBKRTransmitPolicy,
     map_ibkr_order_command,
 )
-
 from .runtime import (
     IBKR_ASYNC_PACKAGE_NAME,
     IBKR_ASYNC_VERSION_TARGET,
