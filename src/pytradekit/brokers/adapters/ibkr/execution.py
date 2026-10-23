@@ -42,6 +42,12 @@ from .order_commands import (
     IBKRTransmitPolicy,
     map_ibkr_order_command,
 )
+from .market_rules import (
+    IBKRMarketRuleError,
+    IBKRMarketRuleResolver,
+    IBKRMarketRuleValidationEvidence,
+)
+from .operations_runtime import IBKROperationalGuard
 from .order_session import (
     IBKROrderSessionReservation,
     IBKROrderSessionRuntime,
@@ -362,7 +368,9 @@ class IBKRExecutionAdapter:
         session: IBKROrderSessionRuntime,
         instruments: IBKRExecutionInstrumentResolver,
         admission: IBKREconomicWriteAdmission,
+        operations: IBKROperationalGuard,
         clock: ClockPort,
+        market_rules: IBKRMarketRuleResolver | None = None,
         sdk_factory: IBKRSDKPlacementFactory | None = None,
     ) -> None:
         if not isinstance(connection, IBKRPaperConnectionRuntime):
@@ -377,17 +385,39 @@ class IBKRExecutionAdapter:
             raise IBKRExecutionAdapterError(
                 "admission must be an IBKREconomicWriteAdmission."
             )
+        if not isinstance(operations, IBKROperationalGuard):
+            raise IBKRExecutionAdapterError(
+                "operations must be an IBKROperationalGuard."
+            )
+        if market_rules is not None and not isinstance(
+            market_rules,
+            IBKRMarketRuleResolver,
+        ):
+            raise IBKRExecutionAdapterError(
+                "market_rules must be an IBKRMarketRuleResolver or None."
+            )
         self._connection = connection
         self._session = session
         self._instruments = instruments
         self._admission = admission
+        self._operations = operations
         self._clock = clock
+        self._market_rules = market_rules
         self._sdk_factory = sdk_factory or IBKRSDKPlacementFactory()
         self._last_attempt: IBKREconomicWriteAttempt | None = None
+        self._last_market_rule_evidence: (
+            IBKRMarketRuleValidationEvidence | None
+        ) = None
 
     @property
     def last_attempt(self) -> IBKREconomicWriteAttempt | None:
         return self._last_attempt
+
+    @property
+    def last_market_rule_evidence(
+        self,
+    ) -> IBKRMarketRuleValidationEvidence | None:
+        return self._last_market_rule_evidence
 
     def submit(self, order: Order) -> SubmissionResult:
         """Submit one qualified PAPER order with no automatic retry."""
@@ -396,7 +426,9 @@ class IBKRExecutionAdapter:
             raise IBKRExecutionAdapterError(
                 "order must be a canonical Order."
             )
+        self._operations.require_write_allowed(operation="submit")
         self._admission.require(operation="submit")
+        self._last_market_rule_evidence = None
 
         binding = self._instruments.resolve(order.instrument_id)
         if binding is None:
@@ -425,13 +457,41 @@ class IBKRExecutionAdapter:
             and placement.price_increment_mode
             is IBKRPriceIncrementMode.MARKET_RULE
         ):
-            return SubmissionResult(
-                status=SubmissionStatus.REJECTED,
-                reason=(
-                    "IBKR LIMIT execution requires qualified dynamic market-rule "
-                    "price validation before economic write."
-                ),
-            )
+            if self._market_rules is None:
+                return SubmissionResult(
+                    status=SubmissionStatus.REJECTED,
+                    reason=(
+                        "IBKR LIMIT execution requires configured dynamic "
+                        "market-rule validation before economic write."
+                    ),
+                )
+            limit_price = placement.order.limit_price
+            if limit_price is None:
+                raise IBKRExecutionAdapterError(
+                    "LIMIT placement must retain limit_price."
+                )
+            try:
+                evidence = self._market_rules.validate_limit_price(
+                    instrument=binding.mapping,
+                    price=limit_price,
+                )
+            except IBKRMarketRuleError as exc:
+                return SubmissionResult(
+                    status=SubmissionStatus.REJECTED,
+                    reason=(
+                        "IBKR dynamic market-rule validation rejected the "
+                        f"LIMIT price: {exc}"
+                    ),
+                )
+            self._last_market_rule_evidence = evidence
+            if not evidence.valid:
+                return SubmissionResult(
+                    status=SubmissionStatus.REJECTED,
+                    reason=(
+                        "IBKR LIMIT price does not conform to the active "
+                        "dynamic market-rule increment."
+                    ),
+                )
 
         context = ProviderExecutionContext(
             order_id=order.id,
@@ -550,6 +610,7 @@ class IBKRExecutionAdapter:
             raise IBKRExecutionAdapterError(
                 "order must be a canonical Order."
             )
+        self._operations.require_write_allowed(operation="cancel")
         self._admission.require(operation="cancel")
 
         reservation = self._session.correlations.find_by_order_id(order.id)
@@ -682,7 +743,9 @@ def build_ibkr_execution_adapter(
     session: IBKROrderSessionRuntime,
     instruments: IBKRExecutionInstrumentResolver,
     admission: IBKREconomicWriteAdmission,
+    operations: IBKROperationalGuard,
     clock: ClockPort,
+    market_rules: IBKRMarketRuleResolver | None = None,
     sdk_factory: IBKRSDKPlacementFactory | None = None,
 ) -> IBKRExecutionAdapter:
     """Compose LOT-06.5 over a started PAPER session and LOT-06.4 routing."""
@@ -692,7 +755,9 @@ def build_ibkr_execution_adapter(
         session=session,
         instruments=instruments,
         admission=admission,
+        operations=operations,
         clock=clock,
+        market_rules=market_rules,
         sdk_factory=sdk_factory,
     )
 
