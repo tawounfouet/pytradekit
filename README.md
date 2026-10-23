@@ -4,13 +4,13 @@ PyTradeKit is a domain-first, broker-agnostic trading framework designed around 
 
 ## Current milestone
 
-PyTradeKit 0.8.0a4 - IBKR Discovery & Contract Freeze
+PyTradeKit 0.8.0b1 - IBKR Anti-Corruption Layer
 
 PyTradeKit 0.8 continues the Broker Compliance, Certification & IBKR milestone on top of the qualified 0.7 security and operations baseline.
 
-LOT-04 freezes the first IBKR implementation envelope before any SDK-backed adapter is introduced. The target is IB Gateway + TWS API socket + PAPER + US equities + MARKET/LIMIT/CANCEL.
+LOT-05.1 introduces the first concrete IBKR Anti-Corruption Layer primitives. clientId, orderId, permId, orderRef, execId and conId now have explicit provider-local types and cannot silently replace canonical PyTradeKit identifiers.
 
-The freeze maps orderRef, permId, execId and conId to existing provider-neutral identities while keeping orderId, clientId and nextValidId adapter-local. No IBKR-specific Domain, OMS, Risk, Portfolio, Reconciliation or Safety branch is introduced. LIVE remains unavailable.
+Provider-neutral Broker models remain unchanged. No IBKR SDK dependency or provider network call is introduced yet. LIVE remains unavailable.
 
 ## Requirements
 
@@ -48,7 +48,7 @@ pytradekit --version
 Current release version:
 
 ~~~text
-0.8.0a4
+0.8.0b1
 ~~~
 
 ## Milestone flow
@@ -324,6 +324,8 @@ package import graph remains acyclic
 - IBKR discovery guide: docs/guides/ibkr-discovery.md
 - IBKR discovery qualification: docs/qualification/ibkr-discovery-contract-freeze.md
 - 0.8.0a4 release notes: docs/releases/0.8.0a4.md
+- IBKR provider identity architecture: docs/architecture/ibkr-identity-model.md
+- 0.8.0b1 release notes: docs/releases/0.8.0b1.md
 - ADRs: docs/adr/
 
 ## Quality commands
