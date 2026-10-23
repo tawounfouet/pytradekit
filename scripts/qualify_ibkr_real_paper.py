@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import os
 import sys
@@ -16,7 +17,6 @@ from typing import Protocol, cast
 from pytradekit.brokers.adapters.ibkr import (
     IBKR_ASYNC_PACKAGE_NAME,
     IBKR_ASYNC_VERSION_TARGET,
-    IBKRClientId,
     IBKRContractId,
     IBKREconomicWriteAdmission,
     IBKRExecutionInstrumentBinding,
@@ -605,14 +605,10 @@ def main() -> int:
         if operations is not None:
             operations.stop()
         if provider is not None:
-            try:
+            with contextlib.suppress(Exception):
                 collector.unbind(provider)
-            except Exception:
-                pass
-        try:
+        with contextlib.suppress(Exception):
             connection.stop()
-        except Exception:
-            pass
 
     payload = {
         "schema_version": "probe-1",
