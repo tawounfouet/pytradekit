@@ -23,7 +23,7 @@ def _bundle(
     market_exec_id: bool = True,
     real_provider_used: bool = True,
 ) -> IBKRPaperEvidenceBundle:
-    proofs = {
+    proofs: dict[BrokerCapability, dict[str, object]] = {
         BrokerCapability.ACCOUNT_QUERY: {
             "account_ready": True,
             "managed_account_match": True,
