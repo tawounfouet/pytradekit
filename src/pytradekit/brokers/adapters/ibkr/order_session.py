@@ -744,4 +744,5 @@ def _optional_positive_decimal(
 def _optional_trade_error(trade: object) -> str | None:
     if not hasattr(trade, "advancedError"):
         return None
-    return _optional_text(getattr(trade, "advancedError"))
+    candidate = cast(_TradeLike, trade)
+    return _optional_text(candidate.advancedError)
