@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
@@ -127,6 +127,72 @@ class IBKRAccountRestrictionsProvider(Protocol):
         """Return explicit account restriction evidence or None."""
 
         ...
+
+
+class StaticIBKRInstrumentResolver:
+    """Resolve only pre-qualified LOT-05.2 instrument mappings."""
+
+    def __init__(
+        self,
+        mappings: Iterable[IBKRInstrumentMappingResult],
+    ) -> None:
+        self._mappings: dict[
+            tuple[int, str],
+            IBKRInstrumentMappingResult,
+        ] = {}
+        for mapping in mappings:
+            if not isinstance(mapping, IBKRInstrumentMappingResult):
+                raise IBKRReadSideError(
+                    "mappings must contain IBKRInstrumentMappingResult values."
+                )
+            key = (
+                int(mapping.identity.external_id),
+                mapping.identity.external_symbol,
+            )
+            if key in self._mappings:
+                raise IBKRReadSideError(
+                    "IBKR instrument mappings must be unique by conId and symbol."
+                )
+            self._mappings[key] = mapping
+
+    def resolve(
+        self,
+        *,
+        contract_id: IBKRContractId,
+        symbol: str,
+    ) -> IBKRInstrumentMappingResult | None:
+        return self._mappings.get((contract_id.value, symbol.strip()))
+
+
+class StaticIBKRAccountRestrictionsProvider:
+    """Return only explicit restriction evidence supplied by the caller."""
+
+    def __init__(
+        self,
+        evidence: Mapping[str, IBKRAccountRestrictionsObservation],
+    ) -> None:
+        self._evidence: dict[str, IBKRAccountRestrictionsObservation] = {}
+        for account, observation in evidence.items():
+            normalized = account.strip()
+            if not normalized:
+                raise IBKRReadSideError(
+                    "restriction evidence account IDs must be non-empty."
+                )
+            if not isinstance(
+                observation,
+                IBKRAccountRestrictionsObservation,
+            ):
+                raise IBKRReadSideError(
+                    "restriction evidence values must be "
+                    "IBKRAccountRestrictionsObservation."
+                )
+            self._evidence[normalized] = observation
+
+    def get(
+        self,
+        external_account_id: str,
+    ) -> IBKRAccountRestrictionsObservation | None:
+        return self._evidence.get(external_account_id.strip())
 
 
 class _AccountValueLike(Protocol):
