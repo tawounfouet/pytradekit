@@ -325,6 +325,7 @@ def main() -> int:
             "buying_power_present": account_proof[
                 "buying_power_present"
             ],
+            "currency": account_proof["currency"],
         }
         proofs["POSITION_QUERY"] = {
             "baseline_observed": True,
@@ -713,13 +714,25 @@ def _account_proof(
         if isinstance(item.tag, str)
         and isinstance(item.value, str)
     }
+    usd_tags = {
+        item.tag: item.value.strip()
+        for item in values
+        if (
+            isinstance(item.tag, str)
+            and isinstance(item.value, str)
+            and item.currency == "USD"
+        )
+    }
     account_ready = tags.get("AccountReady", "").lower() == "true"
+    cash_present = bool(usd_tags.get("TotalCashValue"))
+    equity_present = bool(usd_tags.get("NetLiquidation"))
     return {
         "account_ready": account_ready,
         "managed_account_match": True,
-        "cash_present": bool(tags.get("TotalCashValue")),
-        "equity_present": bool(tags.get("NetLiquidation")),
-        "buying_power_present": bool(tags.get("BuyingPower")),
+        "cash_present": cash_present,
+        "equity_present": equity_present,
+        "buying_power_present": bool(usd_tags.get("BuyingPower")),
+        "currency": "USD" if cash_present and equity_present else "",
     }
 
 
