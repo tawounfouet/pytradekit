@@ -7,13 +7,13 @@ import json
 from datetime import UTC, datetime
 from pathlib import Path
 
-from pytradekit.brokers.compliance import CertificationLevel
 from pytradekit.brokers.adapters.ibkr import (
     IBKR_BASELINE_CERTIFICATION_LEVELS,
     IBKRPaperEvidenceBundle,
     IBKRPaperEvidenceProvenance,
     build_ibkr_certification_run,
 )
+from pytradekit.brokers.compliance import CertificationLevel
 
 
 def _parser() -> argparse.ArgumentParser:
