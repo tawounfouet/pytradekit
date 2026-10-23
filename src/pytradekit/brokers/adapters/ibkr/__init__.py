@@ -12,6 +12,12 @@ from .account_mapping import (
     map_ibkr_account_snapshot,
     map_ibkr_position_snapshot,
 )
+from .capability_manifest import (
+    IBKR_ACL_ADAPTER_VERSION,
+    IBKR_ACL_DECLARED_CAPABILITIES,
+    build_ibkr_capability_manifest,
+    validate_ibkr_capability_manifest,
+)
 from .contract_mapping import (
     IBKRContractDetailsRecord,
     IBKRContractMappingError,
@@ -41,6 +47,22 @@ from .discovery import (
     IBKRReadinessFact,
     build_ibkr_contract_freeze,
     validate_ibkr_paper_port,
+)
+from .error_readiness import (
+    IBKR_ERROR_RULES,
+    IBKRConnectivityState,
+    IBKRErrorCategory,
+    IBKRErrorDisposition,
+    IBKRErrorMappingError,
+    IBKRErrorObservation,
+    IBKRErrorRule,
+    IBKRReadinessDecision,
+    IBKRReadinessObservation,
+    assert_ibkr_ready_for_economic_write,
+    evaluate_ibkr_readiness,
+    ibkr_connectivity_state,
+    ibkr_error_rule,
+    map_ibkr_provider_error,
 )
 from .execution_mapping import (
     IBKRExecutionDetailsObservation,
@@ -96,6 +118,24 @@ from .order_commands import (
 )
 
 __all__ = [
+    "validate_ibkr_capability_manifest",
+    "map_ibkr_provider_error",
+    "ibkr_error_rule",
+    "ibkr_connectivity_state",
+    "evaluate_ibkr_readiness",
+    "build_ibkr_capability_manifest",
+    "assert_ibkr_ready_for_economic_write",
+    "IBKRReadinessObservation",
+    "IBKRReadinessDecision",
+    "IBKRErrorRule",
+    "IBKRErrorObservation",
+    "IBKRErrorMappingError",
+    "IBKRErrorDisposition",
+    "IBKRErrorCategory",
+    "IBKRConnectivityState",
+    "IBKR_ERROR_RULES",
+    "IBKR_ACL_DECLARED_CAPABILITIES",
+    "IBKR_ACL_ADAPTER_VERSION",
     "IBKR_DEFERRED_CAPABILITIES",
     "IBKR_DISCOVERY_VERSION",
     "IBKR_LIVE_PORTS",
