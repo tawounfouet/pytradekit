@@ -337,10 +337,17 @@ class IBKRContractReferenceResolver:
             )
             return None
 
-        normalized_matches = tuple(
-            normalize_ibkr_contract_details(item)
-            for item in raw_matches
-        )
+        try:
+            normalized_matches = tuple(
+                normalize_ibkr_contract_details(item)
+                for item in raw_matches
+            )
+        except IBKRContractResolutionError as exc:
+            raise ProviderProtocolError(
+                "IBKR contract-details payload could not be normalized safely.",
+                provider=IBKR_PROVIDER_KEY,
+                operation="contract_details",
+            ) from exc
         exact = tuple(
             details
             for details in normalized_matches
