@@ -2,10 +2,6 @@
 
 from datetime import UTC, datetime
 
-from pytradekit.brokers.compliance import (
-    BrokerCapability,
-    CertificationLevel,
-)
 from pytradekit.brokers.adapters.ibkr import (
     IBKR_REAL_PAPER_C3_ELIGIBLE_CAPABILITIES,
     IBKRPaperEvidenceBundle,
@@ -13,6 +9,10 @@ from pytradekit.brokers.adapters.ibkr import (
     build_ibkr_certification_manifest,
     build_ibkr_certification_run,
     expected_ibkr_certification_levels,
+)
+from pytradekit.brokers.compliance import (
+    BrokerCapability,
+    CertificationLevel,
 )
 
 _CAPTURED = datetime(2026, 10, 23, 12, 5, tzinfo=UTC)
