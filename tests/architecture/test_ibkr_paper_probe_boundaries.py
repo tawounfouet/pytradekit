@@ -25,6 +25,9 @@ def test_controlled_probe_uses_canonical_execution_adapter() -> None:
     assert "execution.cancel(" in source
     assert ".placeOrder(" not in source
     assert ".cancelOrder(" not in source
+    assert "_restore_probe_baseline" in source
+    assert "_observed_probe_buy_quantity" in source
+    assert "if (\n            args.with_orders\n            and not cleanup_attempted" in source
 
 
 def test_standard_ci_never_runs_real_paper_probe() -> None:
