@@ -6,6 +6,53 @@ The project is currently pre-1.0 and public APIs remain experimental unless expl
 
 ## [Unreleased]
 
+## [0.8.0a4] - 2026-10-23
+
+### Added
+
+- LOT-04 IBKR Discovery & Contract Freeze.
+- Dependency-free IBKR discovery package with a machine-readable contract freeze.
+- PAPER and LIVE socket port matrix with fail-closed PAPER validation.
+- Frozen identity semantics for orderRef, orderId, permId, execId, conId and clientId.
+- IBKR readiness facts including nextValidId and reconciliation completion.
+- Target and deferred capability inventory for the first US-equity PAPER vertical slice.
+- Reconnect policy requiring implicit resubmission to remain disabled.
+- Canonical contract compatibility decisions and explicit unresolved PAPER questions.
+- IBKR architecture, discovery, qualification and release documentation.
+- Dedicated LOT-04 CI qualification gate.
+
+### Architecture
+
+- ExecutionPort and BrokerSnapshotPort remain unchanged.
+- ProviderOrderIdentity maps client_reference to orderRef and external_order_id to permId.
+- ProviderFillIdentity maps external_fill_id to execId.
+- ProviderInstrumentIdentity maps external_id to conId.
+- orderId, clientId and nextValidId remain adapter-local runtime state.
+- The Alpaca-only RuntimeProfile is not extended with IBKR provider branches.
+- No IBKR-specific logic enters Domain, OMS, Risk, Portfolio, Reconciliation or Safety.
+
+### Dependency policy
+
+- Official TWS API 10.49+ is documented by IBKR as GPL.
+- PyTradeKit remains Apache-2.0.
+- Official ibapi is not added pending explicit license review.
+- ib_async remains a candidate implementation and is not added by LOT-04.
+
+### Qualification
+
+- PAPER port 4002 and TWS PAPER port 7497 are accepted only for their explicit surfaces.
+- LIVE ports 4001 and 7496 are rejected.
+- No IBKR CertifiedCapability is emitted.
+- Unresolved PAPER behavior remains an explicit blocker to later certification.
+- LIVE remains unavailable.
+
+### Compatibility
+
+- BrokerAdapterContract remains candidate version 1.0-rc1.
+- Alpaca 0.8.0a3 certification remains unchanged.
+- IBKR ACL implementation is deferred to LOT-05.
+- Public APIs remain pre-1.0 and experimental unless explicitly documented otherwise.
+
 ## [0.8.0a3] - 2026-10-23
 
 ### Added

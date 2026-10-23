@@ -4,13 +4,13 @@ PyTradeKit is a domain-first, broker-agnostic trading framework designed around 
 
 ## Current milestone
 
-PyTradeKit 0.8.0a3 - Alpaca Compliance Certification
+PyTradeKit 0.8.0a4 - IBKR Discovery & Contract Freeze
 
 PyTradeKit 0.8 continues the Broker Compliance, Certification & IBKR milestone on top of the qualified 0.7 security and operations baseline.
 
-LOT-03 maps the frozen Alpaca PAPER adapter into the common compliance model and produces capability-specific CertifiedCapability records from retained deterministic and real PAPER evidence.
+LOT-04 freezes the first IBKR implementation envelope before any SDK-backed adapter is introduced. The target is IB Gateway + TWS API socket + PAPER + US equities + MARKET/LIMIT/CANCEL.
 
-Alpaca now provides the first concrete provider certification under the 0.8 BrokerAdapterContract candidate. PARTIAL_FILL remains C2 because the retained real PAPER evidence did not trigger a genuine partial fill. LIVE trading remains unavailable by design.
+The freeze maps orderRef, permId, execId and conId to existing provider-neutral identities while keeping orderId, clientId and nextValidId adapter-local. No IBKR-specific Domain, OMS, Risk, Portfolio, Reconciliation or Safety branch is introduced. LIVE remains unavailable.
 
 ## Requirements
 
@@ -48,7 +48,7 @@ pytradekit --version
 Current release version:
 
 ~~~text
-0.8.0a3
+0.8.0a4
 ~~~
 
 ## Milestone flow
@@ -268,7 +268,8 @@ src/pytradekit/
 |-- reconciliation/
 |-- brokers/
 |   |-- compliance/
-|   `-- adapters/alpaca/
+|   |-- adapters/alpaca/
+|   `-- adapters/ibkr/
 |-- runtime/
 `-- testing/
 ~~~
@@ -319,6 +320,10 @@ package import graph remains acyclic
 - 0.8.0a1 release notes: docs/releases/0.8.0a1.md
 - 0.8.0a2 release notes: docs/releases/0.8.0a2.md
 - 0.8.0a3 release notes: docs/releases/0.8.0a3.md
+- IBKR contract freeze: docs/architecture/ibkr-contract-freeze.md
+- IBKR discovery guide: docs/guides/ibkr-discovery.md
+- IBKR discovery qualification: docs/qualification/ibkr-discovery-contract-freeze.md
+- 0.8.0a4 release notes: docs/releases/0.8.0a4.md
 - ADRs: docs/adr/
 
 ## Quality commands
