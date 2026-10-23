@@ -508,6 +508,8 @@ def _integrity_payload(
             "IBKR evidence payload must normalize to a JSON object."
         )
     raw_provenance = copied.get("provenance")
+    if raw_provenance is None:
+        return copied
     if not isinstance(raw_provenance, dict):
         raise IBKREvidenceError(
             "provenance must be a mapping."
