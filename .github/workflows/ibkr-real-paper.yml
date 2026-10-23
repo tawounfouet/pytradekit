@@ -120,6 +120,14 @@ jobs:
             --runbook-reviewed \
             --output artifacts/qualification/brokers/ibkr/real-paper-probe.json
 
+      - name: Retain raw PAPER provider evidence
+        id: provider_evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytradekit-ibkr-paper-provider-evidence-${{ github.run_id }}
+          path: artifacts/qualification/brokers/ibkr/real-paper-probe.json
+          if-no-files-found: error
+
       - name: Normalize retained PAPER evidence
         run: |
           python scripts/normalize_ibkr_paper_evidence.py \
@@ -127,7 +135,8 @@ jobs:
             --qualified-commit "$GITHUB_SHA" \
             --workflow-run-id "$GITHUB_RUN_ID" \
             --deterministic-ci-run-id "${{ inputs.deterministic_ci_run_id }}" \
-            --artifact-name pytradekit-ibkr-paper-certification \
+            --artifact-name "pytradekit-ibkr-paper-provider-evidence-${GITHUB_RUN_ID}" \
+            --artifact-id "${{ steps.provider_evidence.outputs.artifact-id }}" \
             --output artifacts/qualification/brokers/ibkr/real-paper-evidence.json
 
       - name: Replay retained evidence through the compliance harness
