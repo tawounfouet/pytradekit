@@ -6,14 +6,15 @@ from datetime import UTC, datetime
 
 import pytest
 
-from pytradekit.brokers.compliance import (
-    BrokerCapability,
-    CertificationLevel,
-)
 from pytradekit.brokers.adapters.ibkr import (
     IBKRPaperEvidenceBundle,
     IBKRPaperEvidenceProvenance,
     build_ibkr_certification_run,
+)
+from pytradekit.brokers.compliance import (
+    BrokerCapability,
+    CertificationLevel,
+    ComplianceRun,
 )
 
 _NOW = datetime(2026, 10, 23, 12, 30, tzinfo=UTC)
@@ -60,8 +61,10 @@ def _evidence() -> IBKRPaperEvidenceBundle:
     )
 
 
-def _levels(run: object) -> dict[BrokerCapability, CertificationLevel]:
-    report = getattr(run, "report")
+def _levels(
+    run: ComplianceRun,
+) -> dict[BrokerCapability, CertificationLevel]:
+    report = run.report
     return {
         item.capability: item.certification_level
         for item in report.capability_results
