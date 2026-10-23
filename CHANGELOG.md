@@ -10,6 +10,14 @@ The project is currently pre-1.0 and public APIs remain experimental unless expl
 
 ### Added
 
+- LOT-05.2 IBKR Contract & Instrument Mapping.
+- SDK-free IBKRContractRecord and IBKRContractDetailsRecord.
+- IBKRInstrumentMappingResult retaining provider-only contract metadata.
+- conId to ProviderInstrumentIdentity and InstrumentMapping conversion.
+- STK/SMART/USD mapping to canonical EQUITY Instrument.
+- minSize and sizeIncrement mapping to ContractSpecification.
+- marketRuleIds-aware price increment handling that avoids false static tick-size claims.
+- Dedicated LOT-05.2 architecture, public-contract, unit and qualification gates.
 - LOT-05.1 IBKR Provider Primitives & Identity Model.
 - IBKRClientId, IBKRSessionOrderId, IBKRPermanentOrderId and IBKROrderReference.
 - IBKRExecutionId and explicit IBKRExecutionCorrection relationship.
@@ -37,7 +45,8 @@ The project is currently pre-1.0 and public APIs remain experimental unless expl
 - LOT-04 contract freeze remains valid.
 - No IBKR PAPER certification claim is made.
 - LIVE remains unavailable.
-- LOT-05.2 Contract & Instrument Mapping remains next.
+- LOT-05.2 Contract & Instrument Mapping is implemented.
+- LOT-05.3 Order Command Mapping remains next.
 
 ## [0.8.0a4] - 2026-10-23
 
