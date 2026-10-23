@@ -23,11 +23,7 @@ from pytradekit.reconciliation.application import (
     StaleRunRecovery,
 )
 from pytradekit.reconciliation.domain import ConsistencyStatus, StateConfidence
-from pytradekit.runtime import (
-    ReadinessCheck,
-    ReadinessCheckStatus,
-    TradingReadinessReport,
-)
+from pytradekit.runtime import TradingReadinessReport
 from pytradekit.runtime.ports import ClockPort
 from pytradekit.shared import CorrelationId
 
@@ -39,6 +35,7 @@ from .read_side import (
     IBKRReadSideClient,
 )
 from .runtime import IBKRPaperConnectionRuntime
+from .startup_reconciliation import IBKRStartupReconciliationGate
 
 IBKR_RECONCILIATION_RUNTIME_VERSION = "0.8.0b3-lot06.2"
 
@@ -80,6 +77,7 @@ class IBKRStartupReconciliationRuntime:
     workflows: RecoveryWorkflowCoordinator
     registry: ConsistencyRegistry
     consistency_gate: ConsistencyAdmissionPolicy
+    gate: IBKRStartupReconciliationGate
     session: Session
 
     @property
@@ -96,84 +94,7 @@ class IBKRStartupReconciliationRuntime:
         """Connect and reconcile while keeping economic writes fail-closed."""
 
         startup = self.connection.start()
-        checks = list(startup.checks)
-        gaps: list[str] = []
-
-        if not startup.ready_for_startup:
-            gaps.append("IBKR PAPER connection startup is not ready")
-            gaps.append(
-                "economic write runtime is not yet qualified by LOT-06.2"
-            )
-            return self._report(
-                checks=checks,
-                gaps=gaps,
-                consistency_status=None,
-                state_confidence=None,
-            )
-
-        try:
-            outcome = self.workflows.startup(
-                account_id=self.account_id,
-                correlation_id=CorrelationId.new(),
-            )
-        except Exception as exc:
-            self.registry.clear(self.account_id)
-            checks.append(
-                ReadinessCheck(
-                    name="startup_reconciliation",
-                    status=ReadinessCheckStatus.FAIL,
-                    detail=(
-                        "IBKR startup reconciliation failed safely "
-                        f"({type(exc).__name__})."
-                    ),
-                )
-            )
-            gaps.append("IBKR startup reconciliation did not complete")
-            gaps.append(
-                "economic write runtime is not yet qualified by LOT-06.2"
-            )
-            return self._report(
-                checks=checks,
-                gaps=gaps,
-                consistency_status=None,
-                state_confidence=None,
-            )
-
-        status = outcome.run.result_status
-        confidence = outcome.run.confidence
-        safe = (
-            status is ConsistencyStatus.CONSISTENT
-            and confidence is StateConfidence.HIGH
-        )
-        checks.append(
-            ReadinessCheck(
-                name="startup_reconciliation",
-                status=(
-                    ReadinessCheckStatus.PASS
-                    if safe
-                    else ReadinessCheckStatus.FAIL
-                ),
-                detail=(
-                    "IBKR broker and durable state reconciled CONSISTENT/HIGH."
-                    if safe
-                    else "IBKR startup reconciliation did not prove safe convergence."
-                ),
-            )
-        )
-        if not safe:
-            gaps.append(
-                "IBKR startup reconciliation did not prove CONSISTENT/HIGH"
-            )
-
-        gaps.append(
-            "economic write runtime is not yet qualified by LOT-06.2"
-        )
-        return self._report(
-            checks=checks,
-            gaps=gaps,
-            consistency_status=status,
-            state_confidence=confidence,
-        )
+        return self.gate.evaluate(startup)
 
     def periodic(self) -> ReconciliationOutcome:
         return self.workflows.periodic(
@@ -198,24 +119,6 @@ class IBKRStartupReconciliationRuntime:
             self.connection.stop()
         finally:
             self.session.close()
-
-    def _report(
-        self,
-        *,
-        checks: list[ReadinessCheck],
-        gaps: list[str],
-        consistency_status: ConsistencyStatus | None,
-        state_confidence: StateConfidence | None,
-    ) -> TradingReadinessReport:
-        return TradingReadinessReport(
-            provider=IBKR_PROVIDER_KEY,
-            environment="PAPER",
-            account=self.connection.profile.masked_account_id,
-            checks=tuple(checks),
-            gaps=tuple(dict.fromkeys(gaps)),
-            consistency_status=consistency_status,
-            state_confidence=state_confidence,
-        )
 
 
 def build_ibkr_startup_reconciliation_runtime(
@@ -268,5 +171,9 @@ def build_ibkr_startup_reconciliation_runtime(
         workflows=workflows,
         registry=registry,
         consistency_gate=ConsistencyAdmissionPolicy(registry),
+        gate=IBKRStartupReconciliationGate(
+            account_id=account_id,
+            workflows=workflows,
+        ),
         session=evidence_session,
     )
