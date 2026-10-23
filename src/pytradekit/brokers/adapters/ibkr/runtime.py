@@ -89,8 +89,42 @@ class _IBAsyncClient(Protocol):
 
         ...
 
+    def accountValues(self, account: str = "") -> list[object]:
+        """Return synchronized account values."""
+
+        ...
+
+    def portfolio(self, account: str = "") -> list[object]:
+        """Return synchronized portfolio rows."""
+
+        ...
+
+    def trades(self) -> list[object]:
+        """Return synchronized trades from this session."""
+
+        ...
+
+    def fills(self) -> list[object]:
+        """Return synchronized fills from this session."""
+
+        ...
+
 
 IBAsyncClientFactory = Callable[[], _IBAsyncClient]
+
+
+class _IBAsyncReadClient(Protocol):
+    def accountValues(self, account: str = "") -> list[object]:
+        ...
+
+    def portfolio(self, account: str = "") -> list[object]:
+        ...
+
+    def trades(self) -> list[object]:
+        ...
+
+    def fills(self) -> list[object]:
+        ...
 
 
 def _required_text(value: object, *, field_name: str) -> str:
@@ -295,6 +329,12 @@ class IBKRTransportPort(Protocol):
 
         ...
 
+class _IBKRReadTransportCapability(Protocol):
+    def read_client(self) -> object:
+        """Return the connected provider-local read client."""
+
+        ...
+
 
 class IBAsyncPaperTransport:
     """ib_async-backed IB Gateway PAPER transport with fail-closed validation."""
@@ -401,6 +441,45 @@ class IBAsyncPaperTransport:
             return bool(self._client.isConnected())
         except Exception:
             return False
+
+    def accountValues(self, account: str = "") -> list[object]:
+        """Return synchronized account values from the connected session."""
+
+        client = cast(_IBAsyncReadClient, self._require_connected_client())
+        return list(client.accountValues(account))
+
+    def portfolio(self, account: str = "") -> list[object]:
+        """Return synchronized portfolio items from the connected session."""
+
+        client = cast(_IBAsyncReadClient, self._require_connected_client())
+        return list(client.portfolio(account))
+
+    def trades(self) -> list[object]:
+        """Return synchronized open and completed trades from the session."""
+
+        client = cast(_IBAsyncReadClient, self._require_connected_client())
+        return list(client.trades())
+
+    def fills(self) -> list[object]:
+        """Return synchronized fills from the connected session."""
+
+        client = cast(_IBAsyncReadClient, self._require_connected_client())
+        return list(client.fills())
+
+    def _require_connected_client(self) -> _IBAsyncClient:
+        client = self._client
+        if client is None or not self.is_connected():
+            raise ProviderUnavailableError(
+                "IBKR PAPER read-side requires an active connection.",
+                provider=IBKR_PROVIDER_KEY,
+                operation="read_side",
+            )
+        return client
+
+    def read_client(self) -> object:
+        """Return the connected provider-local read client."""
+
+        return self._require_connected_client()
 
     def _resolve_factory(self) -> tuple[IBAsyncClientFactory, str]:
         if self._client_factory is not None:
@@ -541,6 +620,27 @@ class IBKRPaperConnectionRuntime:
                 ),
             ),
         )
+
+    def read_client(self) -> object:
+        """Return the connected provider-local read client."""
+
+        if self.connection_evidence is None:
+            raise ProviderUnavailableError(
+                "IBKR PAPER runtime has not completed startup.",
+                provider=IBKR_PROVIDER_KEY,
+                operation="read_client",
+            )
+        if not hasattr(self.transport, "read_client"):
+            raise ProviderUnavailableError(
+                "IBKR PAPER transport has no read-side capability.",
+                provider=IBKR_PROVIDER_KEY,
+                operation="read_client",
+            )
+        read_transport = cast(
+            _IBKRReadTransportCapability,
+            self.transport,
+        )
+        return read_transport.read_client()
 
     def stop(self) -> None:
         self.transport.disconnect()

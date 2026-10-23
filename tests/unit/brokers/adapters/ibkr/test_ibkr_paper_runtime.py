@@ -76,6 +76,18 @@ class _FakeIBClient:
     def managedAccounts(self) -> list[str]:
         return list(self.accounts)
 
+    def accountValues(self, account: str = "") -> list[object]:
+        return [f"account:{account}"]
+
+    def portfolio(self, account: str = "") -> list[object]:
+        return [f"portfolio:{account}"]
+
+    def trades(self) -> list[object]:
+        return ["trade"]
+
+    def fills(self) -> list[object]:
+        return ["fill"]
+
 
 def _profile() -> IBKRPaperRuntimeProfile:
     return IBKRPaperRuntimeProfile(
@@ -245,3 +257,27 @@ def test_connection_runtime_returns_not_ready_on_transport_failure() -> None:
     assert report.state is StartupReadinessState.NOT_READY
     assert not report.ready_for_startup
     assert runtime.connection_evidence is None
+
+
+def test_transport_forwards_synchronized_read_side_after_connect() -> None:
+    client = _FakeIBClient()
+    transport = IBAsyncPaperTransport(
+        client_factory=lambda: client,
+        package_version=IBKR_ASYNC_VERSION_TARGET,
+    )
+    transport.connect(_profile())
+
+    assert transport.accountValues("DU1234567") == ["account:DU1234567"]
+    assert transport.portfolio("DU1234567") == ["portfolio:DU1234567"]
+    assert transport.trades() == ["trade"]
+    assert transport.fills() == ["fill"]
+
+
+def test_transport_read_side_fails_closed_when_disconnected() -> None:
+    transport = IBAsyncPaperTransport(
+        client_factory=_FakeIBClient,
+        package_version=IBKR_ASYNC_VERSION_TARGET,
+    )
+
+    with pytest.raises(ProviderUnavailableError, match="active connection"):
+        transport.accountValues("DU1234567")

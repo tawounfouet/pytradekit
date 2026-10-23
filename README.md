@@ -4,13 +4,13 @@ PyTradeKit is a domain-first, broker-agnostic trading framework designed around 
 
 ## Current milestone
 
-PyTradeKit 0.8.0b2 - IBKR PAPER Runtime Integration
+PyTradeKit 0.8.0b3 - IBKR Read-Side Reconciliation
 
 PyTradeKit 0.8 continues the Broker Compliance, Certification & IBKR milestone on top of the qualified 0.7 security and operations baseline.
 
-LOT-05.1 through LOT-05.7 provide the completed SDK-free IBKR Anti-Corruption Layer. LOT-06.1 now adds the first concrete provider transport and PAPER startup runtime through the optional ib_async==2.1.0 dependency.
+LOT-05.1 through LOT-05.7 provide the completed SDK-free IBKR Anti-Corruption Layer. LOT-06.1 adds the concrete ib_async==2.1.0 PAPER connection runtime, and LOT-06.2 now normalizes synchronized account, portfolio, order and execution state into the generic BrokerSnapshot reconciliation pipeline.
 
-The new IBKR runtime is provider-local, loopback-only, hard-locked to IB Gateway PAPER port 4002, rejects clientId 0 to avoid automatic manual-order binding, verifies protocol readiness and expected account identity, and returns READY_FOR_STARTUP without claiming TRADING_READY or C3 PAPER certification. LIVE remains unavailable.
+IBKR read-side completeness is explicit rather than inferred. Missing account restriction evidence, unresolved conId mappings, missing permId values, uncertain execution facts, or unproven order/fill history coverage force SnapshotCompleteness.PARTIAL. Startup reconciliation may prove CONSISTENT/HIGH, but economic writes remain blocked and the runtime still does not claim TRADING_READY or C3 PAPER certification. LIVE remains unavailable.
 
 ## Requirements
 
@@ -49,7 +49,7 @@ pytradekit --version
 Current release version:
 
 ~~~text
-0.8.0b2
+0.8.0b3
 ~~~
 
 ## Milestone flow

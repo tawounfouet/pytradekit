@@ -34,6 +34,21 @@ class _QualifiedFakeTransport:
     def is_connected(self) -> bool:
         return self.connected
 
+    def read_client(self) -> object:
+        return self
+
+    def accountValues(self, account: str = "") -> list[object]:
+        return []
+
+    def portfolio(self, account: str = "") -> list[object]:
+        return []
+
+    def trades(self) -> list[object]:
+        return []
+
+    def fills(self) -> list[object]:
+        return []
+
 
 def test_lot06_1_reaches_startup_readiness_without_trading_claim() -> None:
     transport = _QualifiedFakeTransport()
