@@ -6,6 +6,41 @@ The project is currently pre-1.0 and public APIs remain experimental unless expl
 
 ## [Unreleased]
 
+## [0.8.0b4] - 2026-10-23
+
+### Added
+
+- LOT-06.3 IBKR Contract Qualification & Reference Resolution Runtime.
+- conId-based reqContractDetails provider reference lookup.
+- Exact conId and symbol match enforcement.
+- IBKRContractReferenceResolver and IBKRRuntimeContractDetailsClient.
+- IBAsyncContractRequestFactory behind the IBKR adapter boundary.
+- IBKRCanonicalInstrumentIdResolver and explicit canonical identity requirement.
+- SDK-free ContractDetails normalization into LOT-05.2 records.
+- Zero provider defaults treated as unknown rather than trading constraints.
+- Positional validExchanges and marketRuleIds preservation.
+- Local qualified contract mapping cache.
+- Safe real IBKR PAPER contract resolution probe.
+- Dedicated LOT-06.3 architecture, public-contract, unit and qualification gates.
+
+### Architecture
+
+- Canonical InstrumentId values are never fabricated from provider observations.
+- conId remains the provider contract identity and symbol is an additional coherence check.
+- ContractDetails payload contradictions fail closed as provider protocol errors.
+- LOT-05.2 market-rule semantics remain unchanged.
+- ib_async remains inside the IBKR adapter boundary.
+- Domain, OMS, Portfolio, Risk, Reconciliation and Safety remain provider-neutral.
+- Economic write admission remains closed.
+- LIVE remains unavailable.
+
+### Compatibility
+
+- BrokerAdapterContract remains candidate version 1.0-rc1.
+- LOT-06.1 connection and LOT-06.2 read-side behavior remain unchanged.
+- No real IBKR PAPER capability certification claim is made.
+- MARKET, LIMIT and CANCEL execution remain deferred to later LOT-06 stages.
+
 ## [0.8.0b3] - 2026-10-23
 
 ### Added
