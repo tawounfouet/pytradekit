@@ -44,6 +44,7 @@ def test_real_paper_workflow_verifies_ci_and_normalizes_evidence() -> None:
     assert "github.rest.actions.getWorkflowRun" in source
     assert "run.head_sha !== context.sha" in source
     assert 'run.conclusion !== "success"' in source
+    assert 'run.path !== ".github/workflows/ci.yml"' in source
     assert "normalize_ibkr_paper_evidence.py" in source
     assert "real-paper-probe.json" in source
     assert "real-paper-evidence.json" in source
