@@ -19,7 +19,6 @@ from pytradekit.reconciliation.domain import (
     ConsistencyStatus,
     StateConfidence,
 )
-from pytradekit.runtime import StartupReadinessReport
 from pytradekit.runtime.ports import ClockPort
 
 from .discovery import IBKR_PROVIDER_KEY
@@ -325,9 +324,8 @@ class IBKROperationalGuard:
                 self._market_data_ready = True
         elif code == 2103:
             self._market_data_ready = False
-        elif code == 2104:
-            if not self._market_data_resubscription_required:
-                self._market_data_ready = True
+        elif code == 2104 and not self._market_data_resubscription_required:
+            self._market_data_ready = True
 
         mapped = map_ibkr_provider_error(
             observation,
