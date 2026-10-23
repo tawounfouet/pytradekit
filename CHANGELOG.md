@@ -6,6 +6,34 @@ The project is currently pre-1.0 and public APIs remain experimental unless expl
 
 ## [Unreleased]
 
+## [0.8.0b2] - 2026-10-23
+
+### Added
+
+- LOT-06.1 IBKR Transport Selection & PAPER Connection Runtime.
+- Optional ibkr dependency extra with exact ib_async==2.1.0 pin.
+- Provider-local IBKRPaperRuntimeProfile without modifying the Alpaca RuntimeProfile.
+- Loopback-only IB Gateway PAPER runtime on port 4002.
+- Non-zero client ID policy to avoid automatic manual-order binding.
+- IBAsyncPaperTransport with synchronized protocol readiness and account verification.
+- Sanitized startup readiness report with no trading-ready claim.
+- Safe real PAPER connection probe that performs no economic write.
+- Dedicated LOT-06.1 architecture, public-contract, unit and qualification gates.
+
+### Architecture
+
+- ib_async remains inside the IBKR adapter boundary.
+- Official ibapi remains unbundled.
+- Domain, OMS, Portfolio, Risk, Reconciliation and Safety remain provider-neutral.
+- READY_FOR_STARTUP remains distinct from TRADING_READY.
+- LIVE remains unavailable.
+
+### Compatibility
+
+- BrokerAdapterContract remains candidate version 1.0-rc1.
+- LOT-05.1 through LOT-05.7 remain unchanged.
+- IBKR capability certification remains deferred until real provider evidence exists.
+
 ## [0.8.0b1] - 2026-10-23
 
 ### Added
@@ -92,7 +120,7 @@ The project is currently pre-1.0 and public APIs remain experimental unless expl
 - LOT-05.4 Order Status & Callback Normalization is implemented.
 - LOT-05.5 Execution Details & Fill Mapping is implemented.
 - LOT-05.6 Account, Balance & Position Mapping is implemented.
-- LOT-05.7 Error Taxonomy, Readiness & Capability Manifest remains next.
+- LOT-05.7 Error Taxonomy, Readiness & Capability Manifest is implemented.
 
 ## [0.8.0a4] - 2026-10-23
 

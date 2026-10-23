@@ -4,19 +4,20 @@ PyTradeKit is a domain-first, broker-agnostic trading framework designed around 
 
 ## Current milestone
 
-PyTradeKit 0.8.0b1 - IBKR Anti-Corruption Layer
+PyTradeKit 0.8.0b2 - IBKR PAPER Runtime Integration
 
 PyTradeKit 0.8 continues the Broker Compliance, Certification & IBKR milestone on top of the qualified 0.7 security and operations baseline.
 
-LOT-05.1 through LOT-05.7 now provide the first concrete IBKR Anti-Corruption Layer foundations. Provider identities, instruments, order commands, callbacks, execution facts, account values, positions, error semantics, readiness and capability declarations all map through SDK-free provider records into existing broker-neutral models.
+LOT-05.1 through LOT-05.7 provide the completed SDK-free IBKR Anti-Corruption Layer. LOT-06.1 now adds the first concrete provider transport and PAPER startup runtime through the optional ib_async==2.1.0 dependency.
 
-Distinct IBKR account metrics are not collapsed into fake balance symmetry: TotalCashValue maps to canonical cash, NetLiquidation to equity, BuyingPower stays separate from AvailableFunds, CashBalance remains provider-specific, and AccountReady must be true before snapshot emission. Connectivity loss during an economic write is treated as an uncertain outcome, restored sessions remain reconciliation-gated, and the capability manifest deliberately does not declare LATEST_QUOTE or REPLACE_ORDER yet. No IBKR SDK dependency or provider network call is introduced yet. LIVE remains unavailable.
+The new IBKR runtime is provider-local, loopback-only, hard-locked to IB Gateway PAPER port 4002, rejects clientId 0 to avoid automatic manual-order binding, verifies protocol readiness and expected account identity, and returns READY_FOR_STARTUP without claiming TRADING_READY or C3 PAPER certification. LIVE remains unavailable.
 
 ## Requirements
 
 - Python 3.12+
 - optional PostgreSQL dependencies through the `postgres` extra
 - optional Alpaca dependencies through the `alpaca` extra
+- optional IBKR transport through the `ibkr` extra
 - development tooling through the `dev` extra
 
 ## Development setup
@@ -28,7 +29,7 @@ cd pytradekit
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
-python -m pip install -e ".[dev,postgres,alpaca]"
+python -m pip install -e ".[dev,postgres,alpaca,ibkr]"
 
 make check
 ~~~
@@ -48,7 +49,7 @@ pytradekit --version
 Current release version:
 
 ~~~text
-0.8.0b1
+0.8.0b2
 ~~~
 
 ## Milestone flow

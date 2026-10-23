@@ -47,7 +47,7 @@ jobs:
       - name: Install package and development dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e ".[dev,postgres,alpaca]"
+          python -m pip install -e ".[dev,postgres,alpaca,ibkr]"
 
       - name: Typography policy
         run: python scripts/check_typography.py
@@ -203,6 +203,18 @@ jobs:
           mkdir -p artifacts/qualification/brokers/ibkr
           python scripts/qualify_ibkr_0_8_error_readiness.py \
             --output artifacts/qualification/brokers/ibkr/error-readiness-capability.json
+
+      - name: 0.8 LOT-06.1 IBKR PAPER connection runtime
+        run: |
+          pytest \
+            tests/unit/brokers/adapters/ibkr/test_ibkr_paper_runtime.py \
+            tests/contracts/brokers/ibkr/test_ibkr_runtime_public_contract.py \
+            tests/architecture/test_ibkr_runtime_boundaries.py \
+            tests/qualification/brokers/ibkr/test_ibkr_paper_connection_runtime.py
+          python -c "from importlib.metadata import version; assert version('ib_async') == '2.1.0'"
+          mkdir -p artifacts/qualification/brokers/ibkr
+          python scripts/qualify_ibkr_0_8_paper_connection.py \
+            --output artifacts/qualification/brokers/ibkr/paper-connection-runtime.json
 
       - name: Unit, property, and integration tests
         run: pytest --cov=pytradekit --cov-report=term-missing
