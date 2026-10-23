@@ -31,6 +31,7 @@ class IBKRPaperEvidenceProvenance:
     artifact_json_sha256: str
     source_ref: str
     workflow_run_id: int | None = None
+    deterministic_ci_run_id: int | None = None
     artifact_id: int | None = None
 
     def __post_init__(self) -> None:
@@ -48,7 +49,11 @@ class IBKRPaperEvidenceProvenance:
         _require_sha256(normalized_hash, field_name="artifact_json_sha256")
         object.__setattr__(self, "artifact_json_sha256", normalized_hash)
 
-        for field_name in ("workflow_run_id", "artifact_id"):
+        for field_name in (
+            "workflow_run_id",
+            "deterministic_ci_run_id",
+            "artifact_id",
+        ):
             value = getattr(self, field_name)
             if value is not None and (type(value) is not int or value <= 0):
                 raise IBKREvidenceError(
@@ -62,6 +67,7 @@ class IBKRPaperEvidenceProvenance:
             "artifact_json_sha256": self.artifact_json_sha256,
             "source_ref": self.source_ref,
             "workflow_run_id": self.workflow_run_id,
+            "deterministic_ci_run_id": self.deterministic_ci_run_id,
             "artifact_id": self.artifact_id,
         }
 
@@ -84,6 +90,10 @@ class IBKRPaperEvidenceProvenance:
             workflow_run_id=_optional_positive_int(
                 payload.get("workflow_run_id"),
                 "workflow_run_id",
+            ),
+            deterministic_ci_run_id=_optional_positive_int(
+                payload.get("deterministic_ci_run_id"),
+                "deterministic_ci_run_id",
             ),
             artifact_id=_optional_positive_int(
                 payload.get("artifact_id"),
@@ -206,6 +216,13 @@ class IBKRPaperEvidenceBundle:
             )
         if len(set(self.c3_capabilities)) != len(self.c3_capabilities):
             raise IBKREvidenceError("c3_capabilities must be unique.")
+        if self.c3_capabilities and (
+            self.provenance.workflow_run_id is None
+            or self.provenance.deterministic_ci_run_id is None
+        ):
+            raise IBKREvidenceError(
+                "C3 evidence requires both PAPER workflow and deterministic CI run IDs."
+            )
 
         normalized_proofs: dict[
             BrokerCapability,
