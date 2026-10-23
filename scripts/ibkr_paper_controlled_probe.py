@@ -691,14 +691,15 @@ def _restore_probe_baseline(
         profile=profile,
         contract_id=contract_id,
     )
-    if current_quantity == baseline_quantity:
-        return True
-
     observed_probe_quantity = _observed_probe_buy_quantity(
         provider,
         prefix=prefix,
     )
     if observed_probe_quantity <= 0:
+        return current_quantity == baseline_quantity
+
+    observed_position_delta = current_quantity - baseline_quantity
+    if observed_position_delta != observed_probe_quantity:
         return False
 
     cleanup_ref = f"{prefix}-cleanup"
