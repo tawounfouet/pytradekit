@@ -12,6 +12,12 @@ from .account_mapping import (
     map_ibkr_account_snapshot,
     map_ibkr_position_snapshot,
 )
+from .capability_manifest import (
+    IBKR_ACL_ADAPTER_VERSION,
+    IBKR_ACL_DECLARED_CAPABILITIES,
+    build_ibkr_capability_manifest,
+    validate_ibkr_capability_manifest,
+)
 from .contract_mapping import (
     IBKRContractDetailsRecord,
     IBKRContractMappingError,
@@ -41,6 +47,22 @@ from .discovery import (
     IBKRReadinessFact,
     build_ibkr_contract_freeze,
     validate_ibkr_paper_port,
+)
+from .error_readiness import (
+    IBKR_ERROR_RULES,
+    IBKRConnectivityState,
+    IBKRErrorCategory,
+    IBKRErrorDisposition,
+    IBKRErrorMappingError,
+    IBKRErrorObservation,
+    IBKRErrorRule,
+    IBKRReadinessDecision,
+    IBKRReadinessObservation,
+    assert_ibkr_ready_for_economic_write,
+    evaluate_ibkr_readiness,
+    ibkr_connectivity_state,
+    ibkr_error_rule,
+    map_ibkr_provider_error,
 )
 from .execution_mapping import (
     IBKRExecutionDetailsObservation,
@@ -96,8 +118,11 @@ from .order_commands import (
 )
 
 __all__ = [
+    "IBKR_ACL_ADAPTER_VERSION",
+    "IBKR_ACL_DECLARED_CAPABILITIES",
     "IBKR_DEFERRED_CAPABILITIES",
     "IBKR_DISCOVERY_VERSION",
+    "IBKR_ERROR_RULES",
     "IBKR_LIVE_PORTS",
     "IBKR_OFFICIAL_SDK_LICENSE",
     "IBKR_ORDER_CANCELLED_ERROR_CODE",
@@ -118,6 +143,7 @@ __all__ = [
     "IBKRClientId",
     "IBKRClientSurface",
     "IBKRConnectionIdentity",
+    "IBKRConnectivityState",
     "IBKRContractDecision",
     "IBKRContractDetailsRecord",
     "IBKRContractFreeze",
@@ -127,6 +153,11 @@ __all__ = [
     "IBKRContractOutcome",
     "IBKRContractRecord",
     "IBKRDiscoveryError",
+    "IBKRErrorCategory",
+    "IBKRErrorDisposition",
+    "IBKRErrorMappingError",
+    "IBKRErrorObservation",
+    "IBKRErrorRule",
     "IBKRExecutionCorrection",
     "IBKRExecutionDetailsObservation",
     "IBKRExecutionDisposition",
@@ -158,12 +189,19 @@ __all__ = [
     "IBKRPortfolioPositionObservation",
     "IBKRPositionMappingResult",
     "IBKRPriceIncrementMode",
+    "IBKRReadinessDecision",
     "IBKRReadinessFact",
+    "IBKRReadinessObservation",
     "IBKRSecurityType",
     "IBKRSessionOrderId",
     "IBKRTimeInForce",
     "IBKRTransmitPolicy",
+    "assert_ibkr_ready_for_economic_write",
+    "build_ibkr_capability_manifest",
     "build_ibkr_contract_freeze",
+    "evaluate_ibkr_readiness",
+    "ibkr_connectivity_state",
+    "ibkr_error_rule",
     "ibkr_order_status_rule",
     "map_ibkr_account_snapshot",
     "map_ibkr_execution_report",
@@ -172,8 +210,10 @@ __all__ = [
     "map_ibkr_order_status_report",
     "map_ibkr_order_status_snapshot",
     "map_ibkr_position_snapshot",
+    "map_ibkr_provider_error",
     "map_ibkr_stock_contract",
     "parse_ibkr_execution_time",
     "register_ibkr_open_order_observation",
+    "validate_ibkr_capability_manifest",
     "validate_ibkr_paper_port",
 ]

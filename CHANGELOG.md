@@ -10,6 +10,14 @@ The project is currently pre-1.0 and public APIs remain experimental unless expl
 
 ### Added
 
+- LOT-05.7 IBKR Error Taxonomy, Readiness & Capability Manifest.
+- SDK-free IBKRErrorObservation, error rules and connectivity states.
+- Conservative canonical mapping for pacing, connectivity, authorization, rejection and protocol failures.
+- ProviderUncertainOutcomeError for connectivity loss during in-flight economic writes.
+- Explicit read, market-data and economic-write readiness decisions.
+- 1101 market-data resubscription and reconciliation gating.
+- PAPER-only IBKR capability manifest without LATEST_QUOTE or REPLACE_ORDER overclaim.
+- Dedicated LOT-05.7 architecture, public-contract, unit and qualification gates.
 - LOT-05.6 IBKR Account, Balance & Position Mapping.
 - SDK-free IBKRAccountSummaryObservation and IBKRPortfolioPositionObservation.
 - Explicit provider metric tags for TotalCashValue, NetLiquidation, BuyingPower, AvailableFunds, CashBalance and margin values.
