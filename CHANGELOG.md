@@ -6,6 +6,50 @@ The project is currently pre-1.0 and public APIs remain experimental unless expl
 
 ## [Unreleased]
 
+## [0.8.0b8] - 2026-10-23
+
+### Added
+
+- Real PAPER qualification through the canonical IBKRExecutionAdapter path.
+- Actions-only retained evidence normalizer with exact workflow and commit provenance.
+- Canonical bundle SHA-256 verification before parsing and certification replay.
+- Exact deterministic CI run ID required for any C3 evidence claim.
+- Retained raw provider artifact ID required before any C3 evidence normalization.
+- LOT-06.7 IBKR Real PAPER Evidence & Compliance Certification.
+- Deterministic C2 certification for every declared IBKR capability.
+- IBKRPaperEvidenceBundle and provenance model.
+- Evidence linkage to qualified commit, ib_async version, masked account and SHA-256.
+- Capability-specific explicit C3 claims.
+- Retained real PAPER evidence replay through the common ComplianceHarness.
+- Controlled real IBKR PAPER MARKET, LIMIT, CANCEL and cleanup probe.
+- Cleanup quantity derived from observed provider fills, including partial LIMIT execution, with no blind cleanup replay.
+- Manual self-hosted IBKR PAPER certification workflow.
+- Deterministic LOT-06.7 certification gate in standard CI.
+
+### Architecture
+
+- Local diagnostic probes cannot produce official C3 retained evidence.
+- The real PAPER workflow verifies a successful CI run on the exact candidate commit before qualification.
+- Raw provider evidence is retained before normalization and its artifact ID is embedded in C3 provenance.
+- MARKET, LIMIT, CANCEL and cleanup writes in the probe use IBKRExecutionAdapter rather than direct provider write calls.
+- C3 normalization requires the expected GitHub Actions workflow, GITHUB_SHA and GITHUB_RUN_ID.
+- No retained PAPER evidence means no IBKR C3 certification.
+- No static pre-certified IBKR C3 capability set exists.
+- A successful capability proof never promotes unrelated capabilities.
+- PARTIAL_FILL requires a real observed partial execution.
+- RECONNECT_RECOVERY requires fresh reconciliation and proof of no economic replay.
+- Standard CI never executes the real PAPER controlled probe.
+- Real PAPER writes require explicit acknowledgement.
+- LIVE remains unavailable.
+- TRADING_READY remains closed until the release policy is satisfied.
+
+### Compatibility
+
+- BrokerAdapterContract remains candidate version 1.0-rc1.
+- LOT-06.1 through LOT-06.6 behavior remains compatible.
+- The compliance manifest now records ib_async 2.1.0 as the selected runtime SDK.
+- The current repository state contains no fabricated real IBKR PAPER certification evidence.
+
 ## [0.8.0b7] - 2026-10-23
 
 ### Added
