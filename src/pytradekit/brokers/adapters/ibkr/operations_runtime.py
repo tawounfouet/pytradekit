@@ -349,6 +349,9 @@ class IBKROperationalGuard:
         elif code == 2104 and not self._market_data_resubscription_required:
             self._market_data_ready = True
 
+        if code == 1102 and self._reconciliation_complete:
+            return None
+
         mapped = map_ibkr_provider_error(
             observation,
             operation=operation,
