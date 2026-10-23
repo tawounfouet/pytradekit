@@ -161,7 +161,8 @@ class ProbeConfig:
     timeout_seconds: float
     poll_seconds: float
     with_orders: bool
-    ci_qualified: bool
+    workflow_run_id: int | None
+    deterministic_ci_run_id: int | None
 
     def __post_init__(self) -> None:
         if not self.commit_sha.strip():
@@ -195,6 +196,22 @@ class ProbeConfig:
             raise ValueError(
                 f"{_ACK_ENV} must equal {_ACK_VALUE!r} before PAPER orders are created."
             )
+        for field_name in (
+            "workflow_run_id",
+            "deterministic_ci_run_id",
+        ):
+            value = getattr(self, field_name)
+            if value is not None and (type(value) is not int or value <= 0):
+                raise ValueError(
+                    f"{field_name} must be a positive int or None."
+                )
+        if (
+            self.workflow_run_id is None
+            and self.deterministic_ci_run_id is not None
+        ):
+            raise ValueError(
+                "deterministic_ci_run_id requires workflow_run_id."
+            )
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -213,7 +230,8 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--timeout-seconds", type=float, default=30.0)
     parser.add_argument("--poll-seconds", type=float, default=0.25)
     parser.add_argument("--with-orders", action="store_true")
-    parser.add_argument("--ci-qualified", action="store_true")
+    parser.add_argument("--workflow-run-id", type=int)
+    parser.add_argument("--deterministic-ci-run-id", type=int)
     parser.add_argument("--output", type=Path, required=True)
     return parser
 
@@ -231,7 +249,8 @@ def main() -> int:
             timeout_seconds=args.timeout_seconds,
             poll_seconds=args.poll_seconds,
             with_orders=args.with_orders,
-            ci_qualified=args.ci_qualified,
+            workflow_run_id=args.workflow_run_id,
+            deterministic_ci_run_id=args.deterministic_ci_run_id,
         )
         bundle = _run_probe(config)
     except ValueError as exc:
@@ -283,7 +302,11 @@ def _run_probe(config: ProbeConfig) -> IBKRPaperEvidenceBundle:
         )
 
         gates: dict[str, str] = {
-            "ci_quality_gate": "PASS" if config.ci_qualified else "PENDING",
+            "ci_quality_gate": (
+                "PASS"
+                if config.deterministic_ci_run_id is not None
+                else "PENDING"
+            ),
             "paper_startup": "PASS",
             "paper_account_snapshot": (
                 "PASS" if account_rows["cash_present"] else "FAIL"
@@ -333,7 +356,11 @@ def _run_probe(config: ProbeConfig) -> IBKRPaperEvidenceBundle:
             and gates["paper_execution_details"] == "PASS"
             and gates["paper_cleanup"] == "PASS"
         )
-        release_ready = config.ci_qualified and controlled_passed
+        release_ready = (
+            config.workflow_run_id is not None
+            and config.deterministic_ci_run_id is not None
+            and controlled_passed
+        )
 
         c3 = _c3_capabilities(gates, proofs) if release_ready else ()
         payload = {
@@ -345,10 +372,18 @@ def _run_probe(config: ProbeConfig) -> IBKRPaperEvidenceBundle:
                 "artifact_name": "ibkr-paper-controlled-probe.json",
                 "artifact_json_sha256": "0" * 64,
                 "source_ref": (
-                    "manual:ibkr-paper-controlled-probe:"
-                    f"{config.commit_sha[:12]}"
+                    "github-actions:ibkr-paper:"
+                    f"run:{config.workflow_run_id}"
+                    if config.workflow_run_id is not None
+                    else (
+                        "manual:ibkr-paper-controlled-probe:"
+                        f"{config.commit_sha[:12]}"
+                    )
                 ),
-                "workflow_run_id": None,
+                "workflow_run_id": config.workflow_run_id,
+                "deterministic_ci_run_id": (
+                    config.deterministic_ci_run_id
+                ),
                 "artifact_id": None,
             },
             "captured_at": _captured_at(),
