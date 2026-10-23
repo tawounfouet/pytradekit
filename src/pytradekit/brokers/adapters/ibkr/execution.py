@@ -19,8 +19,8 @@ from pytradekit.execution import (
     SubmissionStatus,
 )
 from pytradekit.orders.domain import Order
-from pytradekit.reference.domain import InstrumentId
 from pytradekit.runtime.ports import ClockPort
+from pytradekit.shared import InstrumentId
 
 from .contract_mapping import (
     IBKRContractRecord,
