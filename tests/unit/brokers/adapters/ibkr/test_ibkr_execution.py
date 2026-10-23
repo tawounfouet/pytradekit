@@ -8,7 +8,12 @@ from typing import cast
 
 import pytest
 
-from pytradekit.brokers import ProviderProtocolError, ProviderRejectedOperationError
+from pytradekit.brokers import (
+    ProviderProtocolError,
+    ProviderRateLimitError,
+    ProviderRejectedOperationError,
+    ProviderStateReconciliationRequired,
+)
 from pytradekit.brokers.adapters.ibkr import (
     IBKRClientId,
     IBKRContractDetailsRecord,
@@ -525,7 +530,7 @@ def test_operational_pacing_guard_blocks_before_place_order() -> None:
         operations=operations,
     )
 
-    with pytest.raises(Exception, match="pacing"):
+    with pytest.raises(ProviderRateLimitError, match="pacing"):
         adapter.submit(_order(binding))
 
     assert provider.place_calls == 0
@@ -544,7 +549,10 @@ def test_operational_reconciliation_guard_blocks_before_cancel_order() -> None:
     )
     order = _order(binding)
 
-    with pytest.raises(Exception, match="reconciliation"):
+    with pytest.raises(
+        ProviderStateReconciliationRequired,
+        match="reconciliation",
+    ):
         adapter.cancel(order)
 
     assert provider.cancel_calls == 0
