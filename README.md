@@ -4,7 +4,7 @@ PyTradeKit is a domain-first, broker-agnostic trading framework designed around 
 
 ## Current milestone
 
-PyTradeKit 0.8.0b7 - IBKR Operational Runtime
+PyTradeKit 0.8.0b8 - IBKR PAPER Evidence Certification
 
 PyTradeKit 0.8 continues the Broker Compliance, Certification & IBKR milestone on top of the qualified 0.7 security and operations baseline.
 
@@ -49,7 +49,7 @@ pytradekit --version
 Current release version:
 
 ~~~text
-0.8.0b7
+0.8.0b8
 ~~~
 
 ## Milestone flow
