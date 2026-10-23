@@ -39,6 +39,8 @@ from .contract_mapping import IBKRInstrumentMappingResult
 from .discovery import IBKR_PROVIDER_KEY
 from .execution_mapping import (
     IBKRExecutionDetailsObservation,
+    IBKRExecutionDisposition,
+    IBKRExecutionRegistry,
     IBKRExecutionSide,
 )
 from .identities import (
@@ -279,14 +281,14 @@ class IBKRReadSideCoverageEvidence:
     evidence_source: str
 
     def __post_init__(self) -> None:
-        for field_name in (
-            "orders_complete",
-            "fills_complete",
-            "positions_complete",
-            "account_complete",
-        ):
-            if type(getattr(self, field_name)) is not bool:
-                raise IBKRReadSideError(f"{field_name} must be a bool.")
+        if type(self.orders_complete) is not bool:
+            raise IBKRReadSideError("orders_complete must be a bool.")
+        if type(self.fills_complete) is not bool:
+            raise IBKRReadSideError("fills_complete must be a bool.")
+        if type(self.positions_complete) is not bool:
+            raise IBKRReadSideError("positions_complete must be a bool.")
+        if type(self.account_complete) is not bool:
+            raise IBKRReadSideError("account_complete must be a bool.")
         source = self.evidence_source.strip()
         if not source:
             raise IBKRReadSideError("evidence_source must be non-empty.")
@@ -327,14 +329,15 @@ class IBKRBrokerSnapshotPort(BrokerSnapshotPort):
             raise IBKRReadSideError(
                 "expected_external_account_id must be non-empty."
             )
-        self._client = client
-        self._external_account_id = account
-        self._instruments = instruments
-        self._identities = identities
         if not isinstance(coverage, IBKRReadSideCoverageEvidence):
             raise IBKRReadSideError(
                 "coverage must be an IBKRReadSideCoverageEvidence."
             )
+
+        self._client = client
+        self._external_account_id = account
+        self._instruments = instruments
+        self._identities = identities
         self._restrictions = restrictions
         self._coverage = coverage
         self._clock = clock
@@ -350,6 +353,8 @@ class IBKRBrokerSnapshotPort(BrokerSnapshotPort):
         account_id: AccountId,
         scope: ReconciliationScope,
     ) -> BrokerSnapshot:
+        """Capture one normalized broker cut from synchronized provider state."""
+
         if not self._client.isConnected():
             raise ProviderProtocolError(
                 "IBKR read-side capture requires an active synchronized session.",
@@ -377,7 +382,10 @@ class IBKRBrokerSnapshotPort(BrokerSnapshotPort):
                 partial.append("execution history coverage is not complete")
 
         if scope in {ReconciliationScope.POSITIONS, ReconciliationScope.FULL}:
-            positions, reasons = self._capture_positions(account_id)
+            positions, reasons = self._capture_positions(
+                account_id,
+                captured_at=captured_at,
+            )
             partial.extend(reasons)
             if not self._coverage.positions_complete:
                 partial.append("position inventory coverage is not complete")
@@ -387,7 +395,10 @@ class IBKRBrokerSnapshotPort(BrokerSnapshotPort):
             ReconciliationScope.BALANCES,
             ReconciliationScope.FULL,
         }:
-            balances, reasons = self._capture_balances(account_id, captured_at)
+            balances, reasons = self._capture_balances(
+                account_id,
+                captured_at=captured_at,
+            )
             partial.extend(reasons)
             if not self._coverage.account_complete:
                 partial.append("account inventory coverage is not complete")
@@ -424,11 +435,16 @@ class IBKRBrokerSnapshotPort(BrokerSnapshotPort):
     def _capture_balances(
         self,
         account_id: AccountId,
+        *,
         captured_at: datetime,
     ) -> tuple[tuple[CanonicalBalance, ...], tuple[str, ...]]:
-        raw = self._client.accountValues(self._external_account_id)
         try:
-            normalized_values = tuple(_account_value(item) for item in raw)
+            normalized_values = tuple(
+                _account_value(item)
+                for item in self._client.accountValues(
+                    self._external_account_id
+                )
+            )
             account_values = tuple(
                 item
                 for item in normalized_values
@@ -472,6 +488,8 @@ class IBKRBrokerSnapshotPort(BrokerSnapshotPort):
     def _capture_positions(
         self,
         account_id: AccountId,
+        *,
+        captured_at: datetime,
     ) -> tuple[tuple[CanonicalPosition, ...], tuple[str, ...]]:
         result: list[CanonicalPosition] = []
         partial: list[str] = []
@@ -487,7 +505,12 @@ class IBKRBrokerSnapshotPort(BrokerSnapshotPort):
                 )
                 if quantity == 0:
                     continue
-                contract = item.contract
+
+                contract = _contract(item.contract)
+                if contract.secType.strip().upper() != "STK":
+                    partial.append("position is outside the qualified STK scope")
+                    continue
+
                 contract_id = IBKRContractId(contract.conId)
                 mapping = self._instruments.resolve(
                     contract_id=contract_id,
@@ -505,7 +528,7 @@ class IBKRBrokerSnapshotPort(BrokerSnapshotPort):
                     symbol=contract.symbol,
                     currency=Currency(contract.currency),
                     signed_quantity=quantity,
-                    average_cost=_decimal(
+                    average_cost=_positive_decimal(
                         item.averageCost,
                         field_name="portfolio averageCost",
                     ),
@@ -515,7 +538,7 @@ class IBKRBrokerSnapshotPort(BrokerSnapshotPort):
                     market_value=_optional_decimal(item.marketValue),
                     unrealized_pnl=_optional_decimal(item.unrealizedPNL),
                     realized_pnl=_optional_decimal(item.realizedPNL),
-                    observed_at=self._clock.now(),
+                    observed_at=captured_at,
                 )
                 mapped = map_ibkr_position_snapshot(
                     observation,
@@ -564,6 +587,7 @@ class IBKRBrokerSnapshotPort(BrokerSnapshotPort):
                     external_order_id,
                     client_order_id,
                 )
+
                 provider_status = status.status.strip()
                 if not provider_status:
                     partial.append("order has no provider status")
@@ -614,6 +638,7 @@ class IBKRBrokerSnapshotPort(BrokerSnapshotPort):
     ) -> tuple[tuple[CanonicalFill, ...], tuple[str, ...]]:
         result: list[CanonicalFill] = []
         partial: list[str] = []
+        registry = IBKRExecutionRegistry()
 
         for raw in self._client.fills():
             try:
@@ -627,6 +652,22 @@ class IBKRBrokerSnapshotPort(BrokerSnapshotPort):
                 if execution.permId <= 0:
                     partial.append("fill has no stable permId")
                     continue
+                if execution.pendingPriceRevision:
+                    partial.append("fill has pending price revision")
+                    continue
+
+                execution_id = IBKRExecutionId(execution.execId)
+                registration = registry.register(execution_id)
+                if registration.disposition is IBKRExecutionDisposition.DUPLICATE:
+                    continue
+                if registration.disposition is IBKRExecutionDisposition.CORRECTION:
+                    partial.append("execution correction requires reconciliation")
+                    continue
+
+                contract = _contract(fill.contract)
+                if contract.secType.strip().upper() != "STK":
+                    partial.append("fill is outside the qualified STK scope")
+                    continue
 
                 external_order_id = str(
                     IBKRPermanentOrderId(execution.permId)
@@ -636,14 +677,12 @@ class IBKRBrokerSnapshotPort(BrokerSnapshotPort):
                     external_order_id,
                     client_order_id,
                 )
-                execution_id = IBKRExecutionId(execution.execId)
-                contract_id = IBKRContractId(fill.contract.conId)
                 occurred_at = _aware_datetime(fill.time)
 
                 if client_order_id is not None:
                     IBKRExecutionDetailsObservation(
-                        contract_id=contract_id,
-                        symbol=fill.contract.symbol,
+                        contract_id=IBKRContractId(contract.conId),
+                        symbol=contract.symbol,
                         execution_id=execution_id,
                         client_id=IBKRClientId(execution.clientId),
                         session_order_id=IBKRSessionOrderId(
@@ -675,14 +714,8 @@ class IBKRBrokerSnapshotPort(BrokerSnapshotPort):
                         exchange=execution.exchange,
                         account=execution.acctNumber,
                         occurred_at=occurred_at,
-                        pending_price_revision=(
-                            execution.pendingPriceRevision
-                        ),
+                        pending_price_revision=False,
                     )
-
-                if execution.pendingPriceRevision:
-                    partial.append("fill has pending price revision")
-                    continue
 
                 result.append(
                     CanonicalFill(
@@ -697,7 +730,7 @@ class IBKRBrokerSnapshotPort(BrokerSnapshotPort):
                             execution.price,
                             field_name="execution price",
                         ),
-                        currency=Currency(fill.contract.currency),
+                        currency=Currency(contract.currency),
                         occurred_at=occurred_at,
                         origin=(
                             ExternalActivityOrigin.INTERNAL
@@ -745,6 +778,7 @@ def _account_observation(
             metric_tag = IBKRAccountMetricTag(tag)
         except ValueError:
             continue
+
         currency = row.currency.strip().upper()
         if not currency:
             continue
@@ -758,6 +792,7 @@ def _account_observation(
 
     if account_ready is None:
         raise IBKRReadSideError("AccountReady value is unavailable.")
+
     base_currency = _resolve_base_currency(metric_rows)
     metrics = tuple(
         IBKRAccountMetric(
@@ -809,6 +844,13 @@ def _account_value(value: object) -> _AccountValueLike:
     return cast(_AccountValueLike, value)
 
 
+def _contract(value: object) -> _ContractLike:
+    required = ("conId", "symbol", "secType", "currency")
+    if any(not hasattr(value, name) for name in required):
+        raise IBKRReadSideError("IBKR contract has an invalid shape.")
+    return cast(_ContractLike, value)
+
+
 def _portfolio_item(value: object) -> _PortfolioItemLike:
     required = (
         "account",
@@ -826,13 +868,15 @@ def _portfolio_item(value: object) -> _PortfolioItemLike:
 
 
 def _trade(value: object) -> _TradeLike:
-    if not all(hasattr(value, name) for name in ("order", "orderStatus", "contract")):
+    required = ("order", "orderStatus", "contract")
+    if any(not hasattr(value, name) for name in required):
         raise IBKRReadSideError("IBKR trade has an invalid shape.")
     return cast(_TradeLike, value)
 
 
 def _fill(value: object) -> _FillLike:
-    if not all(hasattr(value, name) for name in ("contract", "execution", "time")):
+    required = ("contract", "execution", "time")
+    if any(not hasattr(value, name) for name in required):
         raise IBKRReadSideError("IBKR fill has an invalid shape.")
     return cast(_FillLike, value)
 
@@ -841,7 +885,9 @@ def _decimal(value: object, *, field_name: str) -> Decimal:
     try:
         parsed = Decimal(str(value))
     except (InvalidOperation, ValueError) as exc:
-        raise IBKRReadSideError(f"{field_name} is not a Decimal.") from exc
+        raise IBKRReadSideError(
+            f"{field_name} is not a Decimal."
+        ) from exc
     if not parsed.is_finite():
         raise IBKRReadSideError(f"{field_name} must be finite.")
     return parsed
@@ -854,7 +900,11 @@ def _positive_decimal(value: object, *, field_name: str) -> Decimal:
     return parsed
 
 
-def _non_negative_decimal(value: object, *, field_name: str) -> Decimal:
+def _non_negative_decimal(
+    value: object,
+    *,
+    field_name: str,
+) -> Decimal:
     parsed = _decimal(value, field_name=field_name)
     if parsed < 0:
         raise IBKRReadSideError(f"{field_name} must be non-negative.")
@@ -862,12 +912,18 @@ def _non_negative_decimal(value: object, *, field_name: str) -> Decimal:
 
 
 def _optional_decimal(value: object) -> Decimal | None:
-    parsed = _decimal(value, field_name="optional provider decimal")
+    parsed = _decimal(
+        value,
+        field_name="optional provider decimal",
+    )
     return parsed
 
 
 def _optional_positive_decimal(value: object) -> Decimal | None:
-    parsed = _decimal(value, field_name="optional provider price")
+    parsed = _decimal(
+        value,
+        field_name="optional provider price",
+    )
     if parsed <= 0:
         return None
     return parsed
@@ -877,5 +933,7 @@ def _aware_datetime(value: datetime) -> datetime:
     if not isinstance(value, datetime):
         raise IBKRReadSideError("provider datetime has an invalid type.")
     if value.tzinfo is None or value.utcoffset() is None:
-        raise IBKRReadSideError("provider datetime must be timezone-aware.")
+        raise IBKRReadSideError(
+            "provider datetime must be timezone-aware."
+        )
     return value
