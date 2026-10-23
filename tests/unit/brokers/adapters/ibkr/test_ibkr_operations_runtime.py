@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import UTC, datetime
+
 import pytest
 
 from pytradekit.brokers import (
@@ -374,7 +375,7 @@ def test_unsafe_reconciliation_keeps_writes_closed() -> None:
     recovery = IBKRReconnectRecoveryRuntime(
         connection=connection,
         operations=runtime,
-        reconciliation=cast(object, reconciliation),
+        reconciliation=reconciliation,
     )
 
     evidence = recovery.recover(reconnect_socket=False)
