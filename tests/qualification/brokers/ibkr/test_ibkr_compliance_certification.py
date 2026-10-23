@@ -130,12 +130,6 @@ def test_retained_real_paper_evidence_promotes_only_explicit_claims() -> None:
 
 def test_certification_rejects_tampered_in_memory_evidence() -> None:
     evidence = _evidence()
-    payload = evidence.to_dict()
-    proofs = payload["proofs"]
-    assert isinstance(proofs, dict)
-    market = proofs[BrokerCapability.MARKET_ORDER.value]
-    assert isinstance(market, dict)
-    market["terminal_status"] = "Cancelled"
 
     with pytest.raises(ValueError, match="SHA-256"):
         build_ibkr_certification_run(
@@ -146,25 +140,14 @@ def test_certification_rejects_tampered_in_memory_evidence() -> None:
                 captured_at=evidence.captured_at,
                 sdk_name=evidence.sdk_name,
                 sdk_version=evidence.sdk_version,
-                account_mask=evidence.account_mask,
+                account_mask="***9999",
                 release_ready=evidence.release_ready,
                 controlled_probe_passed=evidence.controlled_probe_passed,
                 gates=evidence.gates,
                 c3_capabilities=evidence.c3_capabilities,
-                proofs={
-                    BrokerCapability.MARKET_ORDER: {
-                        "submit_attempts": 1,
-                        "perm_id_present": True,
-                        "terminal_status": "Cancelled",
-                        "exec_id_present": True,
-                    },
-                    BrokerCapability.CANCEL_ORDER: dict(
-                        evidence.proofs[BrokerCapability.CANCEL_ORDER]
-                    ),
-                },
+                proofs=evidence.proofs,
             ),
         )
-
 
 def test_evidence_commit_must_match_certification_target() -> None:
     with pytest.raises(ValueError, match="does not match"):
