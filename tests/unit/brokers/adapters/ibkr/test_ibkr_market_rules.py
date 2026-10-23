@@ -9,6 +9,7 @@ from pytradekit.brokers.adapters.ibkr import (
     IBKRContractDetailsRecord,
     IBKRContractId,
     IBKRContractRecord,
+    IBKRInstrumentMappingResult,
     IBKRMarketRuleResolver,
     IBKRPriceIncrement,
     IBKRSecurityType,
@@ -43,7 +44,7 @@ def _mapping(
     *,
     valid_exchanges: tuple[str, ...] = ("SMART",),
     market_rule_ids: tuple[int | None, ...] = (26,),
-):
+) -> IBKRInstrumentMappingResult:
     contract = IBKRContractRecord(
         contract_id=IBKRContractId(265598),
         symbol="AAPL",
