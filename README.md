@@ -8,9 +8,9 @@ PyTradeKit 0.8.0b1 - IBKR Anti-Corruption Layer
 
 PyTradeKit 0.8 continues the Broker Compliance, Certification & IBKR milestone on top of the qualified 0.7 security and operations baseline.
 
-LOT-05.1 through LOT-05.4 now provide the first concrete IBKR Anti-Corruption Layer foundations. Provider identities are explicit, qualified STK contracts map into canonical reference models, submitted MARKET/LIMIT DAY orders project into SDK-free placement commands, and order callbacks normalize without inventing fills or terminal states.
+LOT-05.1 through LOT-05.5 now provide the first concrete IBKR Anti-Corruption Layer foundations. Provider identities are explicit, qualified STK contracts map into canonical reference models, submitted MARKET/LIMIT DAY orders project into SDK-free placement commands, callbacks normalize conservatively, and execDetails can create idempotent canonical Fill facts.
 
-Session orderId allocation remains outside the mapper, dynamic market rules remain provider-specific, Filled waits for execDetails before economic Fill creation, and Inactive requires reconciliation instead of becoming an automatic rejection. No IBKR SDK dependency or provider network call is introduced yet. LIVE remains unavailable.
+Session orderId allocation remains outside the mapper, exact execId replay creates no second effect, execution corrections require reconciliation, pending price revisions block Fill emission, and provider local execution times are converted to UTC rather than relabeled. No IBKR SDK dependency or provider network call is introduced yet. LIVE remains unavailable.
 
 ## Requirements
 
@@ -328,6 +328,7 @@ package import graph remains acyclic
 - IBKR contract and instrument mapping: docs/architecture/ibkr-contract-instrument-mapping.md
 - IBKR order command mapping: docs/architecture/ibkr-order-command-mapping.md
 - IBKR order callback normalization: docs/architecture/ibkr-order-callback-normalization.md
+- IBKR execution and Fill mapping: docs/architecture/ibkr-execution-fill-mapping.md
 - 0.8.0b1 release notes: docs/releases/0.8.0b1.md
 - ADRs: docs/adr/
 

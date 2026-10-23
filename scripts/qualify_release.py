@@ -67,6 +67,7 @@ RELEASE_DOCUMENTS = (
     Path("docs/architecture/ibkr-contract-instrument-mapping.md"),
     Path("docs/architecture/ibkr-order-command-mapping.md"),
     Path("docs/architecture/ibkr-order-callback-normalization.md"),
+    Path("docs/architecture/ibkr-execution-fill-mapping.md"),
 )
 
 

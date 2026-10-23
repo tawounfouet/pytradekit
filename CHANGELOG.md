@@ -10,6 +10,15 @@ The project is currently pre-1.0 and public APIs remain experimental unless expl
 
 ### Added
 
+- LOT-05.5 IBKR Execution Details & Fill Mapping.
+- SDK-free IBKRExecutionDetailsObservation and IBKRExecutionRegistry.
+- execId-based Fill deduplication and deterministic canonical FillId generation.
+- Explicit duplicate and correction dispositions for provider execution identity.
+- cumQty-based PARTIALLY_FILLED versus FILLED normalization.
+- pendingPriceRevision fail-closed handling.
+- BOT/SLD side correlation and conId/orderRef/permId verification.
+- IANA timezone conversion for provider execution timestamps.
+- Dedicated LOT-05.5 architecture, public-contract, unit and qualification gates.
 - LOT-05.4 IBKR Order Status & Callback Normalization.
 - SDK-free IBKROpenOrderObservation, IBKROrderStatusObservation and IBKROrderErrorObservation.
 - Explicit PendingSubmit, PreSubmitted, Submitted, PendingCancel, ApiCancelled, Cancelled, Filled and Inactive rules.
@@ -64,7 +73,8 @@ The project is currently pre-1.0 and public APIs remain experimental unless expl
 - LOT-05.2 Contract & Instrument Mapping is implemented.
 - LOT-05.3 Order Command Mapping is implemented.
 - LOT-05.4 Order Status & Callback Normalization is implemented.
-- LOT-05.5 Execution Details & Fill Mapping remains next.
+- LOT-05.5 Execution Details & Fill Mapping is implemented.
+- LOT-05.6 Account, Balance & Position Mapping remains next.
 
 ## [0.8.0a4] - 2026-10-23
 
