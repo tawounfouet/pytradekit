@@ -12,6 +12,7 @@ from pytradekit.brokers import (
     ProviderProtocolError,
     ProviderUnavailableError,
 )
+from pytradekit.orders.domain import OrderId
 from pytradekit.shared import require_utc_datetime
 
 from .discovery import IBKR_PROVIDER_KEY
@@ -204,6 +205,14 @@ class IBKROrderCorrelationRegistry:
             (client_id.value, session_order_id.value)
         )
 
+    def find_by_order_id(
+        self,
+        order_id: OrderId,
+    ) -> IBKROrderSessionReservation | None:
+        if not isinstance(order_id, OrderId):
+            raise IBKROrderSessionError("order_id must be an OrderId.")
+        return self._by_order_id.get(str(order_id))
+
     def find_by_reference(
         self,
         reference: IBKROrderReference,
@@ -256,6 +265,22 @@ class IBKROrderSessionSequencer:
                 operation="order_session_reserve",
             )
 
+        order_reference = IBKROrderReference(
+            context.client_order_reference
+        )
+        if self._correlations.find_by_reference(order_reference) is not None:
+            raise ProviderProtocolError(
+                "IBKR orderRef already has a session reservation.",
+                provider=IBKR_PROVIDER_KEY,
+                operation="order_session_reserve",
+            )
+        if self._correlations.find_by_order_id(context.order_id) is not None:
+            raise ProviderProtocolError(
+                "Canonical OrderId already has an IBKR session reservation.",
+                provider=IBKR_PROVIDER_KEY,
+                operation="order_session_reserve",
+            )
+
         client = self._client()
         if not client.isReady():
             raise ProviderProtocolError(
@@ -276,9 +301,6 @@ class IBKROrderSessionSequencer:
 
         try:
             session_order_id = IBKRSessionOrderId(raw_order_id)
-            order_reference = IBKROrderReference(
-                context.client_order_reference
-            )
         except ValueError as exc:
             raise ProviderProtocolError(
                 "IBKR returned an invalid session order ID sequence.",
