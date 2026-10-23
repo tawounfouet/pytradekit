@@ -184,7 +184,7 @@ class IBKRPaperRuntimeProfile:
     def from_environment(
         cls,
         environ: Mapping[str, str] | None = None,
-    ) -> "IBKRPaperRuntimeProfile":
+    ) -> IBKRPaperRuntimeProfile:
         """Build the provider-local PAPER profile from environment values."""
 
         source = os.environ if environ is None else environ
@@ -423,7 +423,7 @@ class IBAsyncPaperTransport:
 
         try:
             module = import_module(IBKR_ASYNC_PACKAGE_NAME)
-            client_type = getattr(module, "IB")
+            client_type = module.IB
         except (ImportError, AttributeError) as exc:
             raise IBKRRuntimeDependencyError(
                 "ib_async does not expose the expected IB transport class."
