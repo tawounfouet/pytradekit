@@ -8,6 +8,8 @@ IBKR deterministic adapter gates
 
 successful deterministic CI on exact commit
 -> manual real PAPER controlled probe through IBKRExecutionAdapter
+-> raw provider evidence retained by GitHub Actions
+-> retained provider artifact_id
 -> Actions-only evidence normalization
 -> canonical bundle SHA-256 verification
 -> sanitized retained bundle
@@ -23,7 +25,7 @@ No static list of pre-certified C3 capabilities exists.
 
 ## Evidence identity
 
-Each retained bundle is bound to provider, PAPER environment, qualified commit, ib_async version, canonical artifact SHA-256, masked account, PAPER workflow run ID and deterministic CI run ID.
+Each retained bundle is bound to provider, PAPER environment, qualified commit, ib_async version, canonical artifact SHA-256, masked account, retained provider artifact ID, PAPER workflow run ID and deterministic CI run ID.
 
 The canonical hash excludes only its own self-referential hash field. Parsing or certification rejects a bundle whose content no longer matches that hash.
 
@@ -43,6 +45,6 @@ Every controlled MARKET, LIMIT, CANCEL and cleanup write flows through IBKRExecu
 
 No LIVE endpoint exists.
 
-Cleanup is evidence, not an assumption.
+Cleanup is evidence, not an assumption. Its correction quantity is derived from provider fills observed for the probe, and an interrupted scenario may attempt cleanup only once before shutdown.
 
 TRADING_READY remains closed until retained real PAPER certification is available.
