@@ -59,8 +59,8 @@ def test_startup_reconciliation_keeps_economic_write_admission_closed() -> None:
     source = _STARTUP.read_text(encoding="utf-8")
 
     assert 'name="economic_write_admission"' in source
-    assert "IBKR economic writes remain blocked." in source
-    assert "IBKR economic write path is not qualified yet" in source
+    assert "execution certification is not complete." in source
+    assert "IBKR economic write path is not PAPER certified yet" in source
 
 
 def test_ibkr_read_side_types_do_not_leak_into_canonical_layers() -> None:

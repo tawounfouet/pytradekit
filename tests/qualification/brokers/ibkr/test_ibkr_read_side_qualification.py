@@ -206,4 +206,4 @@ def test_lot06_2_complete_read_side_can_reconcile_without_write_admission() -> N
     assert report.consistency_status is ConsistencyStatus.CONSISTENT
     assert report.state_confidence is StateConfidence.HIGH
     assert report.state is TradingReadinessState.NOT_READY
-    assert "IBKR economic write path is not qualified yet" in report.gaps
+    assert "IBKR economic write path is not PAPER certified yet" in report.gaps
