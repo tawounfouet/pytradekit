@@ -63,6 +63,7 @@ RELEASE_DOCUMENTS = (
     Path("docs/architecture/ibkr-contract-freeze.md"),
     Path("docs/guides/ibkr-discovery.md"),
     Path("docs/qualification/ibkr-discovery-contract-freeze.md"),
+    Path("docs/architecture/ibkr-identity-model.md"),
 )
 
 

@@ -1,4 +1,4 @@
-"""IBKR adapter discovery surface for PyTradeKit 0.8."""
+"""IBKR adapter surface for PyTradeKit 0.8."""
 
 from .discovery import (
     IBKR_DEFERRED_CAPABILITIES,
@@ -21,6 +21,21 @@ from .discovery import (
     build_ibkr_contract_freeze,
     validate_ibkr_paper_port,
 )
+from .identities import (
+    IBKRClientId,
+    IBKRConnectionIdentity,
+    IBKRContractId,
+    IBKRContractIdentity,
+    IBKRExecutionCorrection,
+    IBKRExecutionId,
+    IBKRExecutionIdentity,
+    IBKRIdentityError,
+    IBKROrderIdentity,
+    IBKROrderReference,
+    IBKRPermanentOrderId,
+    IBKRSessionOrderId,
+)
+from .identity_registry import IBKROrderIdentityRegistry
 
 __all__ = [
     "IBKR_DEFERRED_CAPABILITIES",
@@ -33,13 +48,26 @@ __all__ = [
     "IBKR_RUNTIME_TRANSPORT",
     "IBKR_TARGET_CAPABILITIES",
     "IBKR_TWS_API_TARGET",
+    "IBKRClientId",
     "IBKRClientSurface",
+    "IBKRConnectionIdentity",
     "IBKRContractDecision",
     "IBKRContractFreeze",
+    "IBKRContractId",
+    "IBKRContractIdentity",
     "IBKRContractOutcome",
     "IBKRDiscoveryError",
+    "IBKRExecutionCorrection",
+    "IBKRExecutionId",
+    "IBKRExecutionIdentity",
+    "IBKRIdentityError",
+    "IBKROrderIdentity",
+    "IBKROrderIdentityRegistry",
     "IBKROrderIdentityRole",
+    "IBKROrderReference",
+    "IBKRPermanentOrderId",
     "IBKRReadinessFact",
+    "IBKRSessionOrderId",
     "build_ibkr_contract_freeze",
     "validate_ibkr_paper_port",
 ]

@@ -6,6 +6,39 @@ The project is currently pre-1.0 and public APIs remain experimental unless expl
 
 ## [Unreleased]
 
+## [0.8.0b1] - 2026-10-23
+
+### Added
+
+- LOT-05.1 IBKR Provider Primitives & Identity Model.
+- IBKRClientId, IBKRSessionOrderId, IBKRPermanentOrderId and IBKROrderReference.
+- IBKRExecutionId and explicit IBKRExecutionCorrection relationship.
+- IBKRContractId and IBKRContractIdentity.
+- IBKRConnectionIdentity and IBKROrderIdentity.
+- Conflict-safe IBKROrderIdentityRegistry.
+- Explicit conversions to existing ProviderOrderIdentity, ProviderFillIdentity and ProviderInstrumentIdentity.
+- Dedicated architecture, public-contract, unit and qualification tests.
+- Machine-readable LOT-05.1 qualification artifact.
+
+### Architecture
+
+- orderId remains session-local and never becomes external_order_id.
+- ProviderOrderIdentity requires a non-zero permId.
+- orderRef remains a provider correlation reference.
+- execId identifies provider execution observations without creating Fill semantics.
+- conId remains provider instrument identity.
+- clientId remains provider runtime identity.
+- Generic broker identity models remain IBKR-free.
+- No ibapi or ib_async dependency is introduced.
+
+### Compatibility
+
+- BrokerAdapterContract remains candidate version 1.0-rc1.
+- LOT-04 contract freeze remains valid.
+- No IBKR PAPER certification claim is made.
+- LIVE remains unavailable.
+- LOT-05.2 Contract & Instrument Mapping remains next.
+
 ## [0.8.0a4] - 2026-10-23
 
 ### Added
