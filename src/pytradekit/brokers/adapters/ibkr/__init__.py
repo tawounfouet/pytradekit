@@ -130,6 +130,22 @@ from .runtime import (
     build_ibkr_paper_connection_runtime,
 )
 
+from .read_side import (
+    IBKR_READ_SIDE_VERSION,
+    IBKRAccountRestrictionsProvider,
+    IBKRBrokerSnapshotPort,
+    IBKRInstrumentResolver,
+    IBKROrderIdentityResolver,
+    IBKRReadSideCaptureStats,
+    IBKRReadSideClient,
+    IBKRReadSideError,
+)
+from .startup_reconciliation import (
+    IBKR_STARTUP_RECONCILIATION_VERSION,
+    IBKRStartupReconciliationGate,
+    IBKRStartupReconciliationWorkflow,
+)
+
 __all__ = [
     "IBKR_ACL_ADAPTER_VERSION",
     "IBKR_ACL_DECLARED_CAPABILITIES",
@@ -146,8 +162,10 @@ __all__ = [
     "IBKR_PAPER_PORTS",
     "IBKR_PAPER_RUNTIME_VERSION",
     "IBKR_PROVIDER_KEY",
+    "IBKR_READ_SIDE_VERSION",
     "IBKR_RUNTIME_GATEWAY",
     "IBKR_RUNTIME_TRANSPORT",
+    "IBKR_STARTUP_RECONCILIATION_VERSION",
     "IBKR_TARGET_CAPABILITIES",
     "IBKR_TWS_API_TARGET",
     "IBAsyncPaperTransport",
@@ -156,7 +174,9 @@ __all__ = [
     "IBKRAccountMetric",
     "IBKRAccountMetricTag",
     "IBKRAccountRestrictionsObservation",
+    "IBKRAccountRestrictionsProvider",
     "IBKRAccountSummaryObservation",
+    "IBKRBrokerSnapshotPort",
     "IBKRClientId",
     "IBKRClientSurface",
     "IBKRConnectionIdentity",
@@ -186,6 +206,7 @@ __all__ = [
     "IBKRExecutionSide",
     "IBKRIdentityError",
     "IBKRInstrumentMappingResult",
+    "IBKRInstrumentResolver",
     "IBKROpenOrderObservation",
     "IBKROrderAction",
     "IBKROrderCallbackError",
@@ -194,6 +215,7 @@ __all__ = [
     "IBKROrderErrorObservation",
     "IBKROrderIdentity",
     "IBKROrderIdentityRegistry",
+    "IBKROrderIdentityResolver",
     "IBKROrderIdentityRole",
     "IBKROrderReference",
     "IBKROrderStateDisposition",
@@ -208,6 +230,9 @@ __all__ = [
     "IBKRPortfolioPositionObservation",
     "IBKRPositionMappingResult",
     "IBKRPriceIncrementMode",
+    "IBKRReadSideCaptureStats",
+    "IBKRReadSideClient",
+    "IBKRReadSideError",
     "IBKRReadinessDecision",
     "IBKRReadinessFact",
     "IBKRReadinessObservation",
@@ -215,6 +240,8 @@ __all__ = [
     "IBKRRuntimeDependencyError",
     "IBKRSecurityType",
     "IBKRSessionOrderId",
+    "IBKRStartupReconciliationGate",
+    "IBKRStartupReconciliationWorkflow",
     "IBKRTimeInForce",
     "IBKRTransmitPolicy",
     "IBKRTransportConnectionEvidence",
