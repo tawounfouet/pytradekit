@@ -382,6 +382,7 @@ class IBKRPaperEvidenceBundle:
         cls,
         payload: Mapping[str, object],
     ) -> IBKRPaperEvidenceBundle:
+        verify_ibkr_evidence_integrity(payload)
         if _text(payload.get("schema_version"), "schema_version") != (
             IBKR_PAPER_EVIDENCE_SCHEMA_VERSION
         ):
@@ -465,15 +466,67 @@ class IBKRPaperEvidenceBundle:
 def canonical_ibkr_evidence_sha256(
     payload: Mapping[str, object],
 ) -> str:
-    """Return stable SHA-256 for one JSON-safe evidence payload."""
+    """Return stable SHA-256 excluding only the self-referential hash field."""
 
+    normalized = _integrity_payload(payload)
     encoded = dumps(
-        payload,
+        normalized,
         sort_keys=True,
         separators=(",", ":"),
         ensure_ascii=True,
     ).encode("utf-8")
     return sha256(encoded).hexdigest()
+
+
+def verify_ibkr_evidence_integrity(
+    payload: Mapping[str, object],
+) -> None:
+    """Reject retained PAPER evidence whose canonical artifact hash changed."""
+
+    provenance = _mapping(payload.get("provenance"), "provenance")
+    expected = _text(
+        provenance.get("artifact_json_sha256"),
+        "provenance.artifact_json_sha256",
+    ).lower()
+    _require_sha256(
+        expected,
+        field_name="provenance.artifact_json_sha256",
+    )
+    observed = canonical_ibkr_evidence_sha256(payload)
+    if observed != expected:
+        raise IBKREvidenceError(
+            "Retained IBKR PAPER evidence SHA-256 does not match its content."
+        )
+
+
+def _integrity_payload(
+    payload: Mapping[str, object],
+) -> dict[str, object]:
+    copied = _copy_json_value(payload)
+    if not isinstance(copied, dict):
+        raise IBKREvidenceError(
+            "IBKR evidence payload must normalize to a JSON object."
+        )
+    raw_provenance = copied.get("provenance")
+    if not isinstance(raw_provenance, dict):
+        raise IBKREvidenceError(
+            "provenance must be a mapping."
+        )
+    provenance = dict(raw_provenance)
+    provenance.pop("artifact_json_sha256", None)
+    copied["provenance"] = provenance
+    return copied
+
+
+def _copy_json_value(value: object) -> object:
+    if isinstance(value, Mapping):
+        return {
+            str(key): _copy_json_value(item)
+            for key, item in value.items()
+        }
+    if isinstance(value, list | tuple):
+        return [_copy_json_value(item) for item in value]
+    return value
 
 
 def _mapping(value: object, field_name: str) -> Mapping[str, object]:
