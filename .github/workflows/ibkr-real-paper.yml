@@ -17,6 +17,14 @@ on:
       limit_price:
         description: Explicit safe PAPER LIMIT price for the cancel scenario
         required: true
+      quantity:
+        description: Controlled PAPER share quantity
+        required: true
+        default: "1"
+      client_id:
+        description: Dedicated non-zero IBKR API client ID
+        required: true
+        default: "71"
       acknowledgement:
         description: Type I_UNDERSTAND_IBKR_PAPER_ORDERS_WILL_BE_CREATED
         required: true
@@ -34,8 +42,13 @@ jobs:
       PYTRADEKIT_IBKR_EXPECTED_ACCOUNT_ID: ${{ secrets.PYTRADEKIT_IBKR_EXPECTED_ACCOUNT_ID }}
       PYTRADEKIT_IBKR_HOST: 127.0.0.1
       PYTRADEKIT_IBKR_PORT: "4002"
-      PYTRADEKIT_IBKR_CLIENT_ID: "17"
+      PYTRADEKIT_IBKR_CLIENT_ID: ${{ inputs.client_id }}
       PYTRADEKIT_IBKR_ORDER_PROBE_ACK: ${{ inputs.acknowledgement }}
+      PYTRADEKIT_IBKR_ORDER_PROBE_SYMBOL: ${{ inputs.symbol }}
+      PYTRADEKIT_IBKR_ORDER_PROBE_CONID: ${{ inputs.contract_id }}
+      PYTRADEKIT_IBKR_LIMIT_PRICE: ${{ inputs.limit_price }}
+      PYTRADEKIT_IBKR_ORDER_PROBE_QUANTITY: ${{ inputs.quantity }}
+      PYTRADEKIT_IBKR_ORDER_PROBE_TIMEOUT_SECONDS: "90"
 
     steps:
       - name: Verify explicit PAPER order acknowledgement
@@ -98,17 +111,23 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e ".[dev,ibkr]"
 
-      - name: Run controlled real IBKR PAPER probe
+      - name: Run controlled real IBKR PAPER adapter probe
         run: |
           mkdir -p artifacts/qualification/brokers/ibkr
           python scripts/ibkr_paper_controlled_probe.py \
-            --commit-sha "$GITHUB_SHA" \
-            --contract-id "${{ inputs.contract_id }}" \
-            --symbol "${{ inputs.symbol }}" \
-            --limit-price "${{ inputs.limit_price }}" \
             --with-orders \
+            --ci-qualified \
+            --runbook-reviewed \
+            --output artifacts/qualification/brokers/ibkr/real-paper-probe.json
+
+      - name: Normalize retained PAPER evidence
+        run: |
+          python scripts/normalize_ibkr_paper_evidence.py \
+            --probe-report artifacts/qualification/brokers/ibkr/real-paper-probe.json \
+            --qualified-commit "$GITHUB_SHA" \
             --workflow-run-id "$GITHUB_RUN_ID" \
             --deterministic-ci-run-id "${{ inputs.deterministic_ci_run_id }}" \
+            --artifact-name pytradekit-ibkr-paper-certification \
             --output artifacts/qualification/brokers/ibkr/real-paper-evidence.json
 
       - name: Replay retained evidence through the compliance harness
