@@ -7,14 +7,14 @@ import json
 from pathlib import Path
 from typing import cast
 
-from pytradekit.brokers.compliance import (
-    BrokerCapability,
-    CertificationLevel,
-)
 from pytradekit.brokers.adapters.ibkr import (
     IBKR_REAL_PAPER_C3_ELIGIBLE_CAPABILITIES,
     IBKRPaperEvidenceBundle,
     build_ibkr_certification_run,
+)
+from pytradekit.brokers.compliance import (
+    BrokerCapability,
+    CertificationLevel,
 )
 
 
