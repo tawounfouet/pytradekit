@@ -64,6 +64,7 @@ class IBKRConnectivityState(StrEnum):
     RESTORED_DATA_MAINTAINED = "RESTORED_DATA_MAINTAINED"
     PORT_RESET = "PORT_RESET"
     DEGRADED = "DEGRADED"
+    MARKET_DATA_DEGRADED = "MARKET_DATA_DEGRADED"
 
 
 @dataclass(frozen=True, slots=True)
@@ -334,7 +335,7 @@ _CONNECTIVITY_STATES: Final[Mapping[int, IBKRConnectivityState]] = MappingProxyT
         1101: IBKRConnectivityState.RESTORED_DATA_LOST,
         1102: IBKRConnectivityState.RESTORED_DATA_MAINTAINED,
         1300: IBKRConnectivityState.PORT_RESET,
-        2103: IBKRConnectivityState.DEGRADED,
+        2103: IBKRConnectivityState.MARKET_DATA_DEGRADED,
         2104: IBKRConnectivityState.CONNECTED,
         2110: IBKRConnectivityState.DEGRADED,
     }
@@ -518,8 +519,6 @@ def evaluate_ibkr_readiness(
     reconciliation_required = not observation.reconciliation_complete
     if connectivity in {
         IBKRConnectivityState.LOST,
-        IBKRConnectivityState.RESTORED_DATA_LOST,
-        IBKRConnectivityState.RESTORED_DATA_MAINTAINED,
         IBKRConnectivityState.PORT_RESET,
         IBKRConnectivityState.DEGRADED,
     }:
@@ -536,6 +535,7 @@ def evaluate_ibkr_readiness(
             IBKRConnectivityState.LOST,
             IBKRConnectivityState.PORT_RESET,
             IBKRConnectivityState.DEGRADED,
+            IBKRConnectivityState.MARKET_DATA_DEGRADED,
         }
         and not market_data_resubscription_required
     )
