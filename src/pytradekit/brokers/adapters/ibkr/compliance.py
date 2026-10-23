@@ -42,7 +42,10 @@ from .operations_runtime import IBKRReconnectRecoveryRuntime
 from .order_callbacks import map_ibkr_order_status_report
 from .order_commands import map_ibkr_order_command
 from .order_session import IBKROrderSessionRuntime
-from .paper_evidence import IBKRPaperEvidenceBundle
+from .paper_evidence import (
+    IBKRPaperEvidenceBundle,
+    verify_ibkr_evidence_integrity,
+)
 from .read_side import IBKRBrokerSnapshotPort
 from .runtime import IBKR_ASYNC_PACKAGE_NAME, IBKR_ASYNC_VERSION_TARGET
 
@@ -358,6 +361,8 @@ def build_ibkr_certification_run(
 
     if not isinstance(commit_sha, str) or not commit_sha.strip():
         raise ValueError("commit_sha must be non-empty.")
+    if evidence is not None:
+        verify_ibkr_evidence_integrity(evidence.to_dict())
     manifest = build_ibkr_compliance_manifest()
     fixture = IBKRRetainedEvidenceFixture(manifest)
     requirements = build_ibkr_compliance_requirements(evidence)
