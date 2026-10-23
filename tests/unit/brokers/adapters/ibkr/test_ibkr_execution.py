@@ -8,7 +8,12 @@ from typing import cast
 
 import pytest
 
-from pytradekit.brokers import ProviderProtocolError, ProviderRejectedOperationError
+from pytradekit.brokers import (
+    ProviderProtocolError,
+    ProviderRateLimitError,
+    ProviderRejectedOperationError,
+    ProviderStateReconciliationRequired,
+)
 from pytradekit.brokers.adapters.ibkr import (
     IBKRClientId,
     IBKRContractDetailsRecord,
@@ -17,6 +22,8 @@ from pytradekit.brokers.adapters.ibkr import (
     IBKREconomicWriteAdmission,
     IBKRExecutionAdapter,
     IBKRExecutionInstrumentBinding,
+    IBKRMarketRuleResolver,
+    IBKROperationalGuard,
     IBKRPaperConnectionRuntime,
     IBKRPaperRuntimeProfile,
     IBKRSDKPlacementFactory,
@@ -89,6 +96,11 @@ class _ProviderClient:
         self.place_error: Exception | None = None
         self.cancel_error: Exception | None = None
         self.perm_id = 700
+        self.market_rule_calls = 0
+        self.market_rule_payload: list[object] = [
+            _Object(lowEdge=0.0, increment=0.01),
+            _Object(lowEdge=100.0, increment=0.05),
+        ]
         self._trades: list[object] = []
 
     def placeOrder(self, contract: object, order: object) -> object:
@@ -135,6 +147,11 @@ class _ProviderClient:
 
     def trades(self) -> list[object]:
         return list(self._trades)
+
+    def reqMarketRule(self, marketRuleId: int) -> object:
+        assert marketRuleId == 26
+        self.market_rule_calls += 1
+        return list(self.market_rule_payload)
 
 
 class _Transport:
@@ -252,6 +269,8 @@ def _adapter(
     binding: IBKRExecutionInstrumentBinding,
     *,
     admission: IBKREconomicWriteAdmission | None = None,
+    operations: IBKROperationalGuard | None = None,
+    dynamic_market_rules: bool = False,
 ) -> tuple[IBKRExecutionAdapter, _ProviderClient]:
     provider = _ProviderClient()
     connection = IBKRPaperConnectionRuntime(
@@ -269,13 +288,25 @@ def _adapter(
         contract_constructor=_Object,
         order_constructor=_Object,
     )
+    operational_guard = operations or IBKROperationalGuard(
+        socket_connected=True,
+        provider_connected=True,
+        reconciliation_complete=True,
+    )
+    market_rules = (
+        IBKRMarketRuleResolver(provider)
+        if dynamic_market_rules
+        else None
+    )
     return (
         IBKRExecutionAdapter(
             connection=connection,
             session=session,
             instruments=resolver,
             admission=admission or _admission(),
+            operations=operational_guard,
             clock=_Clock(),
+            market_rules=market_rules,
             sdk_factory=sdk_factory,
         ),
         provider,
@@ -447,3 +478,81 @@ def test_query_order_reuses_callback_normalization() -> None:
     assert report.status is ExecutionStatus.ACCEPTED
     assert report.external_order_id == "700"
     assert report.order_id == order.id
+
+
+def test_dynamic_market_rule_limit_places_when_active_increment_is_valid() -> None:
+    binding = _binding(market_rule=True)
+    adapter, provider = _adapter(
+        binding,
+        dynamic_market_rules=True,
+    )
+
+    result = adapter.submit(
+        _order(binding, limit_price=Decimal("100.10"))
+    )
+
+    assert result.status is SubmissionStatus.ACKNOWLEDGED
+    assert provider.place_calls == 1
+    assert provider.market_rule_calls == 1
+    assert adapter.last_market_rule_evidence is not None
+    assert adapter.last_market_rule_evidence.valid
+    assert adapter.last_market_rule_evidence.increment == Decimal("0.05")
+
+
+def test_dynamic_market_rule_limit_rejects_before_write_when_invalid() -> None:
+    binding = _binding(market_rule=True)
+    adapter, provider = _adapter(
+        binding,
+        dynamic_market_rules=True,
+    )
+
+    result = adapter.submit(
+        _order(binding, limit_price=Decimal("100.12"))
+    )
+
+    assert result.status is SubmissionStatus.REJECTED
+    assert provider.place_calls == 0
+    assert provider.market_rule_calls == 1
+    assert adapter.last_market_rule_evidence is not None
+    assert not adapter.last_market_rule_evidence.valid
+
+
+def test_operational_pacing_guard_blocks_before_place_order() -> None:
+    binding = _binding()
+    operations = IBKROperationalGuard(
+        socket_connected=True,
+        provider_connected=True,
+        reconciliation_complete=True,
+    )
+    operations.on_throttle_start()
+    adapter, provider = _adapter(
+        binding,
+        operations=operations,
+    )
+
+    with pytest.raises(ProviderRateLimitError, match="pacing"):
+        adapter.submit(_order(binding))
+
+    assert provider.place_calls == 0
+
+
+def test_operational_reconciliation_guard_blocks_before_cancel_order() -> None:
+    binding = _binding()
+    operations = IBKROperationalGuard(
+        socket_connected=True,
+        provider_connected=True,
+        reconciliation_complete=False,
+    )
+    adapter, provider = _adapter(
+        binding,
+        operations=operations,
+    )
+    order = _order(binding)
+
+    with pytest.raises(
+        ProviderStateReconciliationRequired,
+        match="reconciliation",
+    ):
+        adapter.cancel(order)
+
+    assert provider.cancel_calls == 0
