@@ -48,6 +48,7 @@ def _bundle(
             source_ref="github-actions:ibkr-paper:test",
             workflow_run_id=1001,
             deterministic_ci_run_id=1000,
+            artifact_id=1002,
         ),
         captured_at=datetime(2026, 10, 23, 12, 0, tzinfo=UTC),
         sdk_name="ib_async",
@@ -88,6 +89,7 @@ def test_claimed_c3_without_required_gate_fails_closed() -> None:
                 source_ref="github-actions:ibkr-paper:test-missing-gate",
                 workflow_run_id=1003,
                 deterministic_ci_run_id=1002,
+                artifact_id=1004,
             ),
             captured_at=datetime(2026, 10, 23, 12, 0, tzinfo=UTC),
             sdk_name="ib_async",
@@ -112,13 +114,47 @@ def test_claimed_c3_without_required_gate_fails_closed() -> None:
 
 
 def test_c3_without_workflow_provenance_is_rejected() -> None:
-    with pytest.raises(IBKREvidenceError, match="requires both"):
+    with pytest.raises(IBKREvidenceError, match="retained provider artifact"):
         IBKRPaperEvidenceBundle(
             provenance=IBKRPaperEvidenceProvenance(
                 qualified_commit="a" * 40,
                 artifact_name="ibkr-paper.json",
                 artifact_json_sha256="b" * 64,
                 source_ref="manual:ibkr-paper:20261023",
+            ),
+            captured_at=datetime(2026, 10, 23, 12, 0, tzinfo=UTC),
+            sdk_name="ib_async",
+            sdk_version="2.1.0",
+            account_mask="***1234",
+            release_ready=True,
+            controlled_probe_passed=True,
+            gates={
+                "ci_quality_gate": "PASS",
+                "paper_market_order": "PASS",
+                "paper_execution_details": "PASS",
+            },
+            c3_capabilities=(BrokerCapability.MARKET_ORDER,),
+            proofs={
+                BrokerCapability.MARKET_ORDER: {
+                    "submit_attempts": 1,
+                    "perm_id_present": True,
+                    "terminal_status": "Filled",
+                    "exec_id_present": True,
+                }
+            },
+        )
+
+
+def test_c3_without_retained_artifact_id_is_rejected() -> None:
+    with pytest.raises(IBKREvidenceError, match="retained provider artifact"):
+        IBKRPaperEvidenceBundle(
+            provenance=IBKRPaperEvidenceProvenance(
+                qualified_commit="a" * 40,
+                artifact_name="ibkr-paper.json",
+                artifact_json_sha256="b" * 64,
+                source_ref="github-actions:ibkr-paper:test-no-artifact",
+                workflow_run_id=1005,
+                deterministic_ci_run_id=1004,
             ),
             captured_at=datetime(2026, 10, 23, 12, 0, tzinfo=UTC),
             sdk_name="ib_async",
