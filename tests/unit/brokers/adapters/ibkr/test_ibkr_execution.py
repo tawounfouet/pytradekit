@@ -18,6 +18,8 @@ from pytradekit.brokers.adapters.ibkr import (
     IBKRExecutionAdapter,
     IBKRExecutionInstrumentBinding,
     IBKRPaperConnectionRuntime,
+    IBKRMarketRuleResolver,
+    IBKROperationalGuard,
     IBKRPaperRuntimeProfile,
     IBKRSDKPlacementFactory,
     IBKRSecurityType,
@@ -89,6 +91,11 @@ class _ProviderClient:
         self.place_error: Exception | None = None
         self.cancel_error: Exception | None = None
         self.perm_id = 700
+        self.market_rule_calls = 0
+        self.market_rule_payload: list[object] = [
+            _Object(lowEdge=0.0, increment=0.01),
+            _Object(lowEdge=100.0, increment=0.05),
+        ]
         self._trades: list[object] = []
 
     def placeOrder(self, contract: object, order: object) -> object:
@@ -135,6 +142,11 @@ class _ProviderClient:
 
     def trades(self) -> list[object]:
         return list(self._trades)
+
+    def reqMarketRule(self, marketRuleId: int) -> object:
+        assert marketRuleId == 26
+        self.market_rule_calls += 1
+        return list(self.market_rule_payload)
 
 
 class _Transport:
@@ -252,6 +264,7 @@ def _adapter(
     binding: IBKRExecutionInstrumentBinding,
     *,
     admission: IBKREconomicWriteAdmission | None = None,
+    dynamic_market_rules: bool = False,
 ) -> tuple[IBKRExecutionAdapter, _ProviderClient]:
     provider = _ProviderClient()
     connection = IBKRPaperConnectionRuntime(
@@ -269,13 +282,25 @@ def _adapter(
         contract_constructor=_Object,
         order_constructor=_Object,
     )
+    operations = IBKROperationalGuard(
+        socket_connected=True,
+        provider_connected=True,
+        reconciliation_complete=True,
+    )
+    market_rules = (
+        IBKRMarketRuleResolver(provider)
+        if dynamic_market_rules
+        else None
+    )
     return (
         IBKRExecutionAdapter(
             connection=connection,
             session=session,
             instruments=resolver,
             admission=admission or _admission(),
+            operations=operations,
             clock=_Clock(),
+            market_rules=market_rules,
             sdk_factory=sdk_factory,
         ),
         provider,
