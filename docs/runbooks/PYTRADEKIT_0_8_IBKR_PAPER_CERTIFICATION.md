@@ -63,7 +63,9 @@ Do not rerun blindly after a failure involving an economic write. Inspect the PA
 
 ## 4. Official C3 capture
 
-Use the manual GitHub Actions workflow `IBKR Real PAPER Certification` only on a self-hosted runner labelled `ibkr-paper` with IB Gateway already running.
+Use the manual GitHub Actions workflow `IBKR Real PAPER Certification` only on a self-hosted macOS runner labelled `ibkr-paper` with IB Gateway already running on the same Mac.
+
+The runner must expose the GitHub labels `self-hosted`, `macOS` and `ibkr-paper`. IB Gateway PAPER must be reachable from that same Mac at `127.0.0.1:4002`.
 
 The workflow requires:
 
