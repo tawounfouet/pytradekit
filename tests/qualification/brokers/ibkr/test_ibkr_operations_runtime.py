@@ -1,6 +1,7 @@
 """Qualification tests for IBKR LOT-06.6 operational runtime."""
 
 from datetime import UTC, datetime
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -51,12 +52,8 @@ def test_lot06_6_qualifies_dynamic_market_rule_runtime() -> None:
     )
 
     assert IBKR_MARKET_RULE_VERSION == "0.8.0b7-lot06.6"
-    assert rule.validates(
-        __import__("decimal", fromlist=["Decimal"]).Decimal("100.10")
-    )
-    assert not rule.validates(
-        __import__("decimal", fromlist=["Decimal"]).Decimal("100.12")
-    )
+    assert rule.validates(Decimal("100.10"))
+    assert not rule.validates(Decimal("100.12"))
 
 
 def test_lot06_6_qualifies_reconnect_containment_without_replay() -> None:
