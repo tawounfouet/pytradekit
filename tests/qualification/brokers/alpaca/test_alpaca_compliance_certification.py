@@ -68,7 +68,9 @@ def test_lot03_c3_evidence_points_back_to_real_github_actions_provenance() -> No
     assert paper_evidence
 
     for item in paper_evidence:
-        source = item.payload["source"]
+        observation = item.payload["observation"]
+        assert isinstance(observation, dict)
+        source = observation["source"]
         assert isinstance(source, dict)
         assert source["workflow_run_id"] == 39789766678
         assert source["artifact_id"] == 12430172671
