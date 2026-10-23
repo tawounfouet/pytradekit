@@ -6,6 +6,43 @@ The project is currently pre-1.0 and public APIs remain experimental unless expl
 
 ## [Unreleased]
 
+## [0.8.0b7] - 2026-10-23
+
+### Added
+
+- LOT-06.6 IBKR Pacing, Reconnect & Dynamic Market Rule Runtime.
+- reqMarketRule resolution with exact Decimal normalization.
+- Routing exchange to marketRuleId positional selection.
+- Cached dynamic PriceIncrement schedules.
+- Dynamic LIMIT price validation before placeOrder.
+- IBKROperationalGuard and operational state snapshot.
+- ib_async connected, disconnected, error and throttle event bridge.
+- Qualified ib_async request ceiling of 45 requests per second.
+- Explicit code 100 pacing containment.
+- Explicit 1100, 1101, 1102, 1300, 2103, 2104 and 2110 state transitions.
+- Explicit reconnect recovery with reconciliation-before-readmission.
+- Deterministic LOT-06.6 qualification artifact.
+
+### Architecture
+
+- ib_async owns the transport throttling queue; PyTradeKit does not add a second competing request queue.
+- Dynamic market-rule validation occurs before the single placeOrder call site.
+- Provider connectivity recovery and economic replay remain separate concerns.
+- operations_runtime.py contains no placeOrder or cancelOrder call site.
+- 1101 keeps market-data admission closed until explicit resubscription evidence exists.
+- 1102 never restores an invalidated reconciliation automatically.
+- 2103 degrades market data without globally blocking account/order reads or writes.
+- Unknown provider states latch the operational runtime fail-closed.
+- Watchdog auto-recovery is not used.
+- LIVE remains unavailable.
+
+### Compatibility
+
+- BrokerAdapterContract remains candidate version 1.0-rc1.
+- LOT-06.5 single-write and uncertain-outcome invariants remain intact.
+- No real IBKR PAPER execution capability certification claim is made.
+- TRADING_READY remains closed.
+
 ## [0.8.0b6] - 2026-10-23
 
 ### Added
