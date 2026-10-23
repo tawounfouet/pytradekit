@@ -214,6 +214,43 @@ def test_ib_async_transport_uses_qualified_connection_parameters() -> None:
     assert transport.is_connected()
 
 
+def test_ib_async_transport_connects_to_tws_paper_port() -> None:
+    client = _FakeIBClient()
+    transport = IBAsyncPaperTransport(
+        client_factory=lambda: client,
+        package_version=IBKR_ASYNC_VERSION_TARGET,
+    )
+    profile = IBKRPaperRuntimeProfile(
+        expected_account_id="DU1234567",
+        surface=IBKRClientSurface.TWS,
+        port=7497,
+        client_id=IBKRClientId(71),
+    )
+
+    evidence = transport.connect(profile)
+
+    assert client.connect_args == (
+        "127.0.0.1",
+        7497,
+        71,
+        10.0,
+        False,
+        "DU1234567",
+        True,
+    )
+    assert evidence.synchronized
+
+
+def test_profile_from_environment_rejects_unknown_surface() -> None:
+    with pytest.raises(IBKRRuntimeConfigurationError, match="TWS or IB_GATEWAY"):
+        IBKRPaperRuntimeProfile.from_environment(
+            {
+                "PYTRADEKIT_IBKR_EXPECTED_ACCOUNT_ID": "DU1234567",
+                "PYTRADEKIT_IBKR_SURFACE": "DESKTOP",
+            }
+        )
+
+
 def test_account_identity_mismatch_fails_closed_and_disconnects() -> None:
     client = _FakeIBClient(accounts=["DU9999999"])
     transport = IBAsyncPaperTransport(
