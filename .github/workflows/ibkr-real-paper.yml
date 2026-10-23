@@ -1,0 +1,90 @@
+name: IBKR Real PAPER Certification
+
+on:
+  workflow_dispatch:
+    inputs:
+      contract_id:
+        description: IBKR conId for the controlled US equity probe
+        required: true
+        default: "265598"
+      symbol:
+        description: Symbol matching the contract ID
+        required: true
+        default: AAPL
+      limit_price:
+        description: Explicit safe PAPER LIMIT price for the cancel scenario
+        required: true
+      acknowledgement:
+        description: Type I_UNDERSTAND_IBKR_PAPER_ORDERS_WILL_BE_CREATED
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  real-paper:
+    name: Real IBKR PAPER evidence
+    runs-on: [self-hosted, linux, ibkr-paper]
+
+    env:
+      PYTRADEKIT_IBKR_EXPECTED_ACCOUNT_ID: ${{ secrets.PYTRADEKIT_IBKR_EXPECTED_ACCOUNT_ID }}
+      PYTRADEKIT_IBKR_HOST: 127.0.0.1
+      PYTRADEKIT_IBKR_PORT: "4002"
+      PYTRADEKIT_IBKR_CLIENT_ID: "17"
+      PYTRADEKIT_IBKR_ORDER_PROBE_ACK: ${{ inputs.acknowledgement }}
+
+    steps:
+      - name: Verify explicit PAPER order acknowledgement
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected="I_UNDERSTAND_IBKR_PAPER_ORDERS_WILL_BE_CREATED"
+          if [ "${PYTRADEKIT_IBKR_ORDER_PROBE_ACK}" != "${expected}" ]; then
+            echo "::error::Explicit PAPER order acknowledgement is invalid"
+            exit 1
+          fi
+          if [ -z "${PYTRADEKIT_IBKR_EXPECTED_ACCOUNT_ID:-}" ]; then
+            echo "::error::PYTRADEKIT_IBKR_EXPECTED_ACCOUNT_ID is not configured"
+            exit 1
+          fi
+
+      - name: Checkout selected certification candidate
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install IBKR qualification dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev,ibkr]"
+
+      - name: Run controlled real IBKR PAPER probe
+        run: |
+          mkdir -p artifacts/qualification/brokers/ibkr
+          python scripts/ibkr_paper_controlled_probe.py \
+            --commit-sha "$GITHUB_SHA" \
+            --contract-id "${{ inputs.contract_id }}" \
+            --symbol "${{ inputs.symbol }}" \
+            --limit-price "${{ inputs.limit_price }}" \
+            --with-orders \
+            --ci-qualified \
+            --output artifacts/qualification/brokers/ibkr/real-paper-evidence.json
+
+      - name: Replay retained evidence through the compliance harness
+        run: |
+          python scripts/qualify_ibkr_0_8_compliance.py \
+            --commit-sha "$GITHUB_SHA" \
+            --paper-evidence artifacts/qualification/brokers/ibkr/real-paper-evidence.json \
+            --output artifacts/qualification/brokers/ibkr/real-paper-certification.json
+
+      - name: Upload sanitized IBKR PAPER evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytradekit-ibkr-paper-certification
+          path: artifacts/qualification/brokers/ibkr/*.json
+          if-no-files-found: warn
