@@ -322,12 +322,13 @@ class IBKRBrokerSnapshotPort(BrokerSnapshotPort):
         captured_at: datetime,
     ) -> tuple[tuple[CanonicalBalance, ...], tuple[str, ...]]:
         raw = self._client.accountValues(self._external_account_id)
-        account_values = tuple(
-            _account_value(item)
-            for item in raw
-            if _account_value(item).account == self._external_account_id
-        )
         try:
+            normalized_values = tuple(_account_value(item) for item in raw)
+            account_values = tuple(
+                item
+                for item in normalized_values
+                if item.account == self._external_account_id
+            )
             observation = _account_observation(
                 account_values,
                 external_account_id=self._external_account_id,
@@ -603,7 +604,7 @@ def _account_observation(
 
     for row in rows:
         tag = row.tag.strip()
-        if tag == "AccountReady":
+        if tag.lower() == "accountready":
             normalized = row.value.strip().lower()
             if normalized in {"true", "1"}:
                 account_ready = True
