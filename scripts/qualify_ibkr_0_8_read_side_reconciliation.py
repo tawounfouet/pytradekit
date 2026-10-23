@@ -12,6 +12,7 @@ from pytradekit.brokers.adapters.ibkr import (
     IBKRBrokerSnapshotPort,
     IBKRContractId,
     IBKRInstrumentMappingResult,
+    IBKRReadSideCoverageEvidence,
     IBKRStartupReconciliationGate,
 )
 from pytradekit.orders.domain import OrderId
@@ -116,6 +117,16 @@ class _Restrictions:
         )
 
 
+def _coverage() -> IBKRReadSideCoverageEvidence:
+    return IBKRReadSideCoverageEvidence(
+        orders_complete=True,
+        fills_complete=True,
+        positions_complete=True,
+        account_complete=True,
+        evidence_source="deterministic-lot06.2-fixture",
+    )
+
+
 class _Workflow:
     def __init__(self, account_id: AccountId) -> None:
         run = ReconciliationRun.create(
@@ -170,6 +181,7 @@ def main() -> int:
         instruments=_NoInstrumentLookup(),
         identities=_NoOrderLookup(),
         restrictions=_Restrictions(),
+        coverage=_coverage(),
         clock=_Clock(),
     )
     snapshot = broker.capture(
