@@ -38,12 +38,18 @@ def test_real_paper_workflow_verifies_ci_and_normalizes_evidence() -> None:
     source = _REAL_WORKFLOW.read_text(encoding="utf-8")
 
     assert "deterministic_ci_run_id" in source
+    assert "artifact_id=args.artifact_id" in source
     assert "github.rest.actions.getWorkflowRun" in source
     assert "run.head_sha !== context.sha" in source
     assert 'run.conclusion !== "success"' in source
     assert "normalize_ibkr_paper_evidence.py" in source
     assert "real-paper-probe.json" in source
     assert "real-paper-evidence.json" in source
+    assert "id: provider_evidence" in source
+    assert "steps.provider_evidence.outputs.artifact-id" in source
+    assert source.index("id: provider_evidence") < source.index(
+        "normalize_ibkr_paper_evidence.py"
+    )
 
 
 def test_evidence_normalizer_derives_c3_from_contract() -> None:
