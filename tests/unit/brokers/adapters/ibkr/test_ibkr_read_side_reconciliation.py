@@ -9,6 +9,7 @@ from decimal import Decimal
 import pytest
 
 from pytradekit.brokers import ProviderProtocolError
+from pytradekit.orders.domain import OrderId
 from pytradekit.brokers.adapters.ibkr import (
     IBKRAccountRestrictionsObservation,
     IBKRBrokerSnapshotPort,
@@ -252,13 +253,13 @@ class _InstrumentResolver:
 
 class _IdentityResolver:
     def __init__(self) -> None:
-        self.order_id = None
+        self.order_id: OrderId | None = None
 
     def resolve_order_id(
         self,
         external_order_id: str,
         client_order_id: str | None = None,
-    ):
+    ) -> OrderId | None:
         if external_order_id == "9001":
             return self.order_id
         return None
@@ -450,7 +451,7 @@ class _Workflow:
         return self.outcome
 
 
-def test_startup_gate_requires_consistent_high_before_trading_ready() -> None:
+def test_startup_gate_proves_consistent_high_but_keeps_writes_blocked() -> None:
     workflow = _Workflow(
         _outcome(
             status=ConsistencyStatus.CONSISTENT,
@@ -464,9 +465,10 @@ def test_startup_gate_requires_consistent_high_before_trading_ready() -> None:
 
     report = gate.evaluate(_startup_report())
 
-    assert report.state is TradingReadinessState.TRADING_READY
+    assert report.state is TradingReadinessState.NOT_READY
     assert report.consistency_status is ConsistencyStatus.CONSISTENT
     assert report.state_confidence is StateConfidence.HIGH
+    assert "IBKR economic write path is not qualified yet" in report.gaps
     assert workflow.calls == 1
 
 
