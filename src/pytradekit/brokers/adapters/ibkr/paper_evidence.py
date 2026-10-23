@@ -219,9 +219,11 @@ class IBKRPaperEvidenceBundle:
         if self.c3_capabilities and (
             self.provenance.workflow_run_id is None
             or self.provenance.deterministic_ci_run_id is None
+            or self.provenance.artifact_id is None
         ):
             raise IBKREvidenceError(
-                "C3 evidence requires both PAPER workflow and deterministic CI run IDs."
+                "C3 evidence requires a retained provider artifact, PAPER workflow "
+                "run ID, and deterministic CI run ID."
             )
 
         normalized_proofs: dict[
