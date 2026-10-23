@@ -116,6 +116,24 @@ from .order_commands import (
     IBKRTransmitPolicy,
     map_ibkr_order_command,
 )
+from .read_side import (
+    IBKR_READ_SIDE_VERSION,
+    IBKRAccountRestrictionsProvider,
+    IBKRBrokerSnapshotPort,
+    IBKRInstrumentResolver,
+    IBKROrderIdentityResolver,
+    IBKRReadSideCaptureStats,
+    IBKRReadSideClient,
+    IBKRReadSideError,
+    StaticIBKRAccountRestrictionsProvider,
+    StaticIBKRInstrumentResolver,
+)
+from .reconciliation_runtime import (
+    IBKR_RECONCILIATION_RUNTIME_VERSION,
+    IBKRRuntimeReadClient,
+    IBKRStartupReconciliationRuntime,
+    build_ibkr_startup_reconciliation_runtime,
+)
 from .runtime import (
     IBKR_ASYNC_PACKAGE_NAME,
     IBKR_ASYNC_VERSION_TARGET,
@@ -128,20 +146,6 @@ from .runtime import (
     IBKRTransportConnectionEvidence,
     IBKRTransportPort,
     build_ibkr_paper_connection_runtime,
-)
-
-from .read_side import (
-    IBKR_READ_SIDE_VERSION,
-    IBKRAccountRestrictionsProvider,
-    IBKRBrokerSnapshotPort,
-    IBKRInstrumentResolver,
-    IBKROrderIdentityResolver,
-    IBKRReadSideCaptureStats,
-    IBKRReadSideClient,
-    IBKRReadSideCoverageEvidence,
-    IBKRReadSideError,
-    StaticIBKRAccountRestrictionsProvider,
-    StaticIBKRInstrumentResolver,
 )
 from .startup_reconciliation import (
     IBKR_STARTUP_RECONCILIATION_VERSION,
@@ -166,6 +170,7 @@ __all__ = [
     "IBKR_PAPER_RUNTIME_VERSION",
     "IBKR_PROVIDER_KEY",
     "IBKR_READ_SIDE_VERSION",
+    "IBKR_RECONCILIATION_RUNTIME_VERSION",
     "IBKR_RUNTIME_GATEWAY",
     "IBKR_RUNTIME_TRANSPORT",
     "IBKR_STARTUP_RECONCILIATION_VERSION",
@@ -242,9 +247,11 @@ __all__ = [
     "IBKRReadinessObservation",
     "IBKRRuntimeConfigurationError",
     "IBKRRuntimeDependencyError",
+    "IBKRRuntimeReadClient",
     "IBKRSecurityType",
     "IBKRSessionOrderId",
     "IBKRStartupReconciliationGate",
+    "IBKRStartupReconciliationRuntime",
     "IBKRStartupReconciliationWorkflow",
     "IBKRTimeInForce",
     "IBKRTransmitPolicy",
@@ -256,6 +263,7 @@ __all__ = [
     "build_ibkr_capability_manifest",
     "build_ibkr_contract_freeze",
     "build_ibkr_paper_connection_runtime",
+    "build_ibkr_startup_reconciliation_runtime",
     "evaluate_ibkr_readiness",
     "ibkr_connectivity_state",
     "ibkr_error_rule",
