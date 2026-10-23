@@ -54,7 +54,11 @@ class _IBAsyncLowLevelClient(Protocol):
 
 
 class _IBAsyncClient(Protocol):
-    client: _IBAsyncLowLevelClient
+    @property
+    def client(self) -> _IBAsyncLowLevelClient:
+        """Return the synchronized low-level protocol client."""
+
+        ...
 
     def connect(
         self,
