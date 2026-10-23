@@ -6,6 +6,42 @@ The project is currently pre-1.0 and public APIs remain experimental unless expl
 
 ## [Unreleased]
 
+## [0.8.0b6] - 2026-10-23
+
+### Added
+
+- LOT-06.5 IBKR Economic Write Execution Adapter.
+- IBKRExecutionAdapter implementing submit, cancel and query_order.
+- Explicit IBKREconomicWriteAdmission provider-local write gate.
+- Qualified execution instrument binding and resolver contract.
+- Dynamic ib_async Contract and Order construction inside the IBKR boundary.
+- Pre-write LOT-06.4 session reservation before placeOrder.
+- Exactly one placeOrder call site and one cancelOrder call site.
+- Uncertain-outcome semantics after attempted economic writes.
+- permId-only canonical external order identity.
+- Static LIMIT execution support.
+- Fail-closed dynamic market-rule LIMIT guard.
+- Deterministic LOT-06.5 qualification artifact.
+
+### Architecture
+
+- Canonical OrderId, orderRef, clientId plus orderId, and permId remain distinct.
+- Session orderId is never emitted as canonical external_order_id.
+- placeOrder and cancelOrder are never retried automatically.
+- Post-write exceptions become UNCERTAIN and require reconciliation.
+- query_order reuses LOT-06.4 callback correlation and LOT-05.4 normalization.
+- Cumulative orderStatus state still cannot create synthetic Fill facts.
+- Dynamic market-rule LIMIT execution remains blocked until reqMarketRule is qualified.
+- Startup readiness stays closed because the write path is not PAPER certified yet.
+- LIVE remains unavailable.
+
+### Compatibility
+
+- BrokerAdapterContract remains candidate version 1.0-rc1.
+- LOT-06.1 through LOT-06.4 behavior remains compatible.
+- No real IBKR PAPER execution capability certification claim is made.
+- TRADING_READY remains closed.
+
 ## [0.8.0b5] - 2026-10-23
 
 ### Added
