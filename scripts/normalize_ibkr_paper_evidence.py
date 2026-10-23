@@ -34,6 +34,7 @@ def _parser() -> argparse.ArgumentParser:
         required=True,
     )
     parser.add_argument("--artifact-name", required=True)
+    parser.add_argument("--artifact-id", type=int, required=True)
     parser.add_argument("--output", type=Path, required=True)
     return parser
 
@@ -44,6 +45,8 @@ def main() -> int:
         raise ValueError("--workflow-run-id must be positive.")
     if args.deterministic_ci_run_id <= 0:
         raise ValueError("--deterministic-ci-run-id must be positive.")
+    if args.artifact_id <= 0:
+        raise ValueError("--artifact-id must be positive.")
 
     _require_github_actions_provenance(
         qualified_commit=args.qualified_commit,
@@ -107,10 +110,11 @@ def main() -> int:
         artifact_json_sha256="0" * 64,
         source_ref=(
             "github-actions:ibkr-paper:"
-            f"run:{args.workflow_run_id}"
+            f"run:{args.workflow_run_id}:artifact:{args.artifact_id}"
         ),
         workflow_run_id=args.workflow_run_id,
         deterministic_ci_run_id=args.deterministic_ci_run_id,
+        artifact_id=args.artifact_id,
     )
 
     sdk = _mapping(probe.get("sdk"), "sdk")
