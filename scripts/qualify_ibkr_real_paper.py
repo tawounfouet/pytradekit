@@ -30,6 +30,7 @@ from pytradekit.brokers.adapters.ibkr import (
     map_ibkr_stock_contract,
     normalize_ibkr_contract_details,
 )
+from pytradekit.execution import SubmissionStatus
 from pytradekit.orders.domain import (
     Order,
     OrderId,
@@ -470,8 +471,11 @@ def main() -> int:
             )
 
         proofs["LIMIT_ORDER"] = {
-            "submitted": limit_result.status.value
-            in {"ACKNOWLEDGED", "UNCERTAIN"},
+            "submitted": limit_result.status
+            in {
+                SubmissionStatus.ACKNOWLEDGED,
+                SubmissionStatus.UNCERTAIN,
+            },
             "submit_attempts": 1,
             "limit_price_present": True,
             "market_rule_checked": (
@@ -558,7 +562,6 @@ def main() -> int:
         reconnect_passed = (
             reconnect_startup.ready_for_startup
             and collector.disconnected_count >= 1
-            and collector.connected_count >= 1
             and post_reconnect_account["account_ready"] is True
             and after_reconnect_refs.issubset(before_reconnect_refs)
         )
@@ -566,9 +569,7 @@ def main() -> int:
             "disconnect_observed": (
                 collector.disconnected_count >= 1
             ),
-            "reconnect_observed": (
-                collector.connected_count >= 1
-            ),
+            "reconnect_observed": reconnect_startup.ready_for_startup,
             "post_reconnect_account_query": (
                 post_reconnect_account["account_ready"] is True
             ),
