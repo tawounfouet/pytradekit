@@ -493,6 +493,7 @@ class IBKRExecutionAdapter:
                     ),
                 )
 
+        self._operations.require_write_allowed(operation="submit")
         context = ProviderExecutionContext(
             order_id=order.id,
             correlation_id=order.correlation_id,
