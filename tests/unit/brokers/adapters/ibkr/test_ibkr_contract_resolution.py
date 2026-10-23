@@ -14,8 +14,12 @@ from pytradekit.brokers.adapters.ibkr import (
     IBKRContractId,
     IBKRContractReferenceResolver,
     IBKRContractResolutionError,
+    IBKRPaperConnectionRuntime,
+    IBKRPaperRuntimeProfile,
     IBKRPriceIncrementMode,
+    IBKRTransportConnectionEvidence,
     StaticIBKRCanonicalInstrumentIdResolver,
+    build_ibkr_contract_reference_resolver,
     normalize_ibkr_contract_details,
 )
 from pytradekit.shared import InstrumentId
@@ -151,6 +155,10 @@ def test_resolver_caches_exact_mapping_without_second_provider_call() -> None:
 
     assert first == second
     assert client.calls == 1
+    assert resolver.last_evidence is not None
+    assert resolver.last_evidence.cache_hit
+    assert resolver.last_evidence.provider_match_count == 0
+    assert resolver.last_evidence.exact_match_count == 0
 
 
 def test_missing_canonical_instrument_id_avoids_provider_lookup() -> None:
@@ -337,3 +345,66 @@ def test_static_instrument_resolver_requires_exact_symbol() -> None:
         )
         is None
     )
+
+
+class _RuntimeTransport:
+    def __init__(self, client: _Client) -> None:
+        self.client = client
+        self.connected = False
+
+    def connect(
+        self,
+        profile: IBKRPaperRuntimeProfile,
+    ) -> IBKRTransportConnectionEvidence:
+        self.connected = True
+        return IBKRTransportConnectionEvidence(
+            transport_name="deterministic",
+            transport_version="2.1.0",
+            socket_connected=True,
+            protocol_ready=True,
+            account_verified=True,
+            managed_accounts=(profile.expected_account_id,),
+            server_version=200,
+        )
+
+    def disconnect(self) -> None:
+        self.connected = False
+
+    def is_connected(self) -> bool:
+        return self.connected
+
+    def read_client(self) -> object:
+        if not self.connected:
+            raise RuntimeError("transport is disconnected")
+        return self.client
+
+
+def test_runtime_builder_resolves_over_started_paper_connection() -> None:
+    instrument_id = InstrumentId.new()
+    provider_client = _Client([_Details(contract=_Contract())])
+    transport = _RuntimeTransport(provider_client)
+    connection = IBKRPaperConnectionRuntime(
+        profile=IBKRPaperRuntimeProfile(
+            expected_account_id="DU1234567",
+        ),
+        transport=transport,
+    )
+    startup = connection.start()
+    assert startup.ready_for_startup
+
+    resolver = build_ibkr_contract_reference_resolver(
+        connection=connection,
+        instrument_ids=_instrument_ids(instrument_id),
+        request_factory=_RequestFactory(),
+    )
+    result = resolver.resolve(
+        contract_id=IBKRContractId(265598),
+        symbol="AAPL",
+    )
+
+    assert result is not None
+    assert result.instrument.id == instrument_id
+    assert provider_client.calls == 1
+
+    connection.stop()
+    assert not transport.connected
