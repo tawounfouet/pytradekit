@@ -99,6 +99,12 @@ jobs:
               core.setFailed(
                 "Workflow name is " + run.name + ", expected CI"
               );
+              return;
+            }
+            if (run.path !== ".github/workflows/ci.yml") {
+              core.setFailed(
+                "Workflow path is " + run.path + ", expected .github/workflows/ci.yml"
+              );
             }
       - name: Set up Python
         uses: actions/setup-python@v5
